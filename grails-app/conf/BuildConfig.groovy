@@ -1,3 +1,5 @@
+import org.apache.ivy.plugins.resolver.FileSystemResolver
+
 grails.project.dependency.resolution = {
     inherits "global" // inherit Grails' default dependencies
     log "warn"
@@ -7,7 +9,14 @@ grails.project.dependency.resolution = {
         grailsCentral()
     }
 
-    //even though this plugin does not need anything from this repo, it has to be added for the deploy script to check existing plugins
+    def ulcClientJarResolver = new FileSystemResolver()
+    String absolutePluginDir = grailsSettings.projectPluginsDir.absolutePath
+
+    ulcClientJarResolver.addArtifactPattern "${absolutePluginDir}/ulc-[revision]/web-app/lib/[artifact].[ext]"
+    ulcClientJarResolver.name = "ulc"
+
+    resolver ulcClientJarResolver
+
     mavenRepo "https://build.intuitive-collaboration.com/maven/plugins/"
 
     String ulcVersion = "2008-u4-4.1"
