@@ -19,21 +19,21 @@ grails.project.dependency.resolution = {
 
     mavenRepo "https://build.intuitive-collaboration.com/maven/plugins/"
 
-    String ulcVersion = "2008-u4-4.1"
+    String ulcVersion = "ria-suite-u2"
 
     plugins {
         runtime ":background-thread:1.3"
         runtime ":hibernate:1.3.7"
         runtime ":joda-time:0.5"
         runtime ":maven-publisher:0.7.5"
-        runtime ":quartz:0.4.1"
+        runtime ":quartz:0.4.2"
         runtime ":spring-security-core:1.0.1"
         runtime ":jetty:1.2-SNAPSHOT"
         compile "com.canoo:ulc:${ulcVersion}"
 
         test ":code-coverage:1.1.7"
 
-        runtime "org.pillarone:risk-analytics-core:1.3-BETA-2.3"
+        runtime "org.pillarone:risk-analytics-core:1.3-BETA-2.4"
         runtime("org.pillarone:risk-analytics-graph-core:0.2") { transitive = false }
     }
 
@@ -41,7 +41,6 @@ grails.project.dependency.resolution = {
         compile group: 'canoo', name: 'ulc-applet-client', version: ulcVersion
         compile group: 'canoo', name: 'ulc-base-client', version: ulcVersion
         compile group: 'canoo', name: 'ulc-base-trusted', version: ulcVersion
-        compile group: 'canoo', name: 'ulc-ejb-client', version: ulcVersion
         compile group: 'canoo', name: 'ulc-jnlp-client', version: ulcVersion
         compile group: 'canoo', name: 'ulc-servlet-client', version: ulcVersion
         compile group: 'canoo', name: 'ulc-standalone-client', version: ulcVersion

@@ -1,26 +1,38 @@
 package org.pillarone.riskanalytics.graph.formeditor.application
 
-import com.ulcjava.base.application.AbstractApplication
+import com.ulcjava.applicationframework.application.SingleFrameApplication
+import com.ulcjava.base.application.ULCComponent
 import com.ulcjava.base.application.ULCFrame
+import com.ulcjava.base.application.ULCMenuBar
 import com.ulcjava.base.application.util.Dimension
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.FormEditorModel
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.FormEditorView
 
-class FormEditorApplication extends AbstractApplication {
+class FormEditorApplication extends SingleFrameApplication {
 
-    ULCFrame mainFrame = new ULCFrame("Form Editor")
+    FormEditorView mainView
 
-    public void start() {
-        mainFrame.defaultCloseOperation = ULCFrame.TERMINATE_ON_CLOSE
-        mainFrame.size = new Dimension(1000, 750)
-
-        //If argument is null, the window is centered on the screen.
-        mainFrame.locationRelativeTo = null
-        FormEditorView mainView = new FormEditorView(new FormEditorModel())
-        mainFrame.contentPane.add(mainView.content)
-        mainFrame.menuBar = mainView.menuBar
-        mainFrame.visible = true
-        mainFrame.toFront()
+    FormEditorApplication() {
+        mainView = new FormEditorView(new FormEditorModel())
     }
+
+    @Override
+    protected void initFrame(ULCFrame frame) {
+        super.initFrame(frame)
+        frame.defaultCloseOperation = ULCFrame.TERMINATE_ON_CLOSE
+        frame.size = new Dimension(1000, 750)
+        frame.locationRelativeTo = null
+    }
+
+    @Override
+    protected ULCComponent createStartupMainContent() {
+        return mainView.content
+    }
+
+    @Override
+    protected ULCMenuBar createStartupMenuBar() {
+        return mainView.menuBar
+    }
+
 
 }
