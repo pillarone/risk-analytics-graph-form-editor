@@ -1,10 +1,7 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 import com.ulcjava.applicationframework.application.form.BeanFormDialog;
-import com.ulcjava.base.application.ClientContext;
-import com.ulcjava.base.application.ULCButton;
-import com.ulcjava.base.application.ULCDialog;
-import com.ulcjava.base.application.UlcUtilities;
+import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.event.IWindowListener;
@@ -14,13 +11,11 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeImportBea
 
 
 public class TypeImportDialog extends ULCDialog {
-	private FormEditorModelsView fEditorView;
     private BeanFormDialog<TypeImportFormModel> fBeanForm;
     private ULCButton fCancel;
     
-    public TypeImportDialog(FormEditorModelsView editor) {
-        super(UlcUtilities.getWindowAncestor(editor.getContentView()));
-        fEditorView = editor;
+    public TypeImportDialog(ULCWindow parent) {
+        super(parent);
         boolean metalLookAndFeel = "Metal".equals(ClientContext.getLookAndFeelName());
         if (!metalLookAndFeel && ClientContext.getLookAndFeelSupportsWindowDecorations()) {
             setUndecorated(true);
@@ -28,7 +23,7 @@ public class TypeImportDialog extends ULCDialog {
         }
         createBeanView();
         setTitle("Add new type (model | component)");
-        setLocationRelativeTo(fEditorView.getContentView());
+        setLocationRelativeTo(parent);
     }
     
     @SuppressWarnings("serial")

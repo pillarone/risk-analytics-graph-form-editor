@@ -25,6 +25,8 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormM
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeImportBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -87,16 +89,16 @@ public class FormEditorModelsView extends AbstractBean {
     private void addModelView(AbstractGraphModel model, TypeDefinitionBean typeDef) {
     	SingleModelEditView modelView = new SingleModelEditView(fContext, model);
 		fModelTabs.put(modelView.getView(), model);
-		fEditorArea.addTab(typeDef.getName(), modelView.getView());
-		modelView.setTransferHandler(new TypeTransferHandler());
+        fEditorArea.addTab(typeDef.getName(), modelView.getView());
+        modelView.setTransferHandler(new TypeTransferHandler());
 		fEditorArea.setSelectedIndex(fEditorArea.getComponentCount()-1);
 		fTypeDefinitions.add(typeDef);
     }
     
-    @SuppressWarnings("serial")
 	private void createTypeDefinitionDialog() {
     	fTypeDefView = new TypeDefinitionDialog(UlcUtilities.getWindowAncestor(fEditorArea), fTypeDefinitions);
-        IActionListener newModelListener = new IActionListener() {			
+        IActionListener newModelListener = new IActionListener() {
+
 			public void actionPerformed(ActionEvent event) {
 				TypeDefinitionBean typeDef = fTypeDefView.getBeanForm().getModel().getBean();
 				AbstractGraphModel model = typeDef.isModel() ? new ModelGraphModel() : new ComposedComponentGraphModel();
@@ -122,13 +124,13 @@ public class FormEditorModelsView extends AbstractBean {
 
     @SuppressWarnings("serial")
 	private void createTypeImportDialog() {
-    	fTypeImportView = new TypeImportDialog(this);
+    	fTypeImportView = new TypeImportDialog(UlcUtilities.getWindowAncestor(fEditorArea));
         IActionListener newModelListener = new IActionListener() {			
 			public void actionPerformed(ActionEvent event) {
                 TypeImportBean bean = (TypeImportBean)fTypeImportView.getBeanForm().getModel().getBean();
                 Class clazz = null;
                 try {
-                	clazz = ClassLoader.getSystemClassLoader().loadClass(bean.getClazzName());
+                	clazz = getClass().getClassLoader().loadClass(bean.getClazzName());
                 	AbstractGraphImport importer = null;
                 	if (ComposedComponent.class.isAssignableFrom(clazz)) {
                 		importer = new ComposedComponentGraphImport();
@@ -146,12 +148,14 @@ public class FormEditorModelsView extends AbstractBean {
                 	} else {
                 		ULCAlert alert = new ULCAlert("No class loaded",
     							"No class with name " + bean.getClazzName() + " could be loaded as graph model.", "ok");
-                		bean.reset();
+                		alert.show();
+                        bean.reset();
                 	}
                 } catch (Exception ex) {
             		ULCAlert alert = new ULCAlert("No class loaded", 
 							"No class with name " + bean.getClazzName() + " could be loaded as graph model.", "ok");
-            		bean.reset();                    	
+            		alert.show();
+                    bean.reset();
                 }
 			}
 		};

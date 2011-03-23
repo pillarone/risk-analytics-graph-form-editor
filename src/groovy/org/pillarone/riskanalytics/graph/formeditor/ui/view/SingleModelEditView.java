@@ -50,7 +50,7 @@ public class SingleModelEditView extends AbstractBean {
         fNodesTable.createDefaultColumnsFromModel();
         fNodesTable.setShowGrid(true);
         fNodesTable.getSelectionModel().setSelectionMode(ULCListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        fNodesTable.setRowSorter(new TableRowSorter(nodesModel));        
+        fNodesTable.setRowSorter(new TableRowSorter(nodesModel));
         fNodesSelected = false;
         fTwoNodesSelected = false;
         fNodesTable.setVisible(true);
