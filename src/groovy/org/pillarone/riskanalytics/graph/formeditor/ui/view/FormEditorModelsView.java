@@ -25,8 +25,6 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormM
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeImportBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import java.util.HashMap;
 import java.util.HashSet;
