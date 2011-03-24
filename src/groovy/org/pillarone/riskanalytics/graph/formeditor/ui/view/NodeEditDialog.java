@@ -56,7 +56,7 @@ public class NodeEditDialog extends ULCDialog {
     @SuppressWarnings("serial")
 	private void createBeanView() {
     	NodeFormModel model = new NodeFormModel(new NodeBean(), fGraphModel);
-    	NodeForm form = new NodeForm(model);
+    	NodeForm form = new NodeForm(model, fGraphModel instanceof ModelGraphModel);
         fBeanForm = new BeanFormDialog<NodeFormModel>(form);
         add(fBeanForm.getContentPane());
         fCancel = new ULCButton("Cancel");
@@ -73,7 +73,8 @@ public class NodeEditDialog extends ULCDialog {
                 if (fEditedNode != null) {
                 	if (fEditedNode != null) {
                 		if (!isConsistent(fEditedNode, bean)) {
-                			GraphModelUtilities.replaceComponentNode(fEditedNode, bean.getName(), bean.getComponentType(), fGraphModel);
+                			ComponentNode newNode = GraphModelUtilities.replaceComponentNode(fEditedNode, bean.getName(), bean.getComponentType(), fGraphModel);
+                            newNode.setComment(bean.getComment());
                 		}                		
                 		if (fGraphModel instanceof ModelGraphModel && bean.isStarter()) {
                 			((ModelGraphModel) fGraphModel).getStartComponents().add(fEditedNode);
@@ -82,8 +83,9 @@ public class NodeEditDialog extends ULCDialog {
                 } else {
                 	ComponentDefinition definition = PaletteService.getInstance().getComponentDefinition(bean.getComponentType());
                 	ComponentNode newNode = fGraphModel.createComponentNode(definition, bean.getName());
+                    newNode.setComment(bean.getComment());
                 	if (fGraphModel instanceof ModelGraphModel && bean.isStarter()) {
-            			((ModelGraphModel) fGraphModel).getStartComponents().add(fEditedNode);                		
+            			((ModelGraphModel) fGraphModel).getStartComponents().add(fEditedNode);
                 	}
                 }
                 setVisible(false);

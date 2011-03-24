@@ -9,9 +9,10 @@ import org.pillarone.riskanalytics.graph.formeditor.util.PaletteUtilities;
 import java.util.List;
 
 public class NodeForm extends AbstractFormBuilder<NodeFormModel> {
-    
-    public NodeForm(NodeFormModel bean) {
+    private boolean fIsModel;
+    public NodeForm(NodeFormModel bean, boolean isModel) {
         super(bean);
+        fIsModel = isModel;
     }
     
     @Override
@@ -23,6 +24,8 @@ public class NodeForm extends AbstractFormBuilder<NodeFormModel> {
         comboBoxModel.setSelectedItem(typeNames != null && typeNames.size()>0 ? typeNames.get(0) : null);
         addComboBox("componentType", comboBoxModel);
         addTextField("comment").columns(15);
-        addCheckBox("starter", null);
+        if (fIsModel) {
+            addCheckBox("starter", null);
+        }
     }
 }

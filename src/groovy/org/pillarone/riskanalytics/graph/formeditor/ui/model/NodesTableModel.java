@@ -96,7 +96,7 @@ public class NodesTableModel extends AbstractTableModel implements ITableModel {
 		switch (column) {
 			case NAMEID: return node.getName();
 			case TYPEID: return node.getType().getTypeClass().getName();
-			case COMMENTID: return null;
+			case COMMENTID: return node.getComment();
 			case STARTERID: return fGraphModel instanceof ModelGraphModel ? ((ModelGraphModel)fGraphModel).getStartComponents().contains(node) : false;
 			default: return null;
 		}
