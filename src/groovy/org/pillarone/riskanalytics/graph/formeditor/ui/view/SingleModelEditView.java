@@ -33,6 +33,7 @@ public class SingleModelEditView extends AbstractBean {
     private ConnectionEditDialog fConnectionEditForm;
     private ReplicationEditDialog fReplicationEditForm;
     private boolean fConnectionSelected;
+    private boolean fIsModel;
     
 
     public SingleModelEditView(ApplicationContext ctx, AbstractGraphModel model) {
@@ -40,6 +41,7 @@ public class SingleModelEditView extends AbstractBean {
     	fMainView = new ULCBoxPane(1,2,2,2);
     	fApplicationContext = ctx;
         fGraphModel = model;
+        fIsModel = model instanceof ModelGraphModel;
         createView();
     }
 
@@ -174,17 +176,24 @@ public class SingleModelEditView extends AbstractBean {
         if (fNodeEditDialog == null) {
             fNodeEditDialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(fNodesTable), fGraphModel);
         }
+        fNodeEditDialog.setModal(true);
         fNodeEditDialog .setVisible(show);
+//        fNodeEditDialog.toFront();
     }
     
     private void showConnectNodesDialog(ComponentNode node1, ComponentNode node2) {
         if (fConnectNodesDialog == null) {
         	fConnectNodesDialog = new ConnectNodesDialog(UlcUtilities.getWindowAncestor(fNodesTable), fGraphModel);
         }
-        if (node1 != null && node2 != null) {
+        if (node1 != null && GraphModelUtilities.hasPorts(node1) &&
+                node2 != null && GraphModelUtilities.hasPorts(node2)) {
         	fConnectNodesDialog.setNodes(node1, node2);
+            fConnectNodesDialog .setVisible(true);
+        } else {
+            ULCAlert alert = new ULCAlert("Connection not created.",
+                        "At least one of the selected nodes does not contain ports. Not connection can be be created.", "ok");
+            alert.show();
         }
-        fConnectNodesDialog .setVisible(true);
     }
     
     private void showNewConnectionDialog() {
@@ -195,10 +204,17 @@ public class SingleModelEditView extends AbstractBean {
     }
 
     private void showReplicationDialog() {
-        if (fReplicationEditForm == null) {
-        	fReplicationEditForm = new ReplicationEditDialog(UlcUtilities.getWindowAncestor(fConnectionsTable), (ComposedComponentGraphModel)fGraphModel);
+        if (fGraphModel instanceof ComposedComponentGraphModel) {
+            if (fReplicationEditForm == null) {
+        	    fReplicationEditForm = new ReplicationEditDialog(UlcUtilities.getWindowAncestor(fConnectionsTable), (ComposedComponentGraphModel)fGraphModel);
+            }
+            fReplicationEditForm.setVisible(true);
+        } else {
+            ULCAlert alert = new ULCAlert("Port replication not possible.",
+                                    "Port replication not possible for models.", "ok");
+            alert.show();
+
         }
-        fReplicationEditForm.setVisible(true);
     }
     
     
@@ -264,7 +280,12 @@ public class SingleModelEditView extends AbstractBean {
             firePropertyChange(new PropertyChangeEvent(this, "connectionSelected", !fConnectionSelected, fConnectionSelected));
     	}
     }
-    
+
+    public boolean isModel() {
+        return fIsModel;
+    }
+
+
     /**
      * @return the selected bean or <code>null</code> if no row is selected
      */
@@ -309,8 +330,8 @@ public class SingleModelEditView extends AbstractBean {
             NodeBean bean = fNodeEditDialog.getBeanForm().getModel().getBean();
             bean.setName(selectedNode.getName());
             bean.setComponentType(selectedNode.getType().getTypeClass().getName());
-            bean.setComment(null);
-            if (fGraphModel instanceof ModelGraphModel) {
+            bean.setComment(selectedNode.getComment());
+            if (fIsModel) {
             	bean.setStarter(((ModelGraphModel)fGraphModel).getStartComponents().contains(selectedNode));
             }
             fNodeEditDialog.getBeanForm().getModel().setEditedNode(selectedNode);
@@ -370,7 +391,7 @@ public class SingleModelEditView extends AbstractBean {
         fConnectionEditForm.getBeanForm().getModel().getBean().reset();
     }
 
-    @Action
+    @Action(enabledProperty = "isModel")
     public void newReplicationAction() {
         if (fReplicationEditForm == null || !fReplicationEditForm.isVisible()) {
         	showReplicationDialog();
