@@ -68,7 +68,13 @@ public class GraphModelUtilities {
 		return newNode;		
 	}
 
-	/**
+
+    public static boolean hasPorts(ComponentNode node) {
+        return (node.getInPorts() != null && node.getInPorts().size()>0)
+                || (node.getOutPorts() != null && node.getOutPorts().size()>0);
+    }
+
+    /**
 	 * Return port name for consisting of the form <component name>.<port name> for inner ports of 
 	 * just the port name for replicating ports.
 	 * @param p
