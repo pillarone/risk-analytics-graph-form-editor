@@ -8,6 +8,7 @@ import com.ulcjava.base.application.dnd.Transferable;
 import com.ulcjava.base.application.tree.DefaultMutableTreeNode;
 import com.ulcjava.base.application.tree.TreePath;
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.SingleModelEditView;
+import org.pillarone.riskanalytics.graph.formeditor.util.ComponentTypeTreeUtilities;
 
 public class TypeTransferHandler extends TransferHandler {
 
@@ -21,28 +22,12 @@ public class TypeTransferHandler extends TransferHandler {
 		this.fModelEditView = modelEditView;
 	}
 
-	private static String getComponentTypeName(TreePath path) {
-		Object[] elms = path.getPath();
-		if (elms.length>1) {
-			DefaultMutableTreeNode node = (DefaultMutableTreeNode) elms[1];
-			StringBuffer buffer = new StringBuffer(node.toString());
-			for (int i = 2; i < elms.length; i++) {
-				buffer.append(".");
-				node = (DefaultMutableTreeNode) elms[i];
-				buffer.append(node.toString());
-			}
-			return buffer.toString();
-		} else {
-			return null;
-		}
-	}
-	
 	@Override
 	public boolean importData(ULCComponent targetComponent, Transferable transferable) {
 		Object dragData0 = transferable.getTransferData(DataFlavor.DRAG_FLAVOR);
 		DnDTreeData dragData = (DnDTreeData)dragData0;
 		TreePath[] paths = dragData.getTreePaths();		
-		String componentType = getComponentTypeName(paths[0]);
+		String componentType = ComponentTypeTreeUtilities.getComponentTypeName(paths[0]);
 		if (fModelEditView==null) {
 			return false;
 		} else {
