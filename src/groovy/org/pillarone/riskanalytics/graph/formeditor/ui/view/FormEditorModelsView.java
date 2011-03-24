@@ -9,6 +9,8 @@ import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
+import com.ulcjava.base.application.tree.DefaultMutableTreeNode;
+import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.IFileChooseHandler;
 import com.ulcjava.base.application.util.IFileStoreHandler;
 import com.ulcjava.base.shared.FileChooserConfig;
@@ -24,6 +26,7 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHand
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeImportBean;
+import org.pillarone.riskanalytics.graph.formeditor.util.ComponentTypeTreeUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 import java.util.HashMap;
@@ -42,7 +45,7 @@ import java.util.Set;
 public class FormEditorModelsView extends AbstractBean {
 	/* Context is needed to load resources (such as icons, etc).*/
     private ApplicationContext fContext;
-    /* The main view.*/
+    /* The editor view.*/
 	private ULCCloseableTabbedPane fEditorArea;
 	/* Set of currently opened type defs - check that type defs does not already exist. */
 	private Set<TypeDefinitionBean> fTypeDefinitions;
@@ -52,6 +55,8 @@ public class FormEditorModelsView extends AbstractBean {
     private TypeDefinitionDialog fTypeDefView;
     /* A dialog for models or composed components to be imported.*/    
     private TypeImportDialog fTypeImportView;
+    /* The type tree view.*/
+	private ComponentTypeTree fComponentTypeTree;
 
     /**
      * @param context Application context is used for accessing and using resources (such as icons, etc.).
@@ -67,6 +72,12 @@ public class FormEditorModelsView extends AbstractBean {
      * @return
      */
     public ULCComponent getContentView() {
+        ULCBoxPane modelEdit = new ULCBoxPane(true);
+        ULCSeparator separator = new ULCSeparator();
+        separator.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+        modelEdit.add(ULCBoxPane.BOX_EXPAND_BOTTOM, ULCFiller.createVerticalStrut(3));
+        modelEdit.add(ULCBoxPane.BOX_EXPAND_BOTTOM, separator);
+
         fEditorArea = new ULCCloseableTabbedPane();
         fEditorArea.addTabListener(new ITabListener() {
         	public void tabClosing(TabEvent event) {
@@ -74,9 +85,19 @@ public class FormEditorModelsView extends AbstractBean {
         		if (fEditorArea.getTabCount()>0) {
         			event.getClosableTabbedPane().setSelectedIndex(0);
         		}
-        	}        			
-        });        
-        return fEditorArea;
+        	}
+        });
+        modelEdit.add(ULCBoxPane.BOX_EXPAND_EXPAND, fEditorArea);
+
+        fComponentTypeTree = new ComponentTypeTree(this);
+
+        ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setDividerLocation(200);
+        splitPane.setDividerSize(5);
+        splitPane.setLeftComponent(fComponentTypeTree);
+        splitPane.setRightComponent(modelEdit);
+
+        return splitPane;
     }
     
     /**
@@ -128,21 +149,9 @@ public class FormEditorModelsView extends AbstractBean {
                 TypeImportBean bean = (TypeImportBean)fTypeImportView.getBeanForm().getModel().getBean();
                 Class clazz = null;
                 try {
-                	clazz = getClass().getClassLoader().loadClass(bean.getClazzName());
-                	AbstractGraphImport importer = null;
-                	if (ComposedComponent.class.isAssignableFrom(clazz)) {
-                		importer = new ComposedComponentGraphImport();
-                	} else if (Model.class.isAssignableFrom(clazz)) {
-                		importer = new ModelGraphImport();							
-                	} 
-                	if (importer != null) {
-                		AbstractGraphModel model = importer.importGraph(clazz, null);
-                		TypeDefinitionBean typeDef = new TypeDefinitionBean();
-                		typeDef.setModel(model instanceof ModelGraphModel);
-                		typeDef.setName(model.getName());
-                		typeDef.setPackageName(model.getPackageName());
-                		addModelView(model, typeDef);
-                    	fTypeImportView.setVisible(false);
+                    boolean success = importComponentType(bean.getClazzName());
+                    if (success) {
+                        fTypeImportView.setVisible(false);
                 	} else {
                 		ULCAlert alert = new ULCAlert("No class loaded",
     							"No class with name " + bean.getClazzName() + " could be loaded as graph model.", "ok");
@@ -157,9 +166,29 @@ public class FormEditorModelsView extends AbstractBean {
                 }
 			}
 		};
-		fTypeImportView.getBeanForm().addSaveActionListener(newModelListener);
+//		fTypeImportView.getBeanForm().addSaveActionListener(newModelListener);
     }
-    
+
+    public boolean importComponentType(String clazzName) throws ClassNotFoundException {
+        Class clazz = getClass().getClassLoader().loadClass(clazzName);
+        AbstractGraphImport importer = null;
+        if (ComposedComponent.class.isAssignableFrom(clazz)) {
+            importer = new ComposedComponentGraphImport();
+        } else if (Model.class.isAssignableFrom(clazz)) {
+            importer = new ModelGraphImport();
+        }
+        if (importer != null) {
+            AbstractGraphModel model = importer.importGraph(clazz, null);
+            TypeDefinitionBean typeDef = new TypeDefinitionBean();
+            typeDef.setModel(model instanceof ModelGraphModel);
+            typeDef.setName(model.getName());
+            typeDef.setPackageName(model.getPackageName());
+            addModelView(model, typeDef);
+            return true;
+         }
+        return false;
+    }
+
 	private void showTypeImportDialog() {
         if (fTypeImportView == null) {
         	createTypeImportDialog();
@@ -168,7 +197,11 @@ public class FormEditorModelsView extends AbstractBean {
         }
         fTypeImportView.setVisible(true);        
     }
-    
+
+    @Action
+    public void showComponentAction(String componentName) {
+    }
+
 	@Action
     public void newAction() {
         if (fTypeDefView == null || !fTypeDefView.isVisible()) {
@@ -186,9 +219,14 @@ public class FormEditorModelsView extends AbstractBean {
         	ULCComponent component = fEditorArea.getComponentAt(i);
         	if (fModelTabs.containsKey(component)) {
         		AbstractGraphModel model = fModelTabs.get(component);
-        		CodeView codeView = new CodeView();
-        		codeView.setText(GraphModelUtilities.getGroovyModelCode(model));
-        		fEditorArea.addTab(model.getName()+".groovy", codeView);
+                try {
+        		    CodeView codeView = new CodeView();
+        		    codeView.setText(GraphModelUtilities.getGroovyModelCode(model));
+        		    fEditorArea.addTab(model.getName()+".groovy", codeView);
+                } catch (Exception ex) {
+                    ULCAlert alert = new ULCAlert("GraphModel not exported.", "Exception occurred: " + ex.getMessage(), "ok");
+                    alert.show();
+                }
         	} else {
             	ULCAlert alert = new ULCAlert("No Model found", "Current page does not contain a model or component specification.", "ok");
             	alert.show();        		
@@ -276,5 +314,5 @@ public class FormEditorModelsView extends AbstractBean {
 
     public ULCToolBar getToolBar() {
         return new ToolBarFactory(getActionMap()).createToolBar("newAction", "importAction", "exportAction", "saveAction");
-    }    
+    }
 }
