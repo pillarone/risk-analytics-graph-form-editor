@@ -26,23 +26,9 @@ class FormEditorApplication extends SingleFrameApplication {
      * @return the component with the content of the main application window.
      */
     protected ULCComponent getContentView() {
-        ULCBoxPane modelEdit = new ULCBoxPane(true);
-        ULCSeparator separator = new ULCSeparator();
-        separator.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
-        modelEdit.add(ULCBoxPane.BOX_EXPAND_BOTTOM, ULCFiller.createVerticalStrut(3));
-        modelEdit.add(ULCBoxPane.BOX_EXPAND_BOTTOM, separator);
-        FormEditorModelsView contentView = new FormEditorModelsView(getContext());
-        modelEdit.add(ULCBoxPane.BOX_EXPAND_EXPAND, contentView.getContentView());
+        FormEditorModelsView contentArea = new FormEditorModelsView(getContext());
 
-        ComponentTypeTree treePane = new ComponentTypeTree();
-
-        ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setDividerLocation(200);
-        splitPane.setDividerSize(5);
-        splitPane.setLeftComponent(treePane);
-        splitPane.setRightComponent(modelEdit);
-
-        ULCToolBar toolBar = contentView.getToolBar();
+        ULCToolBar toolBar = contentArea.getToolBar();
         toolBar.add(ULCFiller.createHorizontalGlue());
         ULCComponent icon = new ULCLabel();
         icon.setName("logo.Label");
@@ -50,6 +36,6 @@ class FormEditorApplication extends SingleFrameApplication {
         toolBar.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 5));
         getMainView().setToolBar(toolBar);
 
-        return splitPane;
+        return contentArea.getContentView();
     }
 }
