@@ -84,11 +84,4 @@ public class PaletteUtilities {
 		}		
 		return selectedTypes;
 	}
-	
-	public static List<String> getAvailableBaseTypes() {
-		List<String> list = new ArrayList<String>();
-		list.add(ModelGraphModel.class.getName());
-		list.add(ComposedComponentGraphModel.class.getName());
-		return list;
-	}	
 }
