@@ -1,13 +1,13 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
-import com.ulcjava.base.application.ULCBoxPane;
-import com.ulcjava.base.application.ULCScrollPane;
-import com.ulcjava.base.application.ULCTree;
-import com.ulcjava.base.application.tree.AbstractTreeModel;
-import com.ulcjava.base.application.tree.DefaultMutableTreeNode;
-import com.ulcjava.base.application.tree.DefaultTreeModel;
-import com.ulcjava.base.application.tree.ITreeModel;
+import com.ulcjava.applicationframework.application.ApplicationActionMap;
+import com.ulcjava.applicationframework.application.ApplicationContext;
+import com.ulcjava.base.application.*;
+import com.ulcjava.base.application.event.ActionEvent;
+import com.ulcjava.base.application.event.IActionListener;
+import com.ulcjava.base.application.tree.*;
 import com.ulcjava.base.application.util.Dimension;
+import org.pillarone.riskanalytics.graph.formeditor.util.ComponentTypeTreeUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.PaletteUtilities;
 
 import java.util.ArrayList;
@@ -19,20 +19,34 @@ import java.util.Map.Entry;
 public class ComponentTypeTree extends ULCBoxPane {
 
 	private ITreeModel fTreeModel;
-	
-	public ComponentTypeTree() {
-		super();		
+    private ULCTree fTree;
+    private ComponentTypeTreeCellRenderer fTreeCellRenderer;
+    private FormEditorModelsView fParent;
+
+	public ComponentTypeTree(FormEditorModelsView parent) {
+		super();
+        fParent = parent;
 		createTreeModel();
 		createView();
 	}
 
+    public void configureCellRenderer(IActionListener listener) {
+    }
+
 	private void createView() {
-		ULCTree tree = new ULCTree();
-		tree.setDragEnabled(true);
-		tree.setModel(fTreeModel);
-        ULCScrollPane treeScrollPane = new ULCScrollPane(tree);
+        // create tree
+		fTree = new ULCTree();
+		fTree.setDragEnabled(true);
+		fTree.setModel(fTreeModel);
+        fTree.getSelectionModel().setSelectionMode(ULCTreeSelectionModel.SINGLE_TREE_SELECTION);
+        fTreeCellRenderer = new ComponentTypeTreeCellRenderer();
+        fTreeCellRenderer.setShowComponentMenuListener(new ShowComponentAction());
+        fTree.setCellRenderer(fTreeCellRenderer);
+
+        ULCScrollPane treeScrollPane = new ULCScrollPane(fTree);
         treeScrollPane.setMinimumSize(new Dimension(200, 600));
         this.add(ULCBoxPane.BOX_EXPAND_EXPAND, treeScrollPane);
+
 		this.setVisible(true);
 	}
 	
@@ -64,33 +78,28 @@ public class ComponentTypeTree extends ULCBoxPane {
 		}
 		return typeMap;
 	}
-	
-	private class ComponentNamesTree extends AbstractTreeModel {
 
-		public Object getRoot() {
-			// TODO Auto-generated method stub
-			return null;
-		}
+    private class ShowComponentAction implements IActionListener {
 
-		public Object getChild(Object parent, int index) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public int getChildCount(Object parent) {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-
-		public boolean isLeaf(Object node) {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		public int getIndexOfChild(Object parent, Object child) {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-		
-	}
+        public void actionPerformed(ActionEvent actionEvent) {
+            TreePath selectedNode = fTree.getSelectionModel().getSelectionPath();
+            String clazzName = ComponentTypeTreeUtilities.getComponentTypeName(selectedNode);
+            try {
+                boolean success = fParent.importComponentType(clazzName);
+                if (!success) {
+                    ULCAlert alert = new ULCAlert("No class loaded",
+                                        "No class with name " + clazzName + " could be loaded as graph model.", "ok");
+                    alert.show();
+                }
+            } catch(ClassNotFoundException ex1) {
+                ULCAlert alert = new ULCAlert("No class loaded",
+                            "Class not found.", "ok");
+                alert.show();
+            } catch (Exception ex3) {
+                ULCAlert alert = new ULCAlert("No class loaded",
+                            "Unkown exception. ", "ok");
+                alert.show();
+            }
+        }
+    }
 }
