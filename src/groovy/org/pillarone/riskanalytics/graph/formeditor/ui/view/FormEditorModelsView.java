@@ -261,6 +261,25 @@ public class FormEditorModelsView extends AbstractBean {
         }
     }
 
+    @Action
+    public void exportToApplication() {
+        if (fEditorArea.getComponentCount() == 0) {
+            ULCAlert alert = new ULCAlert("No Model found", "No model or component to be saved", "ok");
+            alert.show();
+        } else {
+            int i = fEditorArea.getSelectedIndex();
+            ULCComponent component = fEditorArea.getComponentAt(i);
+            if (fModelTabs.containsKey(component)) {
+                AbstractGraphModel model = fModelTabs.get(component);
+                GraphModelUtilities.exportToApplication((ModelGraphModel) model);
+            } else {
+                ULCAlert alert = new ULCAlert("No Model found", "Current page does not contain a model or component specification.", "ok");
+                alert.show();
+            }
+
+        }
+    }
+
     @SuppressWarnings("serial")
     @Action
     public void importAction() {
@@ -318,6 +337,6 @@ public class FormEditorModelsView extends AbstractBean {
     }
 
     public ULCToolBar getToolBar() {
-        return new ToolBarFactory(getActionMap()).createToolBar("newAction", "importAction", "exportAction", "saveAction");
+        return new ToolBarFactory(getActionMap()).createToolBar("newAction", "importAction", "exportAction", "saveAction", "exportToApplication");
     }
 }

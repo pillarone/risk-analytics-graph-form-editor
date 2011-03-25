@@ -1,14 +1,17 @@
 package org.pillarone.riskanalytics.graph.formeditor.util;
 
+import org.pillarone.riskanalytics.core.model.registry.ModelRegistry;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.graphexport.AbstractGraphExport;
 import org.pillarone.riskanalytics.graph.core.graphexport.ComposedComponentGraphExport;
+import org.pillarone.riskanalytics.graph.core.graphexport.GraphExportService;
 import org.pillarone.riskanalytics.graph.core.graphexport.ModelGraphExport;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class GraphModelUtilities {
 
@@ -196,6 +199,19 @@ public class GraphModelUtilities {
         }
         String modelText = exporter.exportGraph(model);
         return modelText;
+    }
+
+    public static void exportToApplication(ModelGraphModel model) {
+        GraphExportService graphExportService = new GraphExportService();
+        Map<String, byte[]> stringMap = graphExportService.exportGraphToBinary(model);
+        String name = null;
+        byte[] data = null;
+        for (Map.Entry<String, byte[]> entry : stringMap.entrySet()) {
+            name = entry.getKey();
+            data = entry.getValue();
+        }
+        Class clazz = GroovyUtils.persistClass(data, name);
+        ModelRegistry.getInstance().addModel(clazz);
     }
 
     /**
