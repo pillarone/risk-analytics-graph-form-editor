@@ -6,23 +6,23 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.AvailablePortsCombo
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ConnectionFormModel;
 
 public class ConnectionForm extends AbstractFormBuilder<ConnectionFormModel> {
-    
-	AbstractGraphModel fGraphModel;
-	
-	
+
+    AbstractGraphModel fGraphModel;
+
+
     public ConnectionForm(ConnectionFormModel formModel, AbstractGraphModel model) {
         super(formModel);
         fGraphModel = model;
     }
-    
+
     public void refresh() {
-    	
+
     }
-    
+
     @Override
     protected void initForm() {
-    	setColumnWeights(0f, 0f, 1f);
-    	addComboBox("from", new AvailablePortsComboBoxModel(fGraphModel, false));
-    	addComboBox("to", new AvailablePortsComboBoxModel(fGraphModel, true));
+        setColumnWeights(0f, 0f, 1f);
+        addComboBox("from", new AvailablePortsComboBoxModel(fGraphModel, false));
+        addComboBox("to", new AvailablePortsComboBoxModel(fGraphModel, true));
     }
 }

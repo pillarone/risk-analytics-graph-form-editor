@@ -30,8 +30,8 @@ public class ComponentTypeTreeCellRenderer extends DefaultTreeCellRenderer {
 
     public IRendererComponent getTreeCellRendererComponent(ULCTree tree, Object node, boolean selected, boolean expanded, boolean leaf, boolean hasFocus) {
         IRendererComponent component = super.getTreeCellRendererComponent(tree, node, selected, expanded, leaf, hasFocus);
-        if (node instanceof DefaultMutableTreeNode ) {
-            setPopUpMenu((ULCComponent) component, (DefaultMutableTreeNode ) node);
+        if (node instanceof DefaultMutableTreeNode) {
+            setPopUpMenu((ULCComponent) component, (DefaultMutableTreeNode) node);
         }
         setToolTip((ULCComponent) component, node);
         return component;

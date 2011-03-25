@@ -9,11 +9,11 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.checkers.PropertySp
  * Model underlying the input form ({@link org.pillarone.riskanalytics.graph.formeditor.ui.view.TypeDefinitionForm}) for type definitions.
  * Is based on the generic {@link FormModel} specified for the {@link TypeDefinitionBean}
  * introduced particularly for that purpose.
- * 
+ *
  * @author martin.melchior
  */
 public class TypeDefinitionFormModel extends FormModel<TypeDefinitionBean> {
-    
+
     public TypeDefinitionFormModel(TypeDefinitionBean bean) {
         super(bean);
     }

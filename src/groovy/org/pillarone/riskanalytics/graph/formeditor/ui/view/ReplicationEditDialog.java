@@ -22,7 +22,7 @@ public class ReplicationEditDialog extends ULCDialog {
     private BeanFormDialog<ReplicationFormModel> fBeanForm;
     private ULCButton fCancel;
     private ComposedComponentGraphModel fGraphModel;
-    
+
     public ReplicationEditDialog(ULCWindow parent, ComposedComponentGraphModel graphModel) {
         super(parent);
         boolean metalLookAndFeel = "Metal".equals(ClientContext.getLookAndFeelName());
@@ -35,11 +35,11 @@ public class ReplicationEditDialog extends ULCDialog {
         setTitle("Replication");
         setLocationRelativeTo(parent);
     }
-    
+
     @SuppressWarnings("serial")
-	private void createBeanView() {
-    	ReplicationFormModel formModel = new ReplicationFormModel(new ReplicationBean(), fGraphModel);
-    	ReplicationForm form = new ReplicationForm(formModel, fGraphModel);
+    private void createBeanView() {
+        ReplicationFormModel formModel = new ReplicationFormModel(new ReplicationBean(), fGraphModel);
+        ReplicationForm form = new ReplicationForm(formModel, fGraphModel);
         fBeanForm = new BeanFormDialog<ReplicationFormModel>(form);
         add(fBeanForm.getContentPane());
         fCancel = new ULCButton("Cancel");
@@ -49,24 +49,24 @@ public class ReplicationEditDialog extends ULCDialog {
                 setVisible(false);
             }
         });
-        
+
         fBeanForm.addToButtons(fCancel);
         fBeanForm.addSaveActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
-            	ReplicationBean bean = (ReplicationBean)fBeanForm.getModel().getBean();
+                ReplicationBean bean = (ReplicationBean) fBeanForm.getModel().getBean();
                 Port inner = GraphModelUtilities.getPortFromName(bean.getInner(), fGraphModel);
                 Class<? extends Packet> packetClass = inner.getPacketType();
-        		if (inner instanceof InPort) {
-        			Port replica = fGraphModel.createOuterInPort(packetClass, bean.getOuter());        		
-            		fGraphModel.createConnection(replica, inner);
-        		} else {
-        			Port replica = fGraphModel.createOuterOutPort(packetClass, bean.getOuter());        		
-        			fGraphModel.createConnection(inner, replica);
-        		}
-        		setVisible(false);
+                if (inner instanceof InPort) {
+                    Port replica = fGraphModel.createOuterInPort(packetClass, bean.getOuter());
+                    fGraphModel.createConnection(replica, inner);
+                } else {
+                    Port replica = fGraphModel.createOuterOutPort(packetClass, bean.getOuter());
+                    fGraphModel.createConnection(inner, replica);
+                }
+                setVisible(false);
             }
         });
-        
+
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new IWindowListener() {
             public void windowClosing(WindowEvent event) {
@@ -79,9 +79,9 @@ public class ReplicationEditDialog extends ULCDialog {
         });
         pack();
     }
-    
+
     public BeanFormDialog<ReplicationFormModel> getBeanForm() {
         return fBeanForm;
     }
-    
+
 }

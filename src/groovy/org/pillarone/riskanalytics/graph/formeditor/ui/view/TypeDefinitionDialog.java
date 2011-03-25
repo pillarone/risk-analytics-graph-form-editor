@@ -19,7 +19,7 @@ public class TypeDefinitionDialog extends ULCDialog {
     private BeanFormDialog<TypeDefinitionFormModel> fBeanForm;
     private ULCButton fCancel;
     private Collection<TypeDefinitionBean> fTypeDefs;
-    
+
     public TypeDefinitionDialog(ULCWindow parent, Collection<TypeDefinitionBean> typeDefs) {
         super(parent);
         boolean metalLookAndFeel = "Metal".equals(ClientContext.getLookAndFeelName());
@@ -33,11 +33,11 @@ public class TypeDefinitionDialog extends ULCDialog {
         setTitle("Add new type (model | component)");
         setLocationRelativeTo(parent);
     }
-    
+
     @SuppressWarnings("serial")
-	private void createBeanView() {
-    	TypeDefinitionFormModel model = new TypeDefinitionFormModel(new TypeDefinitionBean ());
-    	TypeDefinitionForm form = new TypeDefinitionForm(model);
+    private void createBeanView() {
+        TypeDefinitionFormModel model = new TypeDefinitionFormModel(new TypeDefinitionBean());
+        TypeDefinitionForm form = new TypeDefinitionForm(model);
         fBeanForm = new BeanFormDialog<TypeDefinitionFormModel>(form);
         add(fBeanForm.getContentPane());
         fCancel = new ULCButton("Cancel");
@@ -46,7 +46,7 @@ public class TypeDefinitionDialog extends ULCDialog {
                 fBeanForm.reset();
                 setVisible(false);
             }
-        });        
+        });
         fBeanForm.addToButtons(fCancel);
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -61,9 +61,9 @@ public class TypeDefinitionDialog extends ULCDialog {
         });
         pack();
     }
-    
+
     public BeanFormDialog<TypeDefinitionFormModel> getBeanForm() {
         return fBeanForm;
     }
-    
+
 }

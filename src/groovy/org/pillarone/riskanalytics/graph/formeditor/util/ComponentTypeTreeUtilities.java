@@ -15,7 +15,7 @@ public class ComponentTypeTreeUtilities {
 
     public static String getComponentTypeName(TreePath path) {
         Object[] elms = path.getPath();
-        if (elms.length>1) {
+        if (elms.length > 1) {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) elms[1];
             StringBuffer buffer = new StringBuffer(node.toString());
             for (int i = 2; i < elms.length; i++) {

@@ -12,36 +12,36 @@ import org.pillarone.riskanalytics.graph.formeditor.util.ComponentTypeTreeUtilit
 
 public class TypeTransferHandler extends TransferHandler {
 
-	private SingleModelEditView fModelEditView;
-	
-	public SingleModelEditView getModelEditView() {
-		return fModelEditView;
-	}
+    private SingleModelEditView fModelEditView;
 
-	public void setModelEditView(SingleModelEditView modelEditView) {
-		this.fModelEditView = modelEditView;
-	}
+    public SingleModelEditView getModelEditView() {
+        return fModelEditView;
+    }
 
-	@Override
-	public boolean importData(ULCComponent targetComponent, Transferable transferable) {
-		Object dragData0 = transferable.getTransferData(DataFlavor.DRAG_FLAVOR);
-		DnDTreeData dragData = (DnDTreeData)dragData0;
-		TreePath[] paths = dragData.getTreePaths();		
-		String componentType = ComponentTypeTreeUtilities.getComponentTypeName(paths[0]);
-		if (fModelEditView==null) {
-			return false;
-		} else {
-	        fModelEditView.newNodeAction(componentType);
-			return true;
-		}
-	}
+    public void setModelEditView(SingleModelEditView modelEditView) {
+        this.fModelEditView = modelEditView;
+    }
 
-	/**
-	 * Do nothing on the export side
-	 */
-	@Override
-	public void exportDone(ULCComponent src, Transferable t, int action) {
-	}
-	
-	
+    @Override
+    public boolean importData(ULCComponent targetComponent, Transferable transferable) {
+        Object dragData0 = transferable.getTransferData(DataFlavor.DRAG_FLAVOR);
+        DnDTreeData dragData = (DnDTreeData) dragData0;
+        TreePath[] paths = dragData.getTreePaths();
+        String componentType = ComponentTypeTreeUtilities.getComponentTypeName(paths[0]);
+        if (fModelEditView == null) {
+            return false;
+        } else {
+            fModelEditView.newNodeAction(componentType);
+            return true;
+        }
+    }
+
+    /**
+     * Do nothing on the export side
+     */
+    @Override
+    public void exportDone(ULCComponent src, Transferable t, int action) {
+    }
+
+
 }

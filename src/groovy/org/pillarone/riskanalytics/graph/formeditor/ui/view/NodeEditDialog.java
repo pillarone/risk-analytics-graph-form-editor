@@ -24,8 +24,8 @@ public class NodeEditDialog extends ULCDialog {
     private ULCButton fCancel;
     private final AbstractGraphModel fGraphModel;
     private ComponentNode fEditedNode;
-    
-	public NodeEditDialog(ULCWindow parent, AbstractGraphModel model) {
+
+    public NodeEditDialog(ULCWindow parent, AbstractGraphModel model) {
         super(parent);
         boolean metalLookAndFeel = "Metal".equals(ClientContext.getLookAndFeelName());
         if (!metalLookAndFeel && ClientContext.getLookAndFeelSupportsWindowDecorations()) {
@@ -40,23 +40,23 @@ public class NodeEditDialog extends ULCDialog {
     }
 
     public ComponentNode getEditedNode() {
-		return fEditedNode;
-	}
+        return fEditedNode;
+    }
 
-	public void setEditedNode(ComponentNode node) {
-		this.fEditedNode = node;
-	}
-	
-	private static boolean isConsistent(ComponentNode node, NodeBean bean) {
-		return bean.getName().equals(node.getName())
-				&& bean.getComponentType().equals(node.getType().getTypeClass().getName());
-	}
-	
-	
+    public void setEditedNode(ComponentNode node) {
+        this.fEditedNode = node;
+    }
+
+    private static boolean isConsistent(ComponentNode node, NodeBean bean) {
+        return bean.getName().equals(node.getName())
+                && bean.getComponentType().equals(node.getType().getTypeClass().getName());
+    }
+
+
     @SuppressWarnings("serial")
-	private void createBeanView() {
-    	NodeFormModel model = new NodeFormModel(new NodeBean(), fGraphModel);
-    	NodeForm form = new NodeForm(model, fGraphModel instanceof ModelGraphModel);
+    private void createBeanView() {
+        NodeFormModel model = new NodeFormModel(new NodeBean(), fGraphModel);
+        NodeForm form = new NodeForm(model, fGraphModel instanceof ModelGraphModel);
         fBeanForm = new BeanFormDialog<NodeFormModel>(form);
         add(fBeanForm.getContentPane());
         fCancel = new ULCButton("Cancel");
@@ -65,33 +65,33 @@ public class NodeEditDialog extends ULCDialog {
                 fBeanForm.reset();
                 setVisible(false);
             }
-        });        
+        });
         fBeanForm.addToButtons(fCancel);
         fBeanForm.addSaveActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
-            	NodeBean bean = (NodeBean)fBeanForm.getModel().getBean();
+                NodeBean bean = (NodeBean) fBeanForm.getModel().getBean();
                 if (fEditedNode != null) {
-                	if (fEditedNode != null) {
-                		if (!isConsistent(fEditedNode, bean)) {
-                			ComponentNode newNode = GraphModelUtilities.replaceComponentNode(fEditedNode, bean.getName(), bean.getComponentType(), fGraphModel);
+                    if (fEditedNode != null) {
+                        if (!isConsistent(fEditedNode, bean)) {
+                            ComponentNode newNode = GraphModelUtilities.replaceComponentNode(fEditedNode, bean.getName(), bean.getComponentType(), fGraphModel);
                             newNode.setComment(bean.getComment());
-                		}                		
-                		if (fGraphModel instanceof ModelGraphModel && bean.isStarter()) {
-                			((ModelGraphModel) fGraphModel).getStartComponents().add(fEditedNode);
-                		}                		
-                	}
+                        }
+                        if (fGraphModel instanceof ModelGraphModel && bean.isStarter()) {
+                            ((ModelGraphModel) fGraphModel).getStartComponents().add(fEditedNode);
+                        }
+                    }
                 } else {
-                	ComponentDefinition definition = PaletteService.getInstance().getComponentDefinition(bean.getComponentType());
-                	ComponentNode newNode = fGraphModel.createComponentNode(definition, bean.getName());
+                    ComponentDefinition definition = PaletteService.getInstance().getComponentDefinition(bean.getComponentType());
+                    ComponentNode newNode = fGraphModel.createComponentNode(definition, bean.getName());
                     newNode.setComment(bean.getComment());
-                	if (fGraphModel instanceof ModelGraphModel && bean.isStarter()) {
-            			((ModelGraphModel) fGraphModel).getStartComponents().add(fEditedNode);
-                	}
+                    if (fGraphModel instanceof ModelGraphModel && bean.isStarter()) {
+                        ((ModelGraphModel) fGraphModel).getStartComponents().add(fEditedNode);
+                    }
                 }
                 setVisible(false);
             }
         });
-        
+
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new IWindowListener() {
             public void windowClosing(WindowEvent event) {
@@ -104,9 +104,9 @@ public class NodeEditDialog extends ULCDialog {
         });
         pack();
     }
-    
+
     public BeanFormDialog<NodeFormModel> getBeanForm() {
         return fBeanForm;
     }
-    
+
 }

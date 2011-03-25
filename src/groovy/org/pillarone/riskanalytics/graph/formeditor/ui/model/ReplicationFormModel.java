@@ -10,11 +10,11 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.checkers.PropertySp
  * Model underlying the input form ({@link org.pillarone.riskanalytics.graph.formeditor.ui.view.ReplicationForm}) for replicating connections.
  * Is based on the generic {@link FormModel} specified for the {@link ReplicationBean}
  * introduced particularly for that purpose.
- * 
+ *
  * @author martin.melchior
  */
 public class ReplicationFormModel extends FormModel<ReplicationBean> {
-    
+
     public ReplicationFormModel(ReplicationBean bean, AbstractGraphModel graphModel) {
         super(bean);
     }

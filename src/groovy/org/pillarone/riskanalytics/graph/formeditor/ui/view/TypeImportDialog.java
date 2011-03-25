@@ -13,7 +13,7 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeImportBea
 public class TypeImportDialog extends ULCDialog {
     private BeanFormDialog<TypeImportFormModel> fBeanForm;
     private ULCButton fCancel;
-    
+
     public TypeImportDialog(ULCWindow parent) {
         super(parent);
         boolean metalLookAndFeel = "Metal".equals(ClientContext.getLookAndFeelName());
@@ -25,11 +25,11 @@ public class TypeImportDialog extends ULCDialog {
         setTitle("Add new type (model | component)");
         setLocationRelativeTo(parent);
     }
-    
+
     @SuppressWarnings("serial")
-	private void createBeanView() {
-    	TypeImportFormModel model = new TypeImportFormModel(new TypeImportBean());
-    	TypeImportForm form = new TypeImportForm(model);
+    private void createBeanView() {
+        TypeImportFormModel model = new TypeImportFormModel(new TypeImportBean());
+        TypeImportForm form = new TypeImportForm(model);
         fBeanForm = new BeanFormDialog<TypeImportFormModel>(form);
         add(fBeanForm.getContentPane());
         fCancel = new ULCButton("Cancel");
@@ -38,14 +38,14 @@ public class TypeImportDialog extends ULCDialog {
                 fBeanForm.reset();
                 setVisible(false);
             }
-        });        
+        });
         fBeanForm.addToButtons(fCancel);
 
         fBeanForm.addSaveActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
             }
         });
-        
+
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new IWindowListener() {
             public void windowClosing(WindowEvent event) {
@@ -58,8 +58,8 @@ public class TypeImportDialog extends ULCDialog {
         });
         pack();
     }
-    
+
     public BeanFormDialog<TypeImportFormModel> getBeanForm() {
         return fBeanForm;
-    }    
+    }
 }

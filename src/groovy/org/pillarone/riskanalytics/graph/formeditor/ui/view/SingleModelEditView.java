@@ -19,27 +19,27 @@ import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 import java.beans.PropertyChangeEvent;
 
 public class SingleModelEditView extends AbstractBean {
-	private AbstractGraphModel fGraphModel;
-	private ApplicationContext fApplicationContext;
-	private ULCBoxPane fMainView;
+    private AbstractGraphModel fGraphModel;
+    private ApplicationContext fApplicationContext;
+    private ULCBoxPane fMainView;
 
-	private ULCTable fNodesTable;
-	private NodeEditDialog fNodeEditDialog;
-	private ConnectNodesDialog fConnectNodesDialog;
+    private ULCTable fNodesTable;
+    private NodeEditDialog fNodeEditDialog;
+    private ConnectNodesDialog fConnectNodesDialog;
     private boolean fNodesSelected;
     private boolean fTwoNodesSelected;
 
-    private ULCTable fConnectionsTable;    
+    private ULCTable fConnectionsTable;
     private ConnectionEditDialog fConnectionEditForm;
     private ReplicationEditDialog fReplicationEditForm;
     private boolean fConnectionSelected;
     private boolean fIsModel;
-    
+
 
     public SingleModelEditView(ApplicationContext ctx, AbstractGraphModel model) {
-    	super();
-    	fMainView = new ULCBoxPane(1,2,2,2);
-    	fApplicationContext = ctx;
+        super();
+        fMainView = new ULCBoxPane(1, 2, 2, 2);
+        fApplicationContext = ctx;
         fGraphModel = model;
         fIsModel = model instanceof ModelGraphModel;
         createView();
@@ -63,7 +63,7 @@ public class SingleModelEditView extends AbstractBean {
         int preferredWidth = ClientContext.getScreenWidth() / 2;
         int preferredHeight = preferredWidth * ClientContext.getScreenHeight() * 10
                 / (ClientContext.getScreenWidth() * 11 * 2);
-        fNodesTable.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight));    	
+        fNodesTable.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight));
 
         fConnectionsTable = new ULCTable();
         ConnectionsTableModel connModel = new ConnectionsTableModel(fApplicationContext, fGraphModel);
@@ -74,8 +74,8 @@ public class SingleModelEditView extends AbstractBean {
         ULCScrollPane connScrollPane = new ULCScrollPane(fConnectionsTable);
         ULCBoxPane connPane = new ULCBoxPane(true);
         connPane.setBorder(BorderFactory.createTitledBorder("Connections"));
-        connPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, connScrollPane);        
-        fConnectionsTable.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight));    	
+        connPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, connScrollPane);
+        fConnectionsTable.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight));
 
         ULCToolBar toolbar = getToolBar();
         fMainView.add(toolbar);
@@ -86,138 +86,138 @@ public class SingleModelEditView extends AbstractBean {
         addNodesContextMenu();
         addListenersToConnectionsTable();
         addConnectionsContextMenu();
-        
+
         showNodeEditDialog(false);
 
         fMainView.setVisible(true);
     }
-    
+
     public void setTransferHandler(TypeTransferHandler transferHandler) {
-    	transferHandler.setModelEditView(this);
-    	fNodesTable.setTransferHandler(transferHandler);
+        transferHandler.setModelEditView(this);
+        fNodesTable.setTransferHandler(transferHandler);
     }
-    
+
     public ULCBoxPane getView() {
-    	return fMainView;
+        return fMainView;
     }
 
     @SuppressWarnings("serial")
-	private void addListenersToNodesTable() {
-    	fNodesTable.addActionListener(new IActionListener() {
+    private void addListenersToNodesTable() {
+        fNodesTable.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 modifyNodeAction();
             }
         });
-    	fNodesTable.getSelectionModel().addListSelectionListener(new IListSelectionListener() {
+        fNodesTable.getSelectionModel().addListSelectionListener(new IListSelectionListener() {
             public void valueChanged(ListSelectionEvent event) {
                 setNodesSelected(fNodesTable.getSelectedRows().length > 0);
-                setTwoNodesSelected(fNodesTable.getSelectedRows().length==2);
+                setTwoNodesSelected(fNodesTable.getSelectedRows().length == 2);
             }
         });
     }
 
     @SuppressWarnings("serial")
-	private void addListenersToConnectionsTable() {
-    	fConnectionsTable.addActionListener(new IActionListener() {
+    private void addListenersToConnectionsTable() {
+        fConnectionsTable.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 modifyConnectionAction();
             }
         });
-    	fConnectionsTable.getSelectionModel().addListSelectionListener(new IListSelectionListener() {
+        fConnectionsTable.getSelectionModel().addListSelectionListener(new IListSelectionListener() {
             public void valueChanged(ListSelectionEvent event) {
                 setConnectionSelected(fConnectionsTable.getSelectedRows().length > 0);
             }
         });
     }
 
-	private void addNodesContextMenu() {
-		ULCPopupMenu menu = new ULCPopupMenu();
-		ApplicationActionMap actionMap = getActionMap();
-        
-		ULCMenuItem addItem = new ULCMenuItem("add");
+    private void addNodesContextMenu() {
+        ULCPopupMenu menu = new ULCPopupMenu();
+        ApplicationActionMap actionMap = getActionMap();
+
+        ULCMenuItem addItem = new ULCMenuItem("add");
         addItem.addActionListener(actionMap.get("newNodeAction"));
         menu.add(addItem);
 
-		ULCMenuItem connectItem = new ULCMenuItem("connect");
-		connectItem.addActionListener(actionMap.get("connectSelectedNodesAction"));
+        ULCMenuItem connectItem = new ULCMenuItem("connect");
+        connectItem.addActionListener(actionMap.get("connectSelectedNodesAction"));
         menu.add(connectItem);
-        
+
         menu.addSeparator();
-        
+
         ULCMenuItem deleteItem = new ULCMenuItem("remove");
         deleteItem.addActionListener(actionMap.get("removeNodeAction"));
         menu.add(deleteItem);
         fNodesTable.setComponentPopupMenu(menu);
-	}
-    
-	private void addConnectionsContextMenu() {
-		ULCPopupMenu menu = new ULCPopupMenu();
-		ApplicationActionMap actionMap = getActionMap();
-        
-		ULCMenuItem addItem = new ULCMenuItem("add");
+    }
+
+    private void addConnectionsContextMenu() {
+        ULCPopupMenu menu = new ULCPopupMenu();
+        ApplicationActionMap actionMap = getActionMap();
+
+        ULCMenuItem addItem = new ULCMenuItem("add");
         addItem.addActionListener(actionMap.get("newConnectionAction"));
         menu.add(addItem);
-        
+
         if (fGraphModel instanceof ComposedComponentGraphModel) {
-        	ULCMenuItem replicateItem = new ULCMenuItem("replicate");
-        	replicateItem.addActionListener(actionMap.get("newReplicationAction"));
+            ULCMenuItem replicateItem = new ULCMenuItem("replicate");
+            replicateItem.addActionListener(actionMap.get("newReplicationAction"));
             menu.add(replicateItem);
         }
-        	
+
         ULCMenuItem deleteItem = new ULCMenuItem("remove");
         deleteItem.addActionListener(actionMap.get("removeConnectionAction"));
         menu.add(deleteItem);
-        
-        fConnectionsTable.setComponentPopupMenu(menu);
-	}
 
-	
+        fConnectionsTable.setComponentPopupMenu(menu);
+    }
+
+
     private void showNodeEditDialog(boolean show) {
         if (fNodeEditDialog == null) {
             fNodeEditDialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(fNodesTable), fGraphModel);
         }
         fNodeEditDialog.setModal(true);
-        fNodeEditDialog .setVisible(show);
+        fNodeEditDialog.setVisible(show);
 //        fNodeEditDialog.toFront();
     }
-    
+
     private void showConnectNodesDialog(ComponentNode node1, ComponentNode node2) {
         if (fConnectNodesDialog == null) {
-        	fConnectNodesDialog = new ConnectNodesDialog(UlcUtilities.getWindowAncestor(fNodesTable), fGraphModel);
+            fConnectNodesDialog = new ConnectNodesDialog(UlcUtilities.getWindowAncestor(fNodesTable), fGraphModel);
         }
         if (node1 != null && GraphModelUtilities.hasPorts(node1) &&
                 node2 != null && GraphModelUtilities.hasPorts(node2)) {
-        	fConnectNodesDialog.setNodes(node1, node2);
-            fConnectNodesDialog .setVisible(true);
+            fConnectNodesDialog.setNodes(node1, node2);
+            fConnectNodesDialog.setVisible(true);
         } else {
             ULCAlert alert = new ULCAlert("Connection not created.",
-                        "At least one of the selected nodes does not contain ports. Not connection can be be created.", "ok");
+                    "At least one of the selected nodes does not contain ports. Not connection can be be created.", "ok");
             alert.show();
         }
     }
-    
+
     private void showNewConnectionDialog() {
         if (fConnectionEditForm == null) {
             fConnectionEditForm = new ConnectionEditDialog(UlcUtilities.getWindowAncestor(fConnectionsTable), fGraphModel);
         }
-        fConnectionEditForm .setVisible(true);
+        fConnectionEditForm.setVisible(true);
     }
 
     private void showReplicationDialog() {
         if (fGraphModel instanceof ComposedComponentGraphModel) {
             if (fReplicationEditForm == null) {
-        	    fReplicationEditForm = new ReplicationEditDialog(UlcUtilities.getWindowAncestor(fConnectionsTable), (ComposedComponentGraphModel)fGraphModel);
+                fReplicationEditForm = new ReplicationEditDialog(UlcUtilities.getWindowAncestor(fConnectionsTable), (ComposedComponentGraphModel) fGraphModel);
             }
             fReplicationEditForm.setVisible(true);
         } else {
             ULCAlert alert = new ULCAlert("Port replication not possible.",
-                                    "Port replication not possible for models.", "ok");
+                    "Port replication not possible for models.", "ok");
             alert.show();
 
         }
     }
-    
-    
+
+
     public boolean isNodesSelected() {
         return fNodesSelected;
     }
@@ -226,20 +226,20 @@ public class SingleModelEditView extends AbstractBean {
         if (fNodesSelected != selectionAvailable) {
             fNodesSelected = selectionAvailable;
             firePropertyChange(new PropertyChangeEvent(this, "nodesSelected", !fNodesSelected, fNodesSelected));
-    	}
+        }
     }
-    
-    public boolean isTwoNodesSelected() {
-		return fTwoNodesSelected;
-	}
 
-	public void setTwoNodesSelected(boolean twoNodesSelected) {
-		if (fTwoNodesSelected != twoNodesSelected) {
-			fTwoNodesSelected = twoNodesSelected;
-			firePropertyChange(new PropertyChangeEvent(this, "twoNodesSelected", !fTwoNodesSelected, fTwoNodesSelected));
-		}
-	}
-    
+    public boolean isTwoNodesSelected() {
+        return fTwoNodesSelected;
+    }
+
+    public void setTwoNodesSelected(boolean twoNodesSelected) {
+        if (fTwoNodesSelected != twoNodesSelected) {
+            fTwoNodesSelected = twoNodesSelected;
+            firePropertyChange(new PropertyChangeEvent(this, "twoNodesSelected", !fTwoNodesSelected, fTwoNodesSelected));
+        }
+    }
+
     /**
      * @return the selected node or <code>null</code> if no row is selected
      */
@@ -259,17 +259,17 @@ public class SingleModelEditView extends AbstractBean {
     protected ComponentNode[] getSelectedNodes() {
         int[] selectedRows = fNodesTable.getSelectedRows();
         if (selectedRows.length > 0) {
-        	ComponentNode[] nodes = new ComponentNode[selectedRows.length];
-        	for (int i = 0; i < selectedRows.length; i++) {
-        		int index = fNodesTable.convertRowIndexToModel(selectedRows[i]);
-            	nodes[i] = fGraphModel.getAllComponentNodes().get(index);
-        	}
-        	return nodes;
+            ComponentNode[] nodes = new ComponentNode[selectedRows.length];
+            for (int i = 0; i < selectedRows.length; i++) {
+                int index = fNodesTable.convertRowIndexToModel(selectedRows[i]);
+                nodes[i] = fGraphModel.getAllComponentNodes().get(index);
+            }
+            return nodes;
         } else {
             return new ComponentNode[0];
         }
     }
-    
+
     public boolean isConnectionSelected() {
         return fConnectionSelected;
     }
@@ -278,7 +278,7 @@ public class SingleModelEditView extends AbstractBean {
         if (fConnectionSelected != selectionAvailable) {
             fConnectionSelected = selectionAvailable;
             firePropertyChange(new PropertyChangeEvent(this, "connectionSelected", !fConnectionSelected, fConnectionSelected));
-    	}
+        }
     }
 
     public boolean isModel() {
@@ -299,7 +299,7 @@ public class SingleModelEditView extends AbstractBean {
         }
     }
 
-	@Action
+    @Action
     public void newNodeAction() {
         if (fNodeEditDialog == null || !fNodeEditDialog.isVisible()) {
             showNodeEditDialog(true);
@@ -319,8 +319,8 @@ public class SingleModelEditView extends AbstractBean {
         fNodeEditDialog.getBeanForm().getModel().setEditedNode(null);
         fNodeEditDialog.setEditedNode(null);
     }
-	
-	@Action(enabledProperty = "nodesSelected")	
+
+    @Action(enabledProperty = "nodesSelected")
     public void modifyNodeAction() {
         ComponentNode selectedNode = getSelectedNode();
         if (selectedNode != null) {
@@ -332,125 +332,125 @@ public class SingleModelEditView extends AbstractBean {
             bean.setComponentType(selectedNode.getType().getTypeClass().getName());
             bean.setComment(selectedNode.getComment());
             if (fIsModel) {
-            	bean.setStarter(((ModelGraphModel)fGraphModel).getStartComponents().contains(selectedNode));
+                bean.setStarter(((ModelGraphModel) fGraphModel).getStartComponents().contains(selectedNode));
             }
             fNodeEditDialog.getBeanForm().getModel().setEditedNode(selectedNode);
             fNodeEditDialog.setEditedNode(selectedNode);
         }
     }
 
-	@SuppressWarnings("serial")
-	@Action(enabledProperty = "twoNodesSelected")	
+    @SuppressWarnings("serial")
+    @Action(enabledProperty = "twoNodesSelected")
     public void connectSelectedNodesAction() {
-        if (isTwoNodesSelected()) {	
-        	ComponentNode[] nodes = getSelectedNodes();
+        if (isTwoNodesSelected()) {
+            ComponentNode[] nodes = getSelectedNodes();
             if (fConnectNodesDialog == null || !fConnectNodesDialog.isVisible()) {
                 showConnectNodesDialog(nodes[0], nodes[1]);
-            }            
+            }
         }
     }
-	
-	@SuppressWarnings("serial")
-	@Action(enabledProperty = "nodesSelected")	
+
+    @SuppressWarnings("serial")
+    @Action(enabledProperty = "nodesSelected")
     public void removeNodeAction() {
-		final ComponentNode[] nodes = getSelectedNodes();
-		boolean hasNoConnections = true;
-		for (ComponentNode node : nodes) {
-			hasNoConnections = hasNoConnections && !GraphModelUtilities.isConnected(node, fGraphModel);
-		}
-        if (!hasNoConnections) {	
-        	final ULCAlert alert = new ULCAlert(
-			 		"Remove Component Node", 
-			 		"The removal of this component node will also remove associated connections. Proceed?", 
-			 		"Yes", 
-			 		"No");
-        	alert.addWindowListener(new IWindowListener() {
-        		public void windowClosing(WindowEvent event) {
-        			if (alert.getValue().equals("Yes")) {
-        				removeNodes(nodes);
-        			}
-        		}
-        	});
-        	alert.show();
+        final ComponentNode[] nodes = getSelectedNodes();
+        boolean hasNoConnections = true;
+        for (ComponentNode node : nodes) {
+            hasNoConnections = hasNoConnections && !GraphModelUtilities.isConnected(node, fGraphModel);
+        }
+        if (!hasNoConnections) {
+            final ULCAlert alert = new ULCAlert(
+                    "Remove Component Node",
+                    "The removal of this component node will also remove associated connections. Proceed?",
+                    "Yes",
+                    "No");
+            alert.addWindowListener(new IWindowListener() {
+                public void windowClosing(WindowEvent event) {
+                    if (alert.getValue().equals("Yes")) {
+                        removeNodes(nodes);
+                    }
+                }
+            });
+            alert.show();
         } else {
-        	removeNodes(nodes);
+            removeNodes(nodes);
         }
     }
 
-	private void removeNodes(ComponentNode[] nodes) {
-		for (ComponentNode node : nodes) {
-        	fGraphModel.removeComponentNode(node);			
-		}
-	}
+    private void removeNodes(ComponentNode[] nodes) {
+        for (ComponentNode node : nodes) {
+            fGraphModel.removeComponentNode(node);
+        }
+    }
 
-	@Action
+    @Action
     public void newConnectionAction() {
         if (fConnectionEditForm == null || !fConnectionEditForm.isVisible()) {
-        	showNewConnectionDialog();
-        } 
+            showNewConnectionDialog();
+        }
         fConnectionEditForm.getBeanForm().getModel().getBean().reset();
     }
 
     @Action(enabledProperty = "isModel")
     public void newReplicationAction() {
         if (fReplicationEditForm == null || !fReplicationEditForm.isVisible()) {
-        	showReplicationDialog();
+            showReplicationDialog();
         }
         fReplicationEditForm.getBeanForm().getModel().getBean().reset();
     }
-    
-    
-    @Action (enabledProperty = "connectionSelected")
+
+
+    @Action(enabledProperty = "connectionSelected")
     public void modifyConnectionAction() {
         Connection selectedConnection = getSelectedConnection();
         if (selectedConnection != null) {
-        	if (!selectedConnection.isReplicatingConnection()) {
-        		if (fConnectionEditForm == null || !fConnectionEditForm.isVisible()) {
-        			showNewConnectionDialog();
-        		}
-        		ConnectionBean bean = fConnectionEditForm.getBeanForm().getModel().getBean();
-        		bean.setFrom(GraphModelUtilities.getPortName(selectedConnection.getFrom()));
-        		bean.setFrom(GraphModelUtilities.getPortName(selectedConnection.getTo()));
-        	} else {
-        		if (fReplicationEditForm == null || !fReplicationEditForm.isVisible()) {
-        			showReplicationDialog();
-        		}
-        		ReplicationBean bean = fReplicationEditForm.getBeanForm().getModel().getBean();
-        		String fromPortName = GraphModelUtilities.getPortName(selectedConnection.getFrom());
-        		String toPortName = GraphModelUtilities.getPortName(selectedConnection.getTo());
-        		if (fromPortName.split(".").length==1) {
-        			bean.setInner(toPortName);
-        			bean.setOuter(fromPortName);
-        		} else {
-        			bean.setInner(fromPortName);
-        			bean.setOuter(toPortName);        			
-        		}
-        	}
+            if (!selectedConnection.isReplicatingConnection()) {
+                if (fConnectionEditForm == null || !fConnectionEditForm.isVisible()) {
+                    showNewConnectionDialog();
+                }
+                ConnectionBean bean = fConnectionEditForm.getBeanForm().getModel().getBean();
+                bean.setFrom(GraphModelUtilities.getPortName(selectedConnection.getFrom()));
+                bean.setFrom(GraphModelUtilities.getPortName(selectedConnection.getTo()));
+            } else {
+                if (fReplicationEditForm == null || !fReplicationEditForm.isVisible()) {
+                    showReplicationDialog();
+                }
+                ReplicationBean bean = fReplicationEditForm.getBeanForm().getModel().getBean();
+                String fromPortName = GraphModelUtilities.getPortName(selectedConnection.getFrom());
+                String toPortName = GraphModelUtilities.getPortName(selectedConnection.getTo());
+                if (fromPortName.split(".").length == 1) {
+                    bean.setInner(toPortName);
+                    bean.setOuter(fromPortName);
+                } else {
+                    bean.setInner(fromPortName);
+                    bean.setOuter(toPortName);
+                }
+            }
         }
     }
-    
-    @Action (enabledProperty = "connectionSelected")
+
+    @Action(enabledProperty = "connectionSelected")
     public void removeConnectionAction() {
-    	Connection connection = getSelectedConnection();
+        Connection connection = getSelectedConnection();
         if (connection != null) {
-        	fGraphModel.removeConnection(connection);
+            fGraphModel.removeConnection(connection);
         }
     }
 
     private ApplicationActionMap getActionMap() {
         return fApplicationContext.getActionMap(this);
-    }    
-    
+    }
+
     public ULCToolBar getToolBar() {
-    	String[] actions = new String[]{
-    			"newNodeAction", 
-    			"newConnectionAction", 
-    			"newReplicationAction", 
-    			"modifyNodeAction", 
-    			"modifyConnectionAction", 
-    			"removeNodeAction",
-    			"removeConnectionAction"
-    	};
+        String[] actions = new String[]{
+                "newNodeAction",
+                "newConnectionAction",
+                "newReplicationAction",
+                "modifyNodeAction",
+                "modifyConnectionAction",
+                "removeNodeAction",
+                "removeConnectionAction"
+        };
         return new ToolBarFactory(getActionMap()).createToolBar(actions);
     }
 }

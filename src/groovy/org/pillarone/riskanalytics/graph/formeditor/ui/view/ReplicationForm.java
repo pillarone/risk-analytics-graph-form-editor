@@ -6,18 +6,18 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.AvailablePortsCombo
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ReplicationFormModel;
 
 public class ReplicationForm extends AbstractFormBuilder<ReplicationFormModel> {
-    
-	AbstractGraphModel fGraphModel;
-	
+
+    AbstractGraphModel fGraphModel;
+
     public ReplicationForm(ReplicationFormModel formModel, AbstractGraphModel model) {
         super(formModel);
         fGraphModel = model;
     }
-    
+
     @Override
     protected void initForm() {
-    	setColumnWeights(0f, 0f, 1f);
-    	addComboBox("inner", new AvailablePortsComboBoxModel(fGraphModel));
-    	addTextField("outer").columns(15);
+        setColumnWeights(0f, 0f, 1f);
+        addComboBox("inner", new AvailablePortsComboBoxModel(fGraphModel));
+        addTextField("outer").columns(15);
     }
 }
