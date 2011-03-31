@@ -9,6 +9,6 @@ class GroovyUtils {
         ClassRepository.withTransaction {
             new ClassRepository(name: name, data: data).save()
         }
-        return new DatabaseClassLoader(Thread.currentThread().contextClassLoader).loadClass(name)
+        return Thread.currentThread().contextClassLoader.loadClass(name)
     }
 }
