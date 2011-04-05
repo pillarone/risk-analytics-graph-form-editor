@@ -1,32 +1,32 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
-import com.ulcjava.applicationframework.application.ApplicationActionMap;
-import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.tree.*;
 import com.ulcjava.base.application.util.Dimension;
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
+import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.ComponentTypeTreeModelFactory;
 import org.pillarone.riskanalytics.graph.formeditor.util.ComponentTypeTreeUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.PaletteUtilities;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 public class ComponentTypeTree extends ULCBoxPane {
 
+    private static final String PATHSEP = ".";
+
     private ITreeModel fTreeModel;
     private ULCTree fTree;
     private ComponentTypeTreeCellRenderer fTreeCellRenderer;
-    private FormEditorModelsView fParent;
+    private GraphModelEditor fParent;
 
-    public ComponentTypeTree(FormEditorModelsView parent) {
+    public ComponentTypeTree(GraphModelEditor parent) {
         super();
         fParent = parent;
-        createTreeModel();
+        fTreeModel = ComponentTypeTreeModelFactory.getTree();
         createView();
     }
 
@@ -48,35 +48,6 @@ public class ComponentTypeTree extends ULCBoxPane {
         this.add(ULCBoxPane.BOX_EXPAND_EXPAND, treeScrollPane);
 
         this.setVisible(true);
-    }
-
-
-    private void createTreeModel() {
-        Map<String, List<String>> typeMap = getTypeMap();
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
-        for (Entry<String, List<String>> e : typeMap.entrySet()) {
-            DefaultMutableTreeNode node = new DefaultMutableTreeNode(e.getKey());
-            for (String leaf : e.getValue()) {
-                node.add(new DefaultMutableTreeNode(leaf, true));
-            }
-            root.add(node);
-        }
-        fTreeModel = new DefaultTreeModel(root);
-    }
-
-    private Map<String, List<String>> getTypeMap() {
-        Map<String, List<String>> typeMap = new HashMap<String, List<String>>();
-        List<String> componentNames = PaletteUtilities.getAvailableComponentNames(true);
-        for (String path : componentNames) {
-            int index = path.lastIndexOf(".");
-            String name = path.substring(index + 1);
-            String packageName = path.substring(0, index);
-            if (!typeMap.containsKey(packageName)) {
-                typeMap.put(packageName, new ArrayList<String>());
-            }
-            typeMap.get(packageName).add(name);
-        }
-        return typeMap;
     }
 
     private class ShowComponentAction implements IActionListener {
