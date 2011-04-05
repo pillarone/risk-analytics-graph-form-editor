@@ -2,8 +2,8 @@ package org.pillarone.riskanalytics.graph.formeditor.application
 
 import com.ulcjava.applicationframework.application.SingleFrameApplication
 import com.ulcjava.base.application.util.Dimension
-import org.pillarone.riskanalytics.graph.formeditor.ui.view.ComponentTypeTree
-import org.pillarone.riskanalytics.graph.formeditor.ui.view.FormEditorModelsView
+
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.GraphModelEditor
 import com.ulcjava.base.application.*
 
 class FormEditorApplication extends SingleFrameApplication {
@@ -26,7 +26,7 @@ class FormEditorApplication extends SingleFrameApplication {
      * @return the component with the content of the main application window.
      */
     protected ULCComponent getContentView() {
-        FormEditorModelsView contentArea = new FormEditorModelsView(getContext());
+        GraphModelEditor contentArea = new GraphModelEditor(getContext());
 
         ULCToolBar toolBar = contentArea.getToolBar();
         toolBar.add(ULCFiller.createHorizontalGlue());

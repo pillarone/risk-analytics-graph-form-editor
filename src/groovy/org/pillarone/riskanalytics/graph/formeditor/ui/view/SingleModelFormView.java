@@ -18,31 +18,32 @@ import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 import java.beans.PropertyChangeEvent;
 
-public class SingleModelEditView extends AbstractBean {
-    private AbstractGraphModel fGraphModel;
+public class SingleModelFormView extends AbstractBean implements GraphModelEditable, GraphModelViewable {
     private ApplicationContext fApplicationContext;
-    private ULCBoxPane fMainView;
 
-    private ULCTable fNodesTable;
-    private NodeEditDialog fNodeEditDialog;
-    private ConnectNodesDialog fConnectNodesDialog;
-    private boolean fNodesSelected;
-    private boolean fTwoNodesSelected;
-
-    private ULCTable fConnectionsTable;
-    private ConnectionEditDialog fConnectionEditForm;
-    private ReplicationEditDialog fReplicationEditForm;
-    private boolean fConnectionSelected;
+    private AbstractGraphModel fGraphModel;
     private boolean fIsModel;
 
+    private ULCBoxPane fMainView;
+    private ULCTable fNodesTable;
+    private ULCTable fConnectionsTable;
 
-    public SingleModelEditView(ApplicationContext ctx, AbstractGraphModel model) {
+    private NodeEditDialog fNodeEditDialog;
+    private ConnectNodesDialog fConnectNodesDialog;
+    private ConnectionEditDialog fConnectionEditForm;
+    private ReplicationEditDialog fReplicationEditForm;
+
+    private boolean fNodesSelected;
+    private boolean fTwoNodesSelected;
+    private boolean fConnectionSelected;
+
+
+    public SingleModelFormView(ApplicationContext ctx, AbstractGraphModel model) {
         super();
-        fMainView = new ULCBoxPane(1, 2, 2, 2);
+        fMainView = new ULCBoxPane(true, 2);
         fApplicationContext = ctx;
-        fGraphModel = model;
-        fIsModel = model instanceof ModelGraphModel;
-        createView();
+        injectGraphModel(model);
+        setVisible(true);
     }
 
     public void createView() {
@@ -62,7 +63,7 @@ public class SingleModelEditView extends AbstractBean {
         nodesPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, nodesScrollPane);
         int preferredWidth = ClientContext.getScreenWidth() / 2;
         int preferredHeight = preferredWidth * ClientContext.getScreenHeight() * 10
-                / (ClientContext.getScreenWidth() * 11 * 2);
+                                        / (ClientContext.getScreenWidth() * 11 * 2);
         fNodesTable.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight));
 
         fConnectionsTable = new ULCTable();
@@ -77,19 +78,8 @@ public class SingleModelEditView extends AbstractBean {
         connPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, connScrollPane);
         fConnectionsTable.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight));
 
-        ULCToolBar toolbar = getToolBar();
-        fMainView.add(toolbar);
         fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, nodesPane);
         fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, connPane);
-
-        addListenersToNodesTable();
-        addNodesContextMenu();
-        addListenersToConnectionsTable();
-        addConnectionsContextMenu();
-
-        showNodeEditDialog(false);
-
-        fMainView.setVisible(true);
     }
 
     public void setTransferHandler(TypeTransferHandler transferHandler) {
@@ -101,8 +91,23 @@ public class SingleModelEditView extends AbstractBean {
         return fMainView;
     }
 
+    public void setVisible(boolean visible) {
+        if (fMainView != null) {
+            fMainView.setVisible(visible);
+        }
+    }
+
+    public void injectGraphModel(AbstractGraphModel model) {
+        fGraphModel = model;
+        fIsModel = model instanceof ModelGraphModel;
+        createView();
+        addListeners();
+        addNodesContextMenu();
+        addConnectionsContextMenu();
+    }
+
     @SuppressWarnings("serial")
-    private void addListenersToNodesTable() {
+    private void addListeners() {
         fNodesTable.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 modifyNodeAction();
@@ -110,14 +115,11 @@ public class SingleModelEditView extends AbstractBean {
         });
         fNodesTable.getSelectionModel().addListSelectionListener(new IListSelectionListener() {
             public void valueChanged(ListSelectionEvent event) {
-                setNodesSelected(fNodesTable.getSelectedRows().length > 0);
-                setTwoNodesSelected(fNodesTable.getSelectedRows().length == 2);
+                int[] selectedRows = fNodesTable.getSelectedRows();
+                setNodesSelected(selectedRows.length > 0);
+                setTwoNodesSelected(selectedRows.length == 2);
             }
         });
-    }
-
-    @SuppressWarnings("serial")
-    private void addListenersToConnectionsTable() {
         fConnectionsTable.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 modifyConnectionAction();
@@ -178,7 +180,6 @@ public class SingleModelEditView extends AbstractBean {
         }
         fNodeEditDialog.setModal(true);
         fNodeEditDialog.setVisible(show);
-//        fNodeEditDialog.toFront();
     }
 
     private void showConnectNodesDialog(ComponentNode node1, ComponentNode node2) {
@@ -217,7 +218,6 @@ public class SingleModelEditView extends AbstractBean {
         }
     }
 
-
     public boolean isNodesSelected() {
         return fNodesSelected;
     }
@@ -237,6 +237,17 @@ public class SingleModelEditView extends AbstractBean {
         if (fTwoNodesSelected != twoNodesSelected) {
             fTwoNodesSelected = twoNodesSelected;
             firePropertyChange(new PropertyChangeEvent(this, "twoNodesSelected", !fTwoNodesSelected, fTwoNodesSelected));
+        }
+    }
+
+    public boolean isConnectionSelected() {
+        return fConnectionSelected;
+    }
+
+    public void setConnectionSelected(boolean selectionAvailable) {
+        if (fConnectionSelected != selectionAvailable) {
+            fConnectionSelected = selectionAvailable;
+            firePropertyChange(new PropertyChangeEvent(this, "connectionSelected", !fConnectionSelected, fConnectionSelected));
         }
     }
 
@@ -269,22 +280,6 @@ public class SingleModelEditView extends AbstractBean {
             return new ComponentNode[0];
         }
     }
-
-    public boolean isConnectionSelected() {
-        return fConnectionSelected;
-    }
-
-    public void setConnectionSelected(boolean selectionAvailable) {
-        if (fConnectionSelected != selectionAvailable) {
-            fConnectionSelected = selectionAvailable;
-            firePropertyChange(new PropertyChangeEvent(this, "connectionSelected", !fConnectionSelected, fConnectionSelected));
-        }
-    }
-
-    public boolean isModel() {
-        return fIsModel;
-    }
-
 
     /**
      * @return the selected bean or <code>null</code> if no row is selected
@@ -439,18 +434,5 @@ public class SingleModelEditView extends AbstractBean {
 
     private ApplicationActionMap getActionMap() {
         return fApplicationContext.getActionMap(this);
-    }
-
-    public ULCToolBar getToolBar() {
-        String[] actions = new String[]{
-                "newNodeAction",
-                "newConnectionAction",
-                "newReplicationAction",
-                "modifyNodeAction",
-                "modifyConnectionAction",
-                "removeNodeAction",
-                "removeConnectionAction"
-        };
-        return new ToolBarFactory(getActionMap()).createToolBar(actions);
     }
 }

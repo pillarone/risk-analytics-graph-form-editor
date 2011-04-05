@@ -5,20 +5,19 @@ import com.ulcjava.base.application.dnd.DataFlavor;
 import com.ulcjava.base.application.dnd.DnDTreeData;
 import com.ulcjava.base.application.dnd.TransferHandler;
 import com.ulcjava.base.application.dnd.Transferable;
-import com.ulcjava.base.application.tree.DefaultMutableTreeNode;
 import com.ulcjava.base.application.tree.TreePath;
-import org.pillarone.riskanalytics.graph.formeditor.ui.view.SingleModelEditView;
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.GraphModelEditable;
 import org.pillarone.riskanalytics.graph.formeditor.util.ComponentTypeTreeUtilities;
 
 public class TypeTransferHandler extends TransferHandler {
 
-    private SingleModelEditView fModelEditView;
+    private GraphModelEditable fModelEditView;
 
-    public SingleModelEditView getModelEditView() {
+    public GraphModelEditable getModelEditView() {
         return fModelEditView;
     }
 
-    public void setModelEditView(SingleModelEditView modelEditView) {
+    public void setModelEditView(GraphModelEditable modelEditView) {
         this.fModelEditView = modelEditView;
     }
 
@@ -42,6 +41,4 @@ public class TypeTransferHandler extends TransferHandler {
     @Override
     public void exportDone(ULCComponent src, Transferable t, int action) {
     }
-
-
 }
