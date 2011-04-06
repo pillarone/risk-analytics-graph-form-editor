@@ -126,7 +126,7 @@ public class NodesTableModel extends AbstractTableModel implements ITableModel {
             if (value instanceof Boolean && ((Boolean) value) && !model.getStartComponents().contains(node)) {
                 ((ModelGraphModel) fGraphModel).getStartComponents().add(node);
             } else if (value instanceof Boolean && (!(Boolean) value) && model.getStartComponents().contains(node)) {
-                ((ModelGraphModel) fGraphModel).getStartComponents().add(node);
+                ((ModelGraphModel) fGraphModel).getStartComponents().remove(node);
             }
         } else {
             super.setValueAt(value, rowIndex, columnIndex);

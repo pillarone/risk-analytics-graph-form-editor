@@ -70,6 +70,13 @@ public class GraphModelUtilities {
                 }
             }
         }
+        if (model instanceof ModelGraphModel) {
+            ModelGraphModel m = (ModelGraphModel) model;
+            if (m.getStartComponents().contains(node)) {
+                m.getStartComponents().remove(node);
+                m.getStartComponents().add(newNode);
+            }
+        }
         return newNode;
     }
 
