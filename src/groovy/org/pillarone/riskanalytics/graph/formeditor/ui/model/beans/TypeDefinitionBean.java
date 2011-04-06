@@ -4,7 +4,7 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.model.beans;
 public class TypeDefinitionBean {
     private String name;
     private String packageName;
-    private boolean model;
+    private String baseType;
 
     public String getName() {
         return name;
@@ -22,17 +22,17 @@ public class TypeDefinitionBean {
         this.packageName = packageName;
     }
 
-    public boolean isModel() {
-        return model;
+    public String getBaseType() {
+        return baseType;
     }
 
-    public void setModel(boolean model) {
-        this.model = model;
+    public void setBaseType(String baseType) {
+        this.baseType = baseType;
     }
 
     public void reset() {
         name = null;
         packageName = null;
-        model = false;
+        baseType = null;
     }
 }

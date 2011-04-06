@@ -30,7 +30,7 @@ public class TypeDefinitionDialog extends ULCDialog {
 
         fTypeDefs = typeDefs;
         createBeanView();
-        setTitle("Add new type (model | component)");
+        setTitle("Add new type (model | composed component)");
         setLocationRelativeTo(parent);
     }
 

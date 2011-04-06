@@ -12,8 +12,8 @@ public class TypeDefinitionForm extends AbstractFormBuilder<TypeDefinitionFormMo
     @Override
     protected void initForm() {
         setColumnWeights(0f, 0f, 1f);
+        addComboBox("baseType", new String[]{"Model", "Composed Component"});
         addTextField("name").columns(15);
         addTextField("packageName").columns(15);
-        addCheckBox("model", null);
     }
 }
