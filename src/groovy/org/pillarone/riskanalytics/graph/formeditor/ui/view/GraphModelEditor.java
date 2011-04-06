@@ -52,8 +52,8 @@ public class GraphModelEditor extends AbstractBean {
     private TypeDefinitionDialog fTypeDefView;
     /* A dialog for models or composed components to be imported.*/
     private TypeImportDialog fTypeImportView;
-    /* The type tree view.*/
-    private ComponentTypeTree fComponentTypeTree;
+    /* Palette views.*/
+    private ULCBoxPane fPaletteArea;
 
     /**
      * @param context Application context is used for accessing and using resources (such as icons, etc.).
@@ -88,12 +88,41 @@ public class GraphModelEditor extends AbstractBean {
         });
         modelEdit.add(ULCBoxPane.BOX_EXPAND_EXPAND, fEditorArea);
 
-        fComponentTypeTree = new ComponentTypeTree(this);
+
+        ULCBoxPane viewSelector = new ULCBoxPane(false);
+        ULCRadioButton typeTreeSelectButton = new ULCRadioButton("Type Tree", true);
+        ULCRadioButton categoryTreeSelectButton = new ULCRadioButton("Categories");
+        ULCButtonGroup buttonGroup = new ULCButtonGroup();
+        typeTreeSelectButton.setGroup(buttonGroup);
+        categoryTreeSelectButton.setGroup(buttonGroup);
+        viewSelector.add(typeTreeSelectButton);
+        viewSelector.add(categoryTreeSelectButton);
+        viewSelector.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
+
+        final ULCCardPane views = new ULCCardPane();
+        final ComponentTypeTree typeTree = new ComponentTypeTree(this);
+        views.addCard("TypeTree", typeTree);
+        final ComponentCategoryTree categoryTree = new ComponentCategoryTree(this);
+        views.addCard("CategoryTree", categoryTree);
+        typeTreeSelectButton.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                views.setSelectedComponent(typeTree);
+            }
+        });
+        categoryTreeSelectButton.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                views.setSelectedComponent(categoryTree);
+            }
+        });
+        fPaletteArea = new ULCBoxPane(true);
+        fPaletteArea.add(ULCBoxPane.BOX_RIGHT_TOP, viewSelector);
+        fPaletteArea.add(ULCBoxPane.BOX_EXPAND_EXPAND, views);
+
 
         ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(200);
         splitPane.setDividerSize(5);
-        splitPane.setLeftComponent(fComponentTypeTree);
+        splitPane.setLeftComponent(fPaletteArea);
         splitPane.setRightComponent(modelEdit);
 
         return splitPane;
@@ -125,7 +154,7 @@ public class GraphModelEditor extends AbstractBean {
 
                 public void actionPerformed(ActionEvent event) {
                     TypeDefinitionBean typeDef = fTypeDefView.getBeanForm().getModel().getBean();
-                    AbstractGraphModel model = typeDef.isModel() ? new ModelGraphModel() : new ComposedComponentGraphModel();
+                    AbstractGraphModel model = typeDef.getBaseType().equals("Model") ? new ModelGraphModel() : new ComposedComponentGraphModel();
                     model.setPackageName(typeDef.getPackageName());
                     model.setName(typeDef.getName());
                     addModelToView(model, typeDef);
@@ -159,7 +188,7 @@ public class GraphModelEditor extends AbstractBean {
         if (importer != null) {
             AbstractGraphModel model = importer.importGraph(clazz, null);
             TypeDefinitionBean typeDef = new TypeDefinitionBean();
-            typeDef.setModel(model instanceof ModelGraphModel);
+            typeDef.setBaseType(model instanceof ModelGraphModel ? "Model" : "ComposedComponent");
             typeDef.setName(model.getName());
             typeDef.setPackageName(model.getPackageName());
             addModelToView(model, typeDef);
@@ -230,7 +259,7 @@ public class GraphModelEditor extends AbstractBean {
                     GraphImportService importService = new GraphImportService();
                     AbstractGraphModel model = importService.importGraph(content);
                     TypeDefinitionBean typeDef = new TypeDefinitionBean();
-                    typeDef.setModel(model instanceof ModelGraphModel);
+                    typeDef.setBaseType(model instanceof ModelGraphModel ? "Model" : "Composed Component");
                     typeDef.setName(model.getName());
                     typeDef.setPackageName(model.getPackageName());
                     addModelToView(model, typeDef);
