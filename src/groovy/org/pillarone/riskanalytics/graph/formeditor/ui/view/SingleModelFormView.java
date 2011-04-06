@@ -192,7 +192,7 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
             fConnectNodesDialog.setVisible(true);
         } else {
             ULCAlert alert = new ULCAlert("Connection not created.",
-                    "At least one of the selected nodes does not contain ports. Not connection can be be created.", "ok");
+                    "At least one of the selected nodes does not contain ports. Connection cannot be created.", "ok");
             alert.show();
         }
     }
