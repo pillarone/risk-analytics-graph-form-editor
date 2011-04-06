@@ -5,7 +5,10 @@ import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.ComponentTypeTreeCellRenderer;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ComponentTypeTreeModelFactory {
 
@@ -19,7 +22,31 @@ public class ComponentTypeTreeModelFactory {
             addNode(root, componentDef);
         }
         return new DefaultTreeModel(root);
+    }
 
+    public static DefaultTreeModel getCategoryTree() {
+        PaletteService service = PaletteService.getInstance();
+        List<ComponentDefinition> componentDefinitions = service.getAllComponentDefinitions();
+        Map<String,List<ComponentDefinition>> categoryMap = new HashMap<String,List<ComponentDefinition>>();
+        for (ComponentDefinition cd : componentDefinitions) {
+            List<String> categories = service.getCategoriesFromDefinition(cd);
+            for (String c : categories) {
+                if (!categoryMap.containsKey(c)) {
+                    categoryMap.put(c, new ArrayList<ComponentDefinition>());
+                }
+                categoryMap.get(c).add(cd);
+            }
+        }
+        TypeTreeNode root = new TypeTreeNode("","Categories");
+        for (Map.Entry<String,List<ComponentDefinition>> category : categoryMap.entrySet()) {
+            TypeTreeNode categoryNode = new TypeTreeNode("", category.getKey());
+            root.add(categoryNode);
+            for (ComponentDefinition cd : category.getValue()) {
+                TypeTreeNode leaf = new TypeTreeNode(cd);
+                categoryNode.add(leaf);
+            }
+        }
+        return new DefaultTreeModel(root);
     }
 
     private static void addNode(TypeTreeNode parent, ComponentDefinition cd) {

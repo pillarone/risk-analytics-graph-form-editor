@@ -14,63 +14,13 @@ import org.pillarone.riskanalytics.graph.formeditor.util.PaletteUtilities;
 import java.util.*;
 import java.util.Map.Entry;
 
-public class ComponentTypeTree extends ULCBoxPane {
-
-    private static final String PATHSEP = ".";
-
-    private ITreeModel fTreeModel;
-    private ULCTree fTree;
-    private ComponentTypeTreeCellRenderer fTreeCellRenderer;
-    private GraphModelEditor fParent;
+public class ComponentTypeTree extends AbstractComponentDefinitionTree {
 
     public ComponentTypeTree(GraphModelEditor parent) {
-        super();
-        fParent = parent;
-        fTreeModel = ComponentTypeTreeModelFactory.getTree();
-        createView();
+        super(parent);
     }
 
-    public void configureCellRenderer(IActionListener listener) {
-    }
-
-    private void createView() {
-        // create tree
-        fTree = new ULCTree();
-        fTree.setDragEnabled(true);
-        fTree.setModel(fTreeModel);
-        fTree.getSelectionModel().setSelectionMode(ULCTreeSelectionModel.SINGLE_TREE_SELECTION);
-        fTreeCellRenderer = new ComponentTypeTreeCellRenderer();
-        fTreeCellRenderer.setShowComponentMenuListener(new ShowComponentAction());
-        fTree.setCellRenderer(fTreeCellRenderer);
-
-        ULCScrollPane treeScrollPane = new ULCScrollPane(fTree);
-        treeScrollPane.setMinimumSize(new Dimension(200, 600));
-        this.add(ULCBoxPane.BOX_EXPAND_EXPAND, treeScrollPane);
-
-        this.setVisible(true);
-    }
-
-    private class ShowComponentAction implements IActionListener {
-
-        public void actionPerformed(ActionEvent actionEvent) {
-            TreePath selectedNode = fTree.getSelectionModel().getSelectionPath();
-            String clazzName = ComponentTypeTreeUtilities.getComponentTypeName(selectedNode);
-            try {
-                boolean success = fParent.importComponentType(clazzName);
-                if (!success) {
-                    ULCAlert alert = new ULCAlert("No class loaded",
-                            "No class with name " + clazzName + " could be loaded as graph model.", "ok");
-                    alert.show();
-                }
-            } catch (ClassNotFoundException ex1) {
-                ULCAlert alert = new ULCAlert("No class loaded",
-                        "Class not found.", "ok");
-                alert.show();
-            } catch (Exception ex3) {
-                ULCAlert alert = new ULCAlert("No class loaded",
-                        "Unkown exception. ", "ok");
-                alert.show();
-            }
-        }
+    public ITreeModel getTreeModel() {
+        return ComponentTypeTreeModelFactory.getTree();
     }
 }
