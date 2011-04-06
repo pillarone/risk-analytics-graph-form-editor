@@ -67,8 +67,11 @@ public class SingleModelMultiEditView extends AbstractBean {
         // button to select the view
         ULCBoxPane viewSelector = new ULCBoxPane(false);
         ULCRadioButton formSelectButton = new ULCRadioButton("Forms", true);
+        formSelectButton.setToolTipText("Edit (model | component) by filling in forms with nodes and connections.");
         ULCRadioButton textSelectButton = new ULCRadioButton("Groovy");
+        textSelectButton.setToolTipText("Inspect (model | component) by looking at its groovy code.");
         ULCRadioButton visualSelectButton = new ULCRadioButton("Visual");
+        visualSelectButton.setToolTipText("Edit (model | component) in the graphical editor.");
         ULCButtonGroup buttonGroup = new ULCButtonGroup();
         formSelectButton.setGroup(buttonGroup);
         textSelectButton.setGroup(buttonGroup);
