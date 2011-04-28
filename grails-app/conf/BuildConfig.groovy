@@ -36,7 +36,7 @@ grails.project.dependency.resolution = {
 
         if (appName == "RiskAnalyticsGraphFormEditor") {
             runtime "org.pillarone:risk-analytics-core:1.3-BETA-2.4"
-            runtime("org.pillarone:risk-analytics-graph-core:0.2") { transitive = false }
+            runtime("org.pillarone:risk-analytics-graph-core:0.3.1") { transitive = false }
         }
 
     }
