@@ -114,7 +114,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         });
         visualSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
-                fVisualEditorView.injectGraphModel(fGraphModel);
+//                fVisualEditorView.injectGraphModel(fGraphModel);
                 cardPane.setSelectedComponent(visualView);
             }
         });
