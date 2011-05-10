@@ -4,6 +4,8 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 import com.canoo.ulc.detachabletabbedpane.server.ITabListener;
 import com.canoo.ulc.detachabletabbedpane.server.TabEvent;
 import com.canoo.ulc.detachabletabbedpane.server.ULCCloseableTabbedPane;
+import com.canoo.ulc.graph.ULCGraphPalette;
+import com.canoo.ulc.graph.shared.ShapeTemplate;
 import com.ulcjava.applicationframework.application.*;
 import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
@@ -20,6 +22,8 @@ import org.pillarone.riskanalytics.graph.core.graphimport.AbstractGraphImport;
 import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraphImport;
 import org.pillarone.riskanalytics.graph.core.graphimport.GraphImportService;
 import org.pillarone.riskanalytics.graph.core.graphimport.ModelGraphImport;
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
+import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
@@ -92,11 +96,14 @@ public class GraphModelEditor extends AbstractBean {
         ULCBoxPane viewSelector = new ULCBoxPane(false);
         ULCRadioButton typeTreeSelectButton = new ULCRadioButton("Type Tree", true);
         ULCRadioButton categoryTreeSelectButton = new ULCRadioButton("Categories");
+        ULCRadioButton paletteSelectButton = new ULCRadioButton("Palette");
         ULCButtonGroup buttonGroup = new ULCButtonGroup();
         typeTreeSelectButton.setGroup(buttonGroup);
         categoryTreeSelectButton.setGroup(buttonGroup);
+        paletteSelectButton.setGroup(buttonGroup);
         viewSelector.add(typeTreeSelectButton);
         viewSelector.add(categoryTreeSelectButton);
+        viewSelector.add(paletteSelectButton);
         viewSelector.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
 
         final ULCCardPane views = new ULCCardPane();
@@ -104,6 +111,12 @@ public class GraphModelEditor extends AbstractBean {
         views.addCard("TypeTree", typeTree);
         final ComponentCategoryTree categoryTree = new ComponentCategoryTree(this);
         views.addCard("CategoryTree", categoryTree);
+        final ULCGraphPalette palette = new ULCGraphPalette();
+
+        for (ComponentDefinition definition : PaletteService.getInstance().getAllComponentDefinitions()) {
+            palette.addShapeTemplate(new ShapeTemplate(ShapeTemplate.ShapeType.Container, definition.getTypeClass().getName(), definition.getTypeClass().getSimpleName()));
+        }
+        views.addCard("PaletteView", palette);
         typeTreeSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 views.setSelectedComponent(typeTree);
@@ -112,6 +125,11 @@ public class GraphModelEditor extends AbstractBean {
         categoryTreeSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 views.setSelectedComponent(categoryTree);
+            }
+        });
+        paletteSelectButton.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                views.setSelectedComponent(palette);
             }
         });
         fPaletteArea = new ULCBoxPane(true);
@@ -140,7 +158,7 @@ public class GraphModelEditor extends AbstractBean {
         fEditorArea.addTab(typeDef.getName(), modelView.getView());
         modelView.setTransferHandler(new TypeTransferHandler());
         fEditorArea.setSelectedIndex(fEditorArea.getComponentCount() - 1);
-        fEditorArea.setToolTipTextAt(fEditorArea.getComponentCount()-1, model.getPackageName()+"."+model.getName());
+        fEditorArea.setToolTipTextAt(fEditorArea.getComponentCount() - 1, model.getPackageName() + "." + model.getName());
         fTypeDefinitions.add(typeDef);
     }
 
@@ -173,6 +191,7 @@ public class GraphModelEditor extends AbstractBean {
      * Import the component type specified by <code>clazzName</code>.
      * It means that for a given class (of type <code>ComposedComponent</code> or <code>AbstractModel</code>
      * a corresponding graph model is created and added to the model edit pane (as a new tab).
+     *
      * @param clazzName name of the class to be imported
      * @return boolean to indicate whether the import was successful.
      * @throws ClassNotFoundException
