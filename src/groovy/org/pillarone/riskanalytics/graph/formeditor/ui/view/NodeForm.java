@@ -25,8 +25,8 @@ public class NodeForm extends AbstractFormBuilder<NodeFormModel> {
         comboBoxModel.setSelectedItem(typeNames != null && typeNames.size() > 0 ? typeNames.get(0) : null);
         addComboBox("componentType", comboBoxModel);
         addTextField("comment").columns(15);
-        if (fIsModel) {
+        /*if (fIsModel) {
             addCheckBox("starter", null);
-        }
+        }*/
     }
 }
