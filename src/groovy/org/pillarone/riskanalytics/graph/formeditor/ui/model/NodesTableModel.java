@@ -6,6 +6,7 @@ import com.ulcjava.applicationframework.application.form.model.FormModel;
 import com.ulcjava.base.application.table.AbstractTableModel;
 import com.ulcjava.base.application.table.ITableModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.filters.ComponentNodeFilterFactory;
 
 /**
  * Model underlying the nodes table in the form editor.
@@ -20,16 +21,17 @@ import org.pillarone.riskanalytics.graph.core.graph.model.*;
  *
  * @author martin.melchior
  */
-public class NodesTableModel extends AbstractTableModel implements ITableModel {
+public class NodesTableModel extends AbstractTableModel implements ITableModel, IFilterChangedListener {
 
     static final int NAMEID = 0;
     static final int TYPEID = 1;
-    static final int COMMENTID = 2;
-    static final int STARTERID = 3;
+    //static final int COMMENTID = 2;
+    //static final int STARTERID = 3;
 
     private ApplicationContext fContext;
     private AbstractGraphModel fGraphModel;
     private String[] fColumnNames;
+    private IComponentNodeFilter fNodeFilter;
 
     /**
      * @param ctx   is used basically to access the presentation of the table headers.
@@ -40,6 +42,8 @@ public class NodesTableModel extends AbstractTableModel implements ITableModel {
         fContext = ctx;
         fGraphModel = model;
         fColumnNames = getColumnNames();
+        fNodeFilter = ComponentNodeFilterFactory.getFilter("None",null);
+        fNodeFilter.setGraphModel(fGraphModel);
         addGraphModelListeners();
     }
 
@@ -66,13 +70,13 @@ public class NodesTableModel extends AbstractTableModel implements ITableModel {
         ResourceMap modelMap = fContext.getResourceMap(NodeFormModel.class, FormModel.class);
         ResourceMap resourceMap = fContext.getResourceMap(getClass(), AbstractTableModel.class, modelMap);
         boolean isModel = fGraphModel instanceof ModelGraphModel;
-        String[] columnHeaders = new String[isModel ? 4 : 3];
+        String[] columnHeaders = new String[2]; //new String[isModel ? 4 : 3];
         columnHeaders[NAMEID] = resourceMap.getString("name.columnHeader");
         columnHeaders[TYPEID] = resourceMap.getString("componentType.columnHeader");
-        columnHeaders[COMMENTID] = resourceMap.getString("comment.columnHeader");
+        /*columnHeaders[COMMENTID] = resourceMap.getString("comment.columnHeader");
         if (isModel) {
             columnHeaders[STARTERID] = resourceMap.getString("starter.columnHeader");
-        }
+        }*/
         return columnHeaders;
     }
 
@@ -80,7 +84,7 @@ public class NodesTableModel extends AbstractTableModel implements ITableModel {
      * The number of component nodes found in the graph model.
      */
     public int getRowCount() {
-        return fGraphModel.getAllComponentNodes().size();
+        return fNodeFilter.getFilteredComponentNodeList().size();
     }
 
     /**
@@ -88,20 +92,21 @@ public class NodesTableModel extends AbstractTableModel implements ITableModel {
      * a {@link ComposedComponentGraphModel}.
      */
     public int getColumnCount() {
-        return fGraphModel instanceof ModelGraphModel ? 4 : 3;
+        return 2;
+        // return fGraphModel instanceof ModelGraphModel ? 4 : 3;
     }
 
     public Object getValueAt(int row, int column) {
-        ComponentNode node = fGraphModel.getAllComponentNodes().get(row);
+        ComponentNode node = fNodeFilter.getFilteredComponentNodeList().get(row);
         switch (column) {
             case NAMEID:
                 return node.getName();
             case TYPEID:
                 return node.getType().getTypeClass().getName();
-            case COMMENTID:
+            /*case COMMENTID:
                 return node.getComment();
             case STARTERID:
-                return fGraphModel instanceof ModelGraphModel ? ((ModelGraphModel) fGraphModel).getStartComponents().contains(node) : false;
+                return fGraphModel instanceof ModelGraphModel ? ((ModelGraphModel) fGraphModel).getStartComponents().contains(node) : false;*/
             default:
                 return null;
         }
@@ -112,25 +117,8 @@ public class NodesTableModel extends AbstractTableModel implements ITableModel {
      */
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return fGraphModel instanceof ModelGraphModel && columnIndex == STARTERID;
-    }
-
-    /**
-     * Sets for a given component whether it is a starter component - otherwise does nothing.
-     */
-    @Override
-    public void setValueAt(Object value, int rowIndex, int columnIndex) {
-        if (columnIndex == STARTERID) {
-            ModelGraphModel model = (ModelGraphModel) fGraphModel;
-            ComponentNode node = model.getAllComponentNodes().get(rowIndex);
-            if (value instanceof Boolean && ((Boolean) value) && !model.getStartComponents().contains(node)) {
-                ((ModelGraphModel) fGraphModel).getStartComponents().add(node);
-            } else if (value instanceof Boolean && (!(Boolean) value) && model.getStartComponents().contains(node)) {
-                ((ModelGraphModel) fGraphModel).getStartComponents().remove(node);
-            }
-        } else {
-            super.setValueAt(value, rowIndex, columnIndex);
-        }
+        return false;
+        //return fGraphModel instanceof ModelGraphModel && columnIndex == STARTERID;
     }
 
     /**
@@ -139,7 +127,8 @@ public class NodesTableModel extends AbstractTableModel implements ITableModel {
     @SuppressWarnings("rawtypes")
     @Override
     public Class getColumnClass(int columnIndex) {
-        return columnIndex == STARTERID ? Boolean.class : String.class;
+        return String.class;
+        //return columnIndex == STARTERID ? Boolean.class : String.class;
     }
 
     /**
@@ -148,5 +137,10 @@ public class NodesTableModel extends AbstractTableModel implements ITableModel {
     @Override
     public String getColumnName(int column) {
         return fColumnNames[column];
+    }
+
+    public void applyFilter(IComponentNodeFilter filter) {
+        fNodeFilter = filter;
+        fireTableDataChanged();
     }
 }

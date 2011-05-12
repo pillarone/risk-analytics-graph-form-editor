@@ -9,6 +9,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.filters.ComponentNodeFilterFactory;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 /**
@@ -20,7 +21,7 @@ import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
  *
  * @author martin.melchior
  */
-public class ConnectionsTableModel extends AbstractTableModel implements ITableModel {
+public class ConnectionsTableModel extends AbstractTableModel implements ITableModel, IFilterChangedListener {
 
     static final int FROMID = 0;
     static final int TOID = 1;
@@ -28,6 +29,7 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
     private ApplicationContext fContext;
     private AbstractGraphModel fGraphModel;
     private String[] fColumnNames;
+    private IComponentNodeFilter fNodeFilter;
 
     /**
      * @param ctx   is used basically to access the presentation of the table headers.
@@ -39,6 +41,8 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
         fGraphModel = model;
         addGraphModelListeners();
         fColumnNames = getColumnNames();
+        fNodeFilter = ComponentNodeFilterFactory.getFilter("None", null);
+        fNodeFilter.setGraphModel(fGraphModel);
     }
 
     private void addGraphModelListeners() {
@@ -73,7 +77,7 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
      * Returns just the number of connections found in the graph model.
      */
     public int getRowCount() {
-        return fGraphModel.getAllConnections().size();
+        return fNodeFilter.getFilteredConnectionList().size();
     }
 
     /**
@@ -93,7 +97,7 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
      * In a prefix, the name of the components the ports are attached to is included.
      */
     public Object getValueAt(int row, int column) {
-        Connection c = fGraphModel.getAllConnections().get(row);
+        Connection c = fNodeFilter.getFilteredConnectionList().get(row);
         switch (column) {
             case FROMID:
                 return GraphModelUtilities.getPortName(c.getFrom());
@@ -120,4 +124,10 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
     public String getColumnName(int column) {
         return fColumnNames[column];
     }
+
+    public void applyFilter(IComponentNodeFilter filter) {
+        fNodeFilter = filter;
+        fireTableDataChanged();
+    }
+
 }
