@@ -104,7 +104,7 @@ public class GraphModelEditor extends AbstractBean {
         viewSelector.add(typeTreeSelectButton);
         viewSelector.add(categoryTreeSelectButton);
         viewSelector.add(paletteSelectButton);
-        viewSelector.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
+        //viewSelector.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
 
         final ULCCardPane views = new ULCCardPane();
         final ComponentTypeTree typeTree = new ComponentTypeTree(this);
@@ -133,15 +133,17 @@ public class GraphModelEditor extends AbstractBean {
             }
         });
         fPaletteArea = new ULCBoxPane(true);
-        fPaletteArea.add(ULCBoxPane.BOX_RIGHT_TOP, viewSelector);
+        fPaletteArea.add(ULCBoxPane.BOX_EXPAND_TOP, viewSelector);
         fPaletteArea.add(ULCBoxPane.BOX_EXPAND_EXPAND, views);
 
 
         ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setDividerLocation(200);
-        splitPane.setDividerSize(5);
         splitPane.setLeftComponent(fPaletteArea);
         splitPane.setRightComponent(modelEdit);
+        splitPane.setDividerLocationAnimationEnabled(true);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.setDividerLocation(0.3);
+        splitPane.setDividerSize(10);
 
         return splitPane;
     }

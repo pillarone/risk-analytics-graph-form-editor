@@ -28,7 +28,7 @@ public class SingleModelMultiEditView extends AbstractBean {
 
     public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model) {
         super();
-        fMainView = new ULCBoxPane(true, 2);
+        fMainView = new ULCBoxPane(true, 1);
         fApplicationContext = ctx;
         fGraphModel = model;
         fIsModel = model instanceof ModelGraphModel;
@@ -118,8 +118,48 @@ public class SingleModelMultiEditView extends AbstractBean {
                 cardPane.setSelectedComponent(visualView);
             }
         });
-        fMainView.add(ULCBoxPane.BOX_EXPAND_TOP, toolBarPane);
-        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, cardPane);
+        ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.VERTICAL_SPLIT);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.setDividerLocation(0.65);
+        splitPane.setDividerSize(10);
+        // the model editing area
+        ULCBoxPane modelPane = new ULCBoxPane(true,2);
+        modelPane.add(ULCBoxPane.BOX_EXPAND_TOP, toolBarPane);
+        modelPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, cardPane);
+        splitPane.setTopComponent(modelPane);
+
+        // lower pane - consisting of a property pane and a model filter pane
+        ULCBoxPane lower = new ULCBoxPane(true,1);
+        ULCSplitPane splitPane2 = new ULCSplitPane();
+        lower.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane2);
+
+        // the property editing area --> comments, help, ...etc.
+        ULCBoxPane propertyPane = new ULCBoxPane(true,1);
+        ULCTabbedPane tabbedPane = new ULCTabbedPane();
+        ULCTextArea comments = new ULCTextArea();
+        comments.setEditable(true);
+        tabbedPane.addTab("Comments", comments);
+        tabbedPane.setEnabledAt(0,false);
+        ULCBoxPane data = new ULCBoxPane();
+        tabbedPane.addTab("Data", data);
+        tabbedPane.setEnabledAt(1,false);
+        ULCBoxPane results = new ULCBoxPane();
+        tabbedPane.addTab("Results", results);
+        tabbedPane.setEnabledAt(2,false);
+        propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, tabbedPane);
+        splitPane2.setLeftComponent(propertyPane);
+
+        // filter pane
+        ModelFilterPane filterPane = new ModelFilterPane(fGraphModel);
+        filterPane.addFilterChangedListener(fFormEditorView.getNodesTableModel());
+        filterPane.addFilterChangedListener(fFormEditorView.getConnectionsTableModel());
+        splitPane2.setRightComponent(filterPane);
+        splitPane2.setDividerSize(10);
+        splitPane2.setOneTouchExpandable(true);
+        splitPane2.setDividerLocation(0.7);
+
+        splitPane.setBottomComponent(lower);
+        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane);
     }
 
     public ULCBoxPane getView() {

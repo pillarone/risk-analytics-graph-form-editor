@@ -40,7 +40,7 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
 
     public SingleModelFormView(ApplicationContext ctx, AbstractGraphModel model) {
         super();
-        fMainView = new ULCBoxPane(true, 2);
+        fMainView = new ULCBoxPane(true, 1);
         fApplicationContext = ctx;
         injectGraphModel(model);
         setVisible(true);
@@ -78,8 +78,13 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         connPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, connScrollPane);
         fConnectionsTable.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight));
 
-        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, nodesPane);
-        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, connPane);
+        ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setLeftComponent(nodesPane);
+        splitPane.setRightComponent(connPane);
+        splitPane.setDividerLocation(0.5);
+        splitPane.setDividerSize(10);
+        //splitPane.setDividerLocationAnimationEnabled(true);
+        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane);
     }
 
     public void setTransferHandler(TypeTransferHandler transferHandler) {
@@ -130,6 +135,14 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
                 setConnectionSelected(fConnectionsTable.getSelectedRows().length > 0);
             }
         });
+    }
+
+    public NodesTableModel getNodesTableModel() {
+        return (NodesTableModel) fNodesTable.getModel();
+    }
+
+    public ConnectionsTableModel getConnectionsTableModel() {
+        return (ConnectionsTableModel) fConnectionsTable.getModel();
     }
 
     private void addNodesContextMenu() {
