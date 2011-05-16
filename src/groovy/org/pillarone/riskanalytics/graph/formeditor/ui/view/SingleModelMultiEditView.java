@@ -103,18 +103,21 @@ public class SingleModelMultiEditView extends AbstractBean {
         formSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 //fFormEditorView.injectGraphModel(fGraphModel);
+                fFormEditorView.setVisible(true);
                 cardPane.setSelectedComponent(formView);
             }
         });
         textSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 fTextEditorView.injectGraphModel(fGraphModel);
+                fTextEditorView.setVisible(true);
                 cardPane.setSelectedComponent(textView);
             }
         });
         visualSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
 //                fVisualEditorView.injectGraphModel(fGraphModel);
+                fVisualEditorView.setVisible(true);
                 cardPane.setSelectedComponent(visualView);
             }
         });
