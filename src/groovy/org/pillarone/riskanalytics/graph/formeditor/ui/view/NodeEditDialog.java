@@ -71,30 +71,28 @@ public class NodeEditDialog extends ULCDialog {
             public void actionPerformed(ActionEvent event) {
                 NodeBean bean = (NodeBean) fBeanForm.getModel().getBean();
                 if (fEditedNode != null) {
-                    if (fEditedNode != null) {
-                        if (!isConsistent(fEditedNode, bean)) { // new node needs to be created and the old one replaced
-                            ComponentNode newNode = GraphModelUtilities.replaceComponentNode(fEditedNode, bean.getName(), bean.getComponentType(), fGraphModel);
-                            newNode.setComment(bean.getComment());
-                            fEditedNode = newNode;
-                        } else {
-                            fEditedNode.setComment(bean.getComment());
-                        }
-                        if (fGraphModel instanceof ModelGraphModel) {
+                    if (!isConsistent(fEditedNode, bean)) { // new node needs to be created and the old one replaced
+                        ComponentNode newNode = GraphModelUtilities.replaceComponentNode(fEditedNode, bean.getName(), bean.getComponentType(), fGraphModel);
+                        newNode.setComment(bean.getComment());
+                        fEditedNode = newNode;
+                    } else {
+                        fEditedNode.setComment(bean.getComment());
+                    }
+                        /*if (fGraphModel instanceof ModelGraphModel) {
                             ModelGraphModel model = (ModelGraphModel) fGraphModel;
                             if (!model.getStartComponents().contains(fEditedNode) && bean.isStarter()) {
                                 model.getStartComponents().add(fEditedNode);
                             } else if (model.getStartComponents().contains(fEditedNode) && !bean.isStarter()) {
                                 model.getStartComponents().remove(fEditedNode);
                             }
-                        }
-                    }
+                        }*/
                 } else {
                     ComponentDefinition definition = PaletteService.getInstance().getComponentDefinition(bean.getComponentType());
                     ComponentNode newNode = fGraphModel.createComponentNode(definition, bean.getName());
                     newNode.setComment(bean.getComment());
-                    if (fGraphModel instanceof ModelGraphModel && bean.isStarter()) {
+                    /*if (fGraphModel instanceof ModelGraphModel && bean.isStarter()) {
                         ((ModelGraphModel) fGraphModel).getStartComponents().add(fEditedNode);
-                    }
+                    }*/
                 }
                 setVisible(false);
             }
