@@ -28,15 +28,15 @@ grails.project.dependency.resolution = {
         runtime ":joda-time:0.5"
         runtime ":maven-publisher:0.7.5"
         runtime ":quartz:0.4.2"
-        runtime ":spring-security-core:1.0.1"
+        runtime ":spring-security-core:1.1.2"
         runtime ":jetty:1.2-SNAPSHOT"
         compile "com.canoo:ulc:${ulcVersion}"
         runtime "org.pillarone:pillar-one-ulc-extensions:0.1"
 
-        test ":code-coverage:1.1.7"
+        test ":code-coverage:1.2.2"
 
         if (appName == "RiskAnalyticsGraphFormEditor") {
-            runtime "org.pillarone:risk-analytics-core:1.3-BETA-2.4"
+            runtime "org.pillarone:risk-analytics-core:1.4-ALPHA-2.5.1-kti"
             runtime("org.pillarone:risk-analytics-graph-core:0.3.1") { transitive = false }
         }
 
@@ -50,8 +50,8 @@ grails.project.dependency.resolution = {
         compile group: 'canoo', name: 'ulc-servlet-client', version: ulcVersion
         compile group: 'canoo', name: 'ulc-standalone-client', version: ulcVersion
 
-        compile group: 'canoo', name: 'ULCGraph-client', version: "0.1"
-        compile group: 'canoo', name: 'ULCGraph-shared', version: "0.1"
+        compile group: 'canoo', name: 'ULCGraph-client', version: "0.1.5"
+        compile group: 'canoo', name: 'ULCGraph-shared', version: "0.1.5"
         compile group: 'jgraphx', name: 'jgraphx', version: "1.5.1.11"
     }
 }
