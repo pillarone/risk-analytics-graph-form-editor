@@ -9,6 +9,13 @@ grails.project.dependency.resolution = {
         grailsCentral()
     }
 
+    credentials {
+        realm = "Canoo Nexus Repository"
+        host = "ci.canoo.com"
+        username = ""
+        password = ""
+    }
+
     def ulcClientJarResolver = new FileSystemResolver()
     String absolutePluginDir = grailsSettings.projectPluginsDir.absolutePath
 
@@ -19,6 +26,7 @@ grails.project.dependency.resolution = {
     resolver ulcClientJarResolver
 
     mavenRepo "https://build.intuitive-collaboration.com/maven/plugins/"
+    mavenRepo "https://ci.canoo.com/nexus/content/groups/public"
 
     String ulcVersion = "ria-suite-u2"
 
@@ -50,9 +58,12 @@ grails.project.dependency.resolution = {
         compile group: 'canoo', name: 'ulc-servlet-client', version: ulcVersion
         compile group: 'canoo', name: 'ulc-standalone-client', version: ulcVersion
 
-        compile group: 'canoo', name: 'ULCGraph-client', version: "0.1.5"
-        compile group: 'canoo', name: 'ULCGraph-shared', version: "0.1.5"
-        compile group: 'jgraphx', name: 'jgraphx', version: "1.5.1.11"
+        compile(group: 'com.canoo.ulc.community', name: 'ULCGraph-client', version: "0.2") {
+            exclude "ulc-core-client"
+        }
+        compile(group: 'com.canoo.ulc.community', name: 'ULCGraph-server', version: "0.2") {
+            exclude "ulc-core-server"
+        }
     }
 }
 
