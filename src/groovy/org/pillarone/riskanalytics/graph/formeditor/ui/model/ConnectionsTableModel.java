@@ -6,11 +6,13 @@ import com.ulcjava.applicationframework.application.form.model.FormModel;
 import com.ulcjava.base.application.table.AbstractTableModel;
 import com.ulcjava.base.application.table.ITableModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.filters.ComponentNodeFilterFactory;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Model underlying the connections table in the form editor.
@@ -21,7 +23,7 @@ import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
  *
  * @author martin.melchior
  */
-public class ConnectionsTableModel extends AbstractTableModel implements ITableModel, IFilterChangedListener {
+public class ConnectionsTableModel extends AbstractTableModel implements ITableModel {
 
     static final int FROMID = 0;
     static final int TOID = 1;
@@ -29,7 +31,6 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
     private ApplicationContext fContext;
     private AbstractGraphModel fGraphModel;
     private String[] fColumnNames;
-    private IComponentNodeFilter fNodeFilter;
 
     /**
      * @param ctx   is used basically to access the presentation of the table headers.
@@ -39,29 +40,7 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
         super();
         fContext = ctx;
         fGraphModel = model;
-        addGraphModelListeners();
         fColumnNames = getColumnNames();
-        fNodeFilter = ComponentNodeFilterFactory.getFilter("None", null);
-        fNodeFilter.setGraphModel(fGraphModel);
-    }
-
-    private void addGraphModelListeners() {
-        fGraphModel.addGraphModelChangeListener(
-                new IGraphModelChangeListener() {
-                    public void nodeAdded(ComponentNode node) {
-                    }
-
-                    public void nodeRemoved(ComponentNode node) {
-                    }
-
-                    public void connectionAdded(Connection c) {
-                        fireTableDataChanged();
-                    }
-
-                    public void connectionRemoved(Connection node) {
-                        fireTableDataChanged();
-                    }
-                });
     }
 
     private String[] getColumnNames() {
@@ -77,7 +56,7 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
      * Returns just the number of connections found in the graph model.
      */
     public int getRowCount() {
-        return fNodeFilter.getFilteredConnectionList().size();
+        return fGraphModel.getFilteredConnectionsList().size();
     }
 
     /**
@@ -97,7 +76,7 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
      * In a prefix, the name of the components the ports are attached to is included.
      */
     public Object getValueAt(int row, int column) {
-        Connection c = fNodeFilter.getFilteredConnectionList().get(row);
+        Connection c = fGraphModel.getFilteredConnectionsList().get(row);
         switch (column) {
             case FROMID:
                 return GraphModelUtilities.getPortName(c.getFrom());
@@ -125,9 +104,19 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
         return fColumnNames[column];
     }
 
-    public void applyFilter(IComponentNodeFilter filter) {
-        fNodeFilter = filter;
-        fireTableDataChanged();
+    public List<Integer> getRows(Connection[] connections) {
+        List<Integer> rowList = new ArrayList<Integer>();
+        for (Connection c : connections) {
+            int row = fGraphModel.getFilteredConnectionsList().indexOf(c);
+            if (row >= 0 && !rowList.contains(row)) {
+                rowList.add(row);
+            }
+        }
+        Collections.sort(rowList);
+        return rowList;
     }
 
+    public Connection getConnection(int row) {
+        return fGraphModel.getFilteredConnectionsList().get(row);
+    }
 }

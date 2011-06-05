@@ -112,12 +112,37 @@ public class AvailablePortsComboBoxModel implements IComboBoxModel {
             }
         }
 
-        public void connectionAdded(Connection c) {
+        public void nodesSelected(List<ComponentNode> nodes) {
+            //To change body of implemented methods use File | Settings | File Templates.
+        }
 
+        public void connectionsSelected(List<Connection> connections) {
+            //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        public void selectionCleared() {
+            //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        public void filtersApplied() {
+            // nothing to do here
+        }
+
+        public void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
+            if (availablePorts.size()>0 && availablePorts.get(0).getComponentNode()==node) {
+                ListDataEvent e = new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, 0, availablePorts.size() - 1);
+                for (IListDataListener listener : fListDataListeners) {
+                    listener.contentsChanged(e);
+                }
+            }
+        }
+
+        public void connectionAdded(Connection c) {
+            // TODO: possibly use this for validation ?
         }
 
         public void connectionRemoved(Connection c) {
-
+            // TODO: possibly use this for validation ?
         }
     }
 

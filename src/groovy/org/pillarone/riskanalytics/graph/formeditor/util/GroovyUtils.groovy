@@ -1,13 +1,13 @@
 package org.pillarone.riskanalytics.graph.formeditor.util
 
-import org.pillarone.riskanalytics.graph.core.loader.ClassRepository
-import org.pillarone.riskanalytics.graph.core.loader.DatabaseClassLoader
+import java.lang.reflect.Field
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import org.pillarone.riskanalytics.core.components.Component
 import org.pillarone.riskanalytics.core.packets.Packet
 import org.pillarone.riskanalytics.core.packets.PacketList
-import java.lang.reflect.Field
-import org.pillarone.riskanalytics.core.components.Component
+import org.pillarone.riskanalytics.graph.core.loader.ClassRepository
+import org.pillarone.riskanalytics.graph.core.loader.DatabaseClassLoader
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 
 class GroovyUtils {

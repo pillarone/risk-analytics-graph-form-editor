@@ -1,13 +1,7 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 import com.ulcjava.applicationframework.application.form.AbstractFormBuilder;
-import com.ulcjava.base.application.DefaultComboBoxModel;
-import com.ulcjava.base.application.IComboBoxModel;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeNameFormModel;
-import org.pillarone.riskanalytics.graph.formeditor.util.PaletteUtilities;
-
-import java.util.List;
 
 public class NodeNameForm extends AbstractFormBuilder<NodeNameFormModel> {
 

@@ -1,22 +1,23 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 
-import com.ulcjava.applicationframework.application.*;
+import com.ulcjava.applicationframework.application.AbstractBean;
+import com.ulcjava.applicationframework.application.Action;
+import com.ulcjava.applicationframework.application.ApplicationActionMap;
 import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.*;
-import com.ulcjava.base.application.table.TableRowSorter;
-import com.ulcjava.base.application.util.Dimension;
+import com.ulcjava.base.application.tree.TreePath;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.ConnectionsTableModel;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodesTableModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ConnectionBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ReplicationBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 import java.beans.PropertyChangeEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SingleModelFormView extends AbstractBean implements GraphModelEditable, GraphModelViewable {
     private ApplicationContext fApplicationContext;
@@ -25,7 +26,8 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
     private boolean fIsModel;
 
     private ULCBoxPane fMainView;
-    private ULCTable fNodesTable;
+    //private ULCTable fNodesTable;
+    private ULCTableTree fNodesTable;
     private ULCTable fConnectionsTable;
 
     private NodeEditDialog fNodeEditDialog;
@@ -47,13 +49,7 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
     }
 
     public void createView() {
-        fNodesTable = new ULCTable();
-        NodesTableModel nodesModel = new NodesTableModel(fApplicationContext, fGraphModel);
-        fNodesTable.setModel(nodesModel);
-        fNodesTable.createDefaultColumnsFromModel();
-        fNodesTable.setShowGrid(true);
-        fNodesTable.getSelectionModel().setSelectionMode(ULCListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        fNodesTable.setRowSorter(new TableRowSorter(nodesModel));
+        fNodesTable = new NodesTable(fApplicationContext, fGraphModel);
         fNodesSelected = false;
         fTwoNodesSelected = false;
         fNodesTable.setVisible(true);
@@ -61,22 +57,13 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         ULCBoxPane nodesPane = new ULCBoxPane(true);
         nodesPane.setBorder(BorderFactory.createTitledBorder("Components"));
         nodesPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, nodesScrollPane);
-        int preferredWidth = ClientContext.getScreenWidth() / 2;
-        int preferredHeight = preferredWidth * ClientContext.getScreenHeight() * 10
-                                        / (ClientContext.getScreenWidth() * 11 * 2);
-        fNodesTable.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight));
 
-        fConnectionsTable = new ULCTable();
-        ConnectionsTableModel connModel = new ConnectionsTableModel(fApplicationContext, fGraphModel);
-        fConnectionsTable.setModel(connModel);
-        fConnectionsTable.getSelectionModel().setSelectionMode(ULCListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        fConnectionsTable.setRowSorter(new TableRowSorter(connModel));
+        fConnectionsTable = new ConnectionsTable(fApplicationContext, fGraphModel);
         fConnectionSelected = false;
         ULCScrollPane connScrollPane = new ULCScrollPane(fConnectionsTable);
         ULCBoxPane connPane = new ULCBoxPane(true);
         connPane.setBorder(BorderFactory.createTitledBorder("Connections"));
         connPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, connScrollPane);
-        fConnectionsTable.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight));
 
         ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(nodesPane);
@@ -118,11 +105,21 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
                 modifyNodeAction();
             }
         });
-        fNodesTable.getSelectionModel().addListSelectionListener(new IListSelectionListener() {
+        
+        /*fNodesTable.getSelectionModel().addListSelectionListener(new IListSelectionListener() {
             public void valueChanged(ListSelectionEvent event) {
                 int[] selectedRows = fNodesTable.getSelectedRows();
                 setNodesSelected(selectedRows.length > 0);
                 setTwoNodesSelected(selectedRows.length == 2);
+            }
+        });*/
+
+        fNodesTable.getSelectionModel().addTreeSelectionListener(new ITreeSelectionListener() {
+            public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
+                int[] selectedRows = fNodesTable.getSelectedRows();
+                setNodesSelected(selectedRows != null && selectedRows.length > 0);
+                setTwoNodesSelected(selectedRows != null && selectedRows.length == 2);
+
             }
         });
         fConnectionsTable.addActionListener(new IActionListener() {
@@ -135,14 +132,6 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
                 setConnectionSelected(fConnectionsTable.getSelectedRows().length > 0);
             }
         });
-    }
-
-    public NodesTableModel getNodesTableModel() {
-        return (NodesTableModel) fNodesTable.getModel();
-    }
-
-    public ConnectionsTableModel getConnectionsTableModel() {
-        return (ConnectionsTableModel) fConnectionsTable.getModel();
     }
 
     private void addNodesContextMenu() {
@@ -162,6 +151,18 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         ULCMenuItem deleteItem = new ULCMenuItem("remove");
         deleteItem.addActionListener(actionMap.get("removeNodeAction"));
         menu.add(deleteItem);
+
+        menu.addSeparator();
+
+        ULCMenuItem showConnectedItem = new ULCMenuItem("show connected");
+        showConnectedItem.addActionListener(actionMap.get("showConnectedElementsAction"));
+        menu.add(showConnectedItem);
+
+        ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear selections");
+        clearSelectionsItem.addActionListener(actionMap.get("clearSelectionsAction"));
+        menu.add(clearSelectionsItem);
+
+
         fNodesTable.setComponentPopupMenu(menu);
     }
 
@@ -179,9 +180,21 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
             menu.add(replicateItem);
         }
 
+        menu.addSeparator();
+
         ULCMenuItem deleteItem = new ULCMenuItem("remove");
         deleteItem.addActionListener(actionMap.get("removeConnectionAction"));
         menu.add(deleteItem);
+
+        menu.addSeparator();
+
+        ULCMenuItem showAttachedNodesItem = new ULCMenuItem("show connected");
+        showAttachedNodesItem.addActionListener(actionMap.get("showAttachedNodesAction"));
+        menu.add(showAttachedNodesItem);
+
+        ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear selections");
+        clearSelectionsItem.addActionListener(actionMap.get("clearSelectionsAction"));
+        menu.add(clearSelectionsItem);
 
         fConnectionsTable.setComponentPopupMenu(menu);
     }
@@ -199,8 +212,8 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         if (fConnectNodesDialog == null) {
             fConnectNodesDialog = new ConnectNodesDialog(UlcUtilities.getWindowAncestor(fNodesTable), fGraphModel);
         }
-        if (node1 != null && GraphModelUtilities.hasPorts(node1) &&
-                node2 != null && GraphModelUtilities.hasPorts(node2)) {
+        if (node1 != null && node1.hasPorts() &&
+                node2 != null && node2.hasPorts()) {
             fConnectNodesDialog.setNodes(node1, node2);
             fConnectNodesDialog.setVisible(true);
         } else {
@@ -268,30 +281,38 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
      * @return the selected node or <code>null</code> if no row is selected
      */
     protected ComponentNode getSelectedNode() {
-        int[] selectedRows = fNodesTable.getSelectedRows();
+        /*int[] selectedRows = fNodesTable.getSelectedRows();
         if (selectedRows.length > 0) {
             int index = fNodesTable.convertRowIndexToModel(selectedRows[0]);
             return fGraphModel.getAllComponentNodes().get(index);
         } else {
             return null;
+        }*/
+        TreePath[] selected = fNodesTable.getSelectedPaths();
+        if (selected.length > 0) {
+            TreePath selected0 = selected[0];
+            if (selected0.getPath().length==2 && selected0.getPath()[1] instanceof ComponentNode) {
+                return (ComponentNode) selected0.getPath()[1];
+            }
         }
+        return null;
     }
 
     /**
      * @return the selected nodes or <code>null</code> if no row is selected
      */
-    protected ComponentNode[] getSelectedNodes() {
-        int[] selectedRows = fNodesTable.getSelectedRows();
-        if (selectedRows.length > 0) {
-            ComponentNode[] nodes = new ComponentNode[selectedRows.length];
-            for (int i = 0; i < selectedRows.length; i++) {
-                int index = fNodesTable.convertRowIndexToModel(selectedRows[i]);
-                nodes[i] = fGraphModel.getAllComponentNodes().get(index);
+    protected List<ComponentNode> getSelectedNodes() {
+        TreePath[] selected = fNodesTable.getSelectedPaths();
+        if (selected.length > 0 ) {
+            List<ComponentNode> nodes = new ArrayList<ComponentNode>();
+            for (TreePath path : selected) {
+                if (path.getPath().length==2 && path.getPath()[1] instanceof ComponentNode) {
+                    nodes.add((ComponentNode) path.getPath()[1]);
+                }
             }
             return nodes;
-        } else {
-            return new ComponentNode[0];
         }
+        return null;
     }
 
     /**
@@ -351,9 +372,11 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
     @Action(enabledProperty = "twoNodesSelected")
     public void connectSelectedNodesAction() {
         if (isTwoNodesSelected()) {
-            ComponentNode[] nodes = getSelectedNodes();
-            if (fConnectNodesDialog == null || !fConnectNodesDialog.isVisible()) {
-                showConnectNodesDialog(nodes[0], nodes[1]);
+            List<ComponentNode> nodes = getSelectedNodes();
+            if (nodes != null && nodes.size()==2) {
+                if (fConnectNodesDialog == null || !fConnectNodesDialog.isVisible()) {
+                    showConnectNodesDialog(nodes.get(0), nodes.get(1));
+                }
             }
         }
     }
@@ -361,10 +384,10 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
     @SuppressWarnings("serial")
     @Action(enabledProperty = "nodesSelected")
     public void removeNodeAction() {
-        final ComponentNode[] nodes = getSelectedNodes();
+        final List<ComponentNode> nodes = getSelectedNodes();
         boolean hasNoConnections = true;
         for (ComponentNode node : nodes) {
-            hasNoConnections = hasNoConnections && !GraphModelUtilities.isConnected(node, fGraphModel);
+            hasNoConnections = hasNoConnections && !fGraphModel.isConnected(node);
         }
         if (!hasNoConnections) {
             final ULCAlert alert = new ULCAlert(
@@ -385,7 +408,7 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         }
     }
 
-    private void removeNodes(ComponentNode[] nodes) {
+    private void removeNodes(List<ComponentNode> nodes) {
         for (ComponentNode node : nodes) {
             fGraphModel.removeComponentNode(node);
         }
@@ -407,6 +430,26 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         fReplicationEditForm.getBeanForm().getModel().getBean().reset();
     }
 
+    @Action
+    public void showAttachedNodesAction() {
+        List<Connection> connections = fGraphModel.getSelectedConnections();
+        List<ComponentNode> connectedNodes = fGraphModel.getAttachedNodes(connections);
+        fGraphModel.setSelectedNodes(connectedNodes, this);
+    }
+
+    @Action(enabledProperty = "nodesSelected")
+    public void showConnectedElementsAction() {
+        List<ComponentNode> selectedNodes = getSelectedNodes();
+        List<Connection> connections = fGraphModel.getEmergingConnections(selectedNodes);
+        fGraphModel.setSelectedConnections(connections, this);
+        List<ComponentNode> connectedNodes = fGraphModel.getConnectedNodes(selectedNodes);
+        fGraphModel.setSelectedNodes(connectedNodes, this);
+    }
+
+    @Action
+    public void clearSelectionsAction() {
+        fGraphModel.clearSelections();
+    }
 
     @Action(enabledProperty = "connectionSelected")
     public void modifyConnectionAction() {

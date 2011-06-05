@@ -11,12 +11,12 @@ import com.ulcjava.base.application.event.IWindowListener;
 import com.ulcjava.base.application.event.WindowEvent;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
-import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 
 public class NodeEditDialog extends ULCDialog {
@@ -71,28 +71,32 @@ public class NodeEditDialog extends ULCDialog {
             public void actionPerformed(ActionEvent event) {
                 NodeBean bean = (NodeBean) fBeanForm.getModel().getBean();
                 if (fEditedNode != null) {
-                    if (!isConsistent(fEditedNode, bean)) { // new node needs to be created and the old one replaced
+                    if (!fEditedNode.getName().equals(bean.getName())) {
+                        fGraphModel.changeNodeProperty(fEditedNode, "name", fEditedNode.getName(), bean.getName());
+                    }
+                    if (!fEditedNode.getType().getTypeClass().getName().equals(bean.getComponentType())) {
+                        ComponentDefinition newType = PaletteService.getInstance().getComponentDefinition(bean.getComponentType());
+                        for (Connection connection : fGraphModel.getEmergingConnections(fEditedNode)) {
+                            fGraphModel.removeConnection(connection);
+                        }
+                        fGraphModel.changeNodeProperty(fEditedNode, "type", fEditedNode.getType(), newType);
+
+                        /*// new node needs to be created and the old one replaced
                         ComponentNode newNode = GraphModelUtilities.replaceComponentNode(fEditedNode, bean.getName(), bean.getComponentType(), fGraphModel);
-                        newNode.setComment(bean.getComment());
-                        fEditedNode = newNode;
+                        if (bean.getComponentType().equals(fEditedNode.getType().getTypeClass().getName())) {
+                            fEditedNode.setName(bean.getName());
+                        } else {
+                            ComponentNode newNode = GraphModelUtilities.replaceComponentNode(fEditedNode, bean.getName(), bean.getComponentType(), fGraphModel);
+                            newNode.setComment(bean.getComment());
+                            fEditedNode = newNode;
+                        }*/
                     } else {
                         fEditedNode.setComment(bean.getComment());
                     }
-                        /*if (fGraphModel instanceof ModelGraphModel) {
-                            ModelGraphModel model = (ModelGraphModel) fGraphModel;
-                            if (!model.getStartComponents().contains(fEditedNode) && bean.isStarter()) {
-                                model.getStartComponents().add(fEditedNode);
-                            } else if (model.getStartComponents().contains(fEditedNode) && !bean.isStarter()) {
-                                model.getStartComponents().remove(fEditedNode);
-                            }
-                        }*/
                 } else {
                     ComponentDefinition definition = PaletteService.getInstance().getComponentDefinition(bean.getComponentType());
                     ComponentNode newNode = fGraphModel.createComponentNode(definition, bean.getName());
                     newNode.setComment(bean.getComment());
-                    /*if (fGraphModel instanceof ModelGraphModel && bean.isStarter()) {
-                        ((ModelGraphModel) fGraphModel).getStartComponents().add(fEditedNode);
-                    }*/
                 }
                 setVisible(false);
             }

@@ -1,7 +1,10 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 import com.ulcjava.applicationframework.application.form.BeanFormDialog;
-import com.ulcjava.base.application.*;
+import com.ulcjava.base.application.ClientContext;
+import com.ulcjava.base.application.ULCButton;
+import com.ulcjava.base.application.ULCDialog;
+import com.ulcjava.base.application.ULCWindow;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.event.IWindowListener;

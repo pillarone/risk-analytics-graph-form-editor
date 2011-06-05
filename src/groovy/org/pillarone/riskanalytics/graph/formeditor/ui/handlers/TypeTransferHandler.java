@@ -8,7 +8,6 @@ import com.ulcjava.base.application.dnd.Transferable;
 import com.ulcjava.base.application.tree.TreePath;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeTreeNode;
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.GraphModelEditable;
-import org.pillarone.riskanalytics.graph.formeditor.util.ComponentTypeTreeUtilities;
 
 public class TypeTransferHandler extends TransferHandler {
 

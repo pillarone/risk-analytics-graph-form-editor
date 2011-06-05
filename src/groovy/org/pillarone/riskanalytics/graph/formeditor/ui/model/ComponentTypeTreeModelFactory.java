@@ -1,6 +1,6 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.model;
 
-import com.ulcjava.base.application.tree.*;
+import com.ulcjava.base.application.tree.DefaultTreeModel;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.ComponentTypeTreeCellRenderer;

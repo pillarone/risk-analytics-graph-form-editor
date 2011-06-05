@@ -9,27 +9,10 @@ import org.pillarone.riskanalytics.graph.core.graphexport.ModelGraphExport;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class GraphModelUtilities {
-
-    /**
-     * Find a component node with given name in graph model. Return null if not found.
-     *
-     * @param model model to search the component node in.
-     * @param name  name to search for.
-     * @return
-     */
-    public static ComponentNode findComponentNode(AbstractGraphModel model, String name) {
-        for (ComponentNode node : model.getAllComponentNodes()) {
-            if (node.getName().equals(name)) {
-                return node;
-            }
-        }
-        return null;
-    }
 
     /**
      * Replace the given component node in the given model by a new component node with given name and type.
@@ -50,7 +33,7 @@ public class GraphModelUtilities {
         if (!model.getAllComponentNodes().contains(node)) return null;
 
         boolean hasSameType = node.getType().getTypeClass().getName().equals(newTypeClassName);
-        List<Connection> connections = GraphModelUtilities.getConnections(node, model);
+        List<Connection> connections = model.getEmergingConnections(node);
         model.removeComponentNode(node);
         ComponentDefinition componentDefinition = hasSameType
                 ? node.getType()
@@ -78,12 +61,6 @@ public class GraphModelUtilities {
             }
         }
         return newNode;
-    }
-
-
-    public static boolean hasPorts(ComponentNode node) {
-        return (node.getInPorts() != null && node.getInPorts().size() > 0)
-                || (node.getOutPorts() != null && node.getOutPorts().size() > 0);
     }
 
     /**
@@ -120,7 +97,7 @@ public class GraphModelUtilities {
         if (nameParts.length == 2) {
             String portName = nameParts[nameParts.length - 1];
             String nodeName = trimmedName.substring(0, trimmedName.length() - portName.length() - 1);
-            ComponentNode node = findComponentNode(model, nodeName);
+            ComponentNode node = model.findNodeByName(nodeName);
             if (node != null) {
                 Port p = node.getPort(portName);
                 if (p != null) {
@@ -142,53 +119,6 @@ public class GraphModelUtilities {
             }
         }
         return null;
-    }
-
-    /**
-     * Check whether there are connections to or from the given component node in the given model.
-     *
-     * @param node
-     * @param model
-     * @return
-     */
-    public static boolean isConnected(ComponentNode node, AbstractGraphModel model) {
-        for (Port p : node.getInPorts()) {
-            for (Connection c : model.getAllConnections()) {
-                if (c.getTo() == p) return true;
-            }
-        }
-        for (Port p : node.getOutPorts()) {
-            for (Connection c : model.getAllConnections()) {
-                if (c.getFrom() == p) return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Return all connections from or to the given component node in the given model.
-     *
-     * @param node
-     * @param model
-     * @return
-     */
-    public static List<Connection> getConnections(ComponentNode node, AbstractGraphModel model) {
-        List<Connection> connections = new ArrayList<Connection>();
-        for (Port p : node.getInPorts()) {
-            for (Connection c : model.getAllConnections()) {
-                if (c.getTo() == p) {
-                    connections.add(c);
-                }
-            }
-        }
-        for (Port p : node.getOutPorts()) {
-            for (Connection c : model.getAllConnections()) {
-                if (c.getFrom() == p) {
-                    connections.add(c);
-                }
-            }
-        }
-        return connections;
     }
 
     /**

@@ -1,19 +1,14 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 
-import com.ulcjava.applicationframework.application.*;
+import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
-import com.ulcjava.base.application.border.ULCAbstractBorder;
-import com.ulcjava.base.application.event.*;
-import com.ulcjava.base.application.util.Dimension;
-import com.ulcjava.base.application.util.IFileChooseHandler;
-import com.ulcjava.base.application.util.IFileStoreHandler;
-import com.ulcjava.base.application.util.Insets;
-import com.ulcjava.base.shared.FileChooserConfig;
-import org.pillarone.riskanalytics.graph.core.graph.model.*;
+import com.ulcjava.base.application.event.ActionEvent;
+import com.ulcjava.base.application.event.IActionListener;
+import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
-import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 public class SingleModelMultiEditView extends AbstractBean {
     private ApplicationContext fApplicationContext;
@@ -39,7 +34,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         fFormEditorView.setTransferHandler(transferHandler);
     }
 
-    private ULCToolBar createToolBar() {
+    /*private ULCToolBar createToolBar() {
         String[] actionNames = new String[]{"saveAction", "exportToApplication"};
         ULCToolBar toolBar = new ULCToolBar(ULCToolBar.HORIZONTAL);
         toolBar.setFloatable(false);
@@ -57,12 +52,12 @@ public class SingleModelMultiEditView extends AbstractBean {
             toolBar.add(button);
         }
         return toolBar;
-    }
+    }*/
 
     public void createView() {
         // toolbar
-        ULCToolBar toolBar = createToolBar();
-        toolBar.setBorderPainted(true);
+        //ULCToolBar toolBar = createToolBar();
+        //toolBar.setBorderPainted(true);
 
         // button to select the view
         ULCBoxPane viewSelector = new ULCBoxPane(false);
@@ -83,7 +78,7 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         // pack it in a toolbar pane:
         ULCBoxPane toolBarPane = new ULCBoxPane(false);
-        toolBarPane.add(ULCBoxPane.BOX_LEFT_CENTER, toolBar);
+        //toolBarPane.add(ULCBoxPane.BOX_LEFT_CENTER, toolBar);
         toolBarPane.add(ULCBoxPane.BOX_EXPAND_CENTER, ULCFiller.createHorizontalGlue());
         toolBarPane.add(ULCBoxPane.BOX_RIGHT_CENTER, viewSelector);
         toolBarPane.setBorder(BorderFactory.createEtchedBorder());
@@ -144,7 +139,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         tabbedPane.addTab("Comments", comments);
         tabbedPane.setEnabledAt(0,false);
         ULCBoxPane data = new ULCBoxPane();
-        tabbedPane.addTab("Data", data);
+        tabbedPane.addTab("Parameters", data);
         tabbedPane.setEnabledAt(1,false);
         ULCBoxPane results = new ULCBoxPane();
         tabbedPane.addTab("Results", results);
@@ -154,8 +149,6 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         // filter pane
         ModelFilterPane filterPane = new ModelFilterPane(fGraphModel);
-        filterPane.addFilterChangedListener(fFormEditorView.getNodesTableModel());
-        filterPane.addFilterChangedListener(fFormEditorView.getConnectionsTableModel());
         splitPane2.setRightComponent(filterPane);
         splitPane2.setDividerSize(10);
         splitPane2.setOneTouchExpandable(true);
@@ -169,7 +162,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         return fMainView;
     }
 
-    @Action
+    /*@Action
     public void saveAction() {
         String text = GraphModelUtilities.getGroovyModelCode(fGraphModel);
         saveOutput(fGraphModel.getName() + ".groovy", text, UlcUtilities.getWindowAncestor(fMainView));
@@ -217,12 +210,12 @@ public class SingleModelMultiEditView extends AbstractBean {
             }
         };
         ClientContext.chooseFile(chooser, config, ancestor);
-    }
+    }*/
 
     /**
      * Deploys the model in RA application.
      */
-    @Action
+    /*@Action
     public void exportToApplication() {
         if (fIsModel) {
             try {
@@ -235,5 +228,5 @@ public class SingleModelMultiEditView extends AbstractBean {
             ULCAlert alert = new ULCAlert("Graph Model cannot be deployed.", "Graph model is a ComposedComponent - these cannot be deployed and run.", "ok");
             alert.show();
         }
-    }
+    }*/
 }

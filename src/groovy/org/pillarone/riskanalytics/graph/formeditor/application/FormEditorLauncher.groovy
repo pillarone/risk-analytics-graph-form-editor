@@ -1,11 +1,10 @@
 package org.pillarone.riskanalytics.graph.formeditor.application
 
-import com.ulcjava.container.local.server.LocalContainerAdapter
+import com.ulcjava.base.client.ISessionStateListener
+import com.ulcjava.base.client.UISession
 import com.ulcjava.base.shared.logging.LogManager
 import com.ulcjava.base.shared.logging.SimpleLogManager
-import com.ulcjava.base.client.UISession
-import com.ulcjava.base.client.ISessionStateListener
-
+import com.ulcjava.container.local.server.LocalContainerAdapter
 
 class FormEditorLauncher extends LocalContainerAdapter {
 

@@ -2,7 +2,6 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.model;
 
 import com.ulcjava.base.application.tree.DefaultMutableTreeNode;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
-import org.springframework.beans.factory.parsing.PassThroughSourceExtractor;
 
 /**
  * Created by IntelliJ IDEA.

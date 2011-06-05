@@ -19,7 +19,10 @@ import com.ulcjava.base.application.event.WindowEvent;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
-import org.pillarone.riskanalytics.graph.core.graph.model.*;
+import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
+import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeNameFormModel;
@@ -211,7 +214,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         public void vertexRemoved(Vertex vertex) {
             String id = vertex.getId();
             if (fNodesMap.containsKey(id)) {
-                fULCGraph.removeVertex(fULCGraph.getVertex(id));
+               // fULCGraph.removeVertex(fULCGraph.getVertex(id));
                 ComponentNode node = fNodesMap.get(id);
                 fNodesMap.remove(id);
                 fGraphModel.removeComponentNode(node);
@@ -223,7 +226,11 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             edge.setId("conn_"+fGraphModel.getAllConnections().size());
             org.pillarone.riskanalytics.graph.core.graph.model.Port outPort = getGraphPort((Port) edge.getSource());
             org.pillarone.riskanalytics.graph.core.graph.model.Port inPort = getGraphPort((Port) edge.getTarget());
-            fGraphModel.createConnection(outPort, inPort);
+            if (outPort != null && inPort != null) {
+                fGraphModel.createConnection(outPort, inPort);
+            } else {
+                System.out.println("Ports could not be properly identified - no connection added to the graph model.");
+            }
         }
 
         public void edgeRemoved(Edge edge) {
@@ -280,6 +287,37 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 }
             }
             fULCGraph.upload();
+        }
+
+        public void nodesSelected(List<ComponentNode> nodes) {
+
+        }
+
+        public void connectionsSelected(List<Connection> connections) {
+
+        }
+
+        public void selectionCleared() {
+
+        }
+
+        public void filtersApplied() {
+            // TODO - once the selection possibilities are available
+        }
+
+        public void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
+            if (!fNodesToBeAdded.values().contains(node)) {
+                String oldName = null;
+                Iterator<Map.Entry<String,ComponentNode>> it = fNodesMap.entrySet().iterator();
+                while (it.hasNext() && oldName==null) {
+                    Map.Entry<String,ComponentNode> e = it.next();
+                    if (e.getValue()==node) {
+                        oldName = e.getKey();
+                        fNodesMap.remove(oldName);
+                        fNodesMap.put(node.getName(),node);
+                    }
+                }
+            }
         }
 
         public void connectionAdded(Connection c) {
@@ -405,6 +443,16 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 v.setRectangle(new Rectangle(new Point(x,y), DIM));
                 vertexPositions.put(v,v.getRectangle().getLocation());
             }
+        }
+
+        public void remove(List<Vertex> verticesToRemove) {
+            for (Vertex v : verticesToRemove) {
+                remove(v);
+            }
+        }
+
+        public void remove(Vertex vertexToRemove) {
+            vertexPositions.remove(vertexToRemove);
         }
     }
 }

@@ -3,11 +3,10 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.ApplicationContext;
-import com.ulcjava.base.application.*;
-import com.ulcjava.base.application.border.ULCAbstractBorder;
-import com.ulcjava.base.application.event.ActionEvent;
-import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.util.Dimension;
+import com.ulcjava.base.application.ULCAlert;
+import com.ulcjava.base.application.ULCBoxPane;
+import com.ulcjava.base.application.ULCScrollPane;
+import com.ulcjava.base.application.ULCTextArea;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;

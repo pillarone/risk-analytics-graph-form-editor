@@ -1,17 +1,6 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
-import com.ulcjava.applicationframework.application.Action;
-import com.ulcjava.base.application.ULCAlert;
-import com.ulcjava.base.application.event.IWindowListener;
-import com.ulcjava.base.application.event.WindowEvent;
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
-import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ConnectionBean;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ReplicationBean;
-import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 /**
  * Created by IntelliJ IDEA.

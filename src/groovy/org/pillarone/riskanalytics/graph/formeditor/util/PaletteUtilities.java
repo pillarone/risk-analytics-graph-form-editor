@@ -1,7 +1,5 @@
 package org.pillarone.riskanalytics.graph.formeditor.util;
 
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 

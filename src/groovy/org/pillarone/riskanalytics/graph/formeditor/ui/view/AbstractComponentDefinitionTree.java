@@ -10,9 +10,7 @@ import com.ulcjava.base.application.tree.ITreeModel;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.tree.ULCTreeSelectionModel;
 import com.ulcjava.base.application.util.Dimension;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.ComponentTypeTreeModelFactory;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeTreeNode;
-import org.pillarone.riskanalytics.graph.formeditor.util.ComponentTypeTreeUtilities;
 
 public abstract class AbstractComponentDefinitionTree extends ULCBoxPane {
 

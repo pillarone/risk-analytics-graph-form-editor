@@ -11,13 +11,16 @@ import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
+import com.ulcjava.base.application.util.IFileChooseHandler;
 import com.ulcjava.base.application.util.IFileLoadHandler;
+import com.ulcjava.base.application.util.IFileStoreHandler;
 import com.ulcjava.base.shared.FileChooserConfig;
 import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.model.Model;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.persistence.GraphPersistenceService;
 import org.pillarone.riskanalytics.graph.core.graphimport.AbstractGraphImport;
 import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraphImport;
 import org.pillarone.riskanalytics.graph.core.graphimport.GraphImportService;
@@ -223,7 +226,7 @@ public class GraphModelEditor extends AbstractBean {
      * Delegates to showTypDefinitionDialog.
      */
     @Action
-    public void newAction() {
+    public void newModelAction() {
         if (fTypeDefView == null || !fTypeDefView.isVisible()) {
             showTypeDefinitionDialog();
         }
@@ -253,7 +256,7 @@ public class GraphModelEditor extends AbstractBean {
 
     @SuppressWarnings("serial")
     @Action
-    public void importAction() {
+    public void importModelAction() {
         FileChooserConfig config = new FileChooserConfig();
         config.setDialogTitle("Open file");
         config.setDialogType(FileChooserConfig.FILES_ONLY);
@@ -297,11 +300,99 @@ public class GraphModelEditor extends AbstractBean {
         ClientContext.loadFile(handler, config, fEditorArea);
     }
 
+    @Action
+    public void loadModelAction() {
+        GraphPersistenceService service = new GraphPersistenceService();
+       // AbstractGraphModel model = service.load(name,type);
+
+        
+    }
+
+    @Action
+    public void saveModelAction() {
+        AbstractGraphModel model = getSelectedModel();
+        GraphPersistenceService service = new GraphPersistenceService();
+        service.save(model);
+    }
+
+    @Action
+    public void exportModelToGroovyAction() {
+        AbstractGraphModel model = getSelectedModel();
+        String text = GraphModelUtilities.getGroovyModelCode(model);
+        saveOutput(model.getName() + ".groovy", text, UlcUtilities.getWindowAncestor(this.getContentView()));
+    }
+
+    private AbstractGraphModel getSelectedModel() {
+        ULCComponent comp = fEditorArea.getSelectedComponent();
+        AbstractGraphModel model = fModelTabs.get(comp);
+        return model;
+    }
+
+    private void saveOutput(String name, final String text, final ULCWindow ancestor) {
+        FileChooserConfig config = new FileChooserConfig();
+        config.setDialogTitle("Save file as");
+        config.setDialogType(FileChooserConfig.SAVE_DIALOG);
+        config.setSelectedFile(name);
+
+        IFileChooseHandler chooser = new IFileChooseHandler() {
+            public void onSuccess(String[] filePaths, String[] fileNames) {
+                String selectedFile = filePaths[0];
+                IFileStoreHandler fileStoreHandler =
+                        new IFileStoreHandler() {
+                            public void prepareFile(java.io.OutputStream stream) throws Exception {
+                                try {
+                                    stream.write(text.getBytes());
+                                } catch (UnsupportedOperationException t) {
+                                    new ULCAlert(ancestor, "Export failed", t.getMessage(), "Ok").show();
+                                } catch (Throwable t) {
+                                    new ULCAlert(ancestor, "Export failed", t.getMessage(), "Ok").show();
+                                } finally {
+                                    stream.close();
+                                }
+                            }
+
+                            public void onSuccess(String filePath, String fileName) {
+                            }
+
+                            public void onFailure(int reason, String description) {
+//	        			new ULCAlert(ancestor, "Export failed", description, "Ok").show();
+                            }
+                        };
+                try {
+                    ClientContext.storeFile(fileStoreHandler, selectedFile);
+                } catch (Exception ex) {
+
+                }
+            }
+
+            public void onFailure(int reason, String description) {
+                new ULCAlert(ancestor, "Export failed", description, "Ok").show();
+            }
+        };
+        ClientContext.chooseFile(chooser, config, ancestor);
+    }
+
+    @Action
+    public void exportModelToApplicationAction() {
+        AbstractGraphModel model = getSelectedModel();
+        if (model instanceof ModelGraphModel) {
+            try {
+                GraphModelUtilities.exportToApplication((ModelGraphModel) model);
+            } catch (Exception ex) {
+                ULCAlert alert = new ULCAlert("Model not deployed.", "Model could not be deployed. Reason: " + ex.getMessage(), "ok");
+                alert.show();
+            }
+        } else {
+            ULCAlert alert = new ULCAlert("Graph Model cannot be deployed.", "Graph model is a ComposedComponent - these cannot be deployed and run.", "ok");
+            alert.show();
+        }
+    }
+
     protected ApplicationActionMap getActionMap() {
         return fContext.getActionMap(this);
     }
 
     public ULCToolBar getToolBar() {
-        return new ToolBarFactory(getActionMap()).createToolBar("newAction", "importAction");
+        return new ToolBarFactory(getActionMap()).createToolBar("newModelAction", "loadModelAction", "importModelAction", "saveModelAction", "exportModelToGroovyAction", "exportModelToApplicationAction");
     }
 }
