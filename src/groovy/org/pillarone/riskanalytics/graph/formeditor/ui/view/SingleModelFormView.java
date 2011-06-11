@@ -315,6 +315,20 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         return null;
     }
 
+    protected List<Port> getSelectedPorts() {
+        TreePath[] selected = fNodesTable.getSelectedPaths();
+        if (selected.length > 0 ) {
+            List<Port> ports = new ArrayList<Port>();
+            for (TreePath path : selected) {
+                if (path.getLastPathComponent() instanceof Port) {
+                    ports.add((Port) path.getLastPathComponent());
+                }
+            }
+            return ports;
+        }
+        return null;
+    }
+
     /**
      * @return the selected bean or <code>null</code> if no row is selected
      */
@@ -376,6 +390,26 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
             if (nodes != null && nodes.size()==2) {
                 if (fConnectNodesDialog == null || !fConnectNodesDialog.isVisible()) {
                     showConnectNodesDialog(nodes.get(0), nodes.get(1));
+                }
+            } else {
+                List<Port> ports = getSelectedPorts();
+                if (ports != null && ports.size()==2) {
+                    Port p1 = ports.get(0);
+                    Port p2 = ports.get(1);
+                    if (p1.allowedToConnectTo(p2)) {
+                        Port from;
+                        if (p1.getClass()!=p2.getClass()) { // non-replicating
+                            from = p1 instanceof InPort ? p2 : p1;
+                        } else { // replicating
+                            if (p1 instanceof InPort) {
+                                from = p1.isComposedComponentOuterPort() ? p1 : p2;
+                            } else {
+                                from = p1.isComposedComponentOuterPort() ? p2 : p1;
+                            }
+                        }
+                        Port to = from==p1 ? p2 : p1;
+                        fGraphModel.createConnection(from, to);
+                    }
                 }
             }
         }
