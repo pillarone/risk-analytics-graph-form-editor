@@ -1,18 +1,18 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.model.beans;
 
 
-public class NodeNameBean {
+public class NameBean {
     private String name;
 
-    public NodeNameBean() {
+    public NameBean() {
         super();
     }
 
-    public NodeNameBean(NodeNameBean node) {
+    public NameBean(NameBean node) {
         this.name = node.name;
     }
 
-    public boolean isEqual(NodeNameBean node) {
+    public boolean isEqual(NameBean node) {
         return this.name.equals(node.getName());
     }
 

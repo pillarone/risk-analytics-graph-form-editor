@@ -167,13 +167,13 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
                         if (range != null) {
                             int numOfConn = ((InPort)port).getConnectionCount();
                             if (numOfConn<range.getTo()) {
-                                value = "IN: accepts more";
+                                value = "IN (+)";
                             }
                             if (numOfConn<range.getFrom()) {
-                                value = "IN: needs more";
+                                value = "IN +!";
                             }
                             if (numOfConn>range.getTo()) {
-                                value = "IN: remove connection(s)";
+                                value = "IN -!";
                             }
                         }
                         return value;
@@ -187,10 +187,6 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
         return null;
     }
 
-    /**
-     * Only the fourth column is a {@link Boolean} - all the others are of type {@link String}.
-     */
-    @SuppressWarnings("rawtypes")
     public Class getColumnClass(int columnIndex) {
         return String.class;
     }
@@ -215,10 +211,6 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
         return fCache.get(parent).indexOf(child);
     }
 
-    /**
-     * Return the name of the column with index <code>col</code> - loaded from the application context.
-     */
-    @Override
     public String getColumnName(int column) {
         return fColumnNames[column];
     }

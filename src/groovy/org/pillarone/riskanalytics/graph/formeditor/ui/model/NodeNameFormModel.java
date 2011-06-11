@@ -5,18 +5,18 @@ import com.ulcjava.applicationframework.application.form.model.IValidator;
 import com.ulcjava.applicationframework.application.form.model.PropertyValidator;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeNameBean;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.checkers.PropertySpellChecker;
 
 /**
  * @author martin.melchior
  */
-public class NodeNameFormModel extends FormModel<NodeNameBean> {
+public class NodeNameFormModel extends FormModel<NameBean> {
 
     private AbstractGraphModel fGraphModel;
     private String fNodeName;
 
-    public NodeNameFormModel(NodeNameBean bean, AbstractGraphModel graphModel) {
+    public NodeNameFormModel(NameBean bean, AbstractGraphModel graphModel) {
         super(bean);
         fGraphModel = graphModel;
     }
