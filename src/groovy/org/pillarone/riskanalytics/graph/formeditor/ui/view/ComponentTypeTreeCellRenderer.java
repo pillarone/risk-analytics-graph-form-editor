@@ -4,13 +4,10 @@ import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.tree.DefaultMutableTreeNode;
 import com.ulcjava.base.application.tree.DefaultTreeCellRenderer;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeTreeNode;
 
 /**
- * Created by IntelliJ IDEA.
- * User: martin.melchior
- * Date: 24.03.11
- * Time: 18:04
- * To change this template use File | Settings | File Templates.
+ *
  */
 public class ComponentTypeTreeCellRenderer extends DefaultTreeCellRenderer {
     private ULCPopupMenu fNodePopUpMenu;
@@ -30,10 +27,10 @@ public class ComponentTypeTreeCellRenderer extends DefaultTreeCellRenderer {
 
     public IRendererComponent getTreeCellRendererComponent(ULCTree tree, Object node, boolean selected, boolean expanded, boolean leaf, boolean hasFocus) {
         IRendererComponent component = super.getTreeCellRendererComponent(tree, node, selected, expanded, leaf, hasFocus);
-        if (node instanceof DefaultMutableTreeNode) {
-            setPopUpMenu((ULCComponent) component, (DefaultMutableTreeNode) node);
+        if (node instanceof TypeTreeNode && ((TypeTreeNode)node).isLeaf()) {
+            setPopUpMenu((ULCComponent) component, (TypeTreeNode) node);
+            setToolTip((ULCComponent) component, (TypeTreeNode) node);
         }
-        setToolTip((ULCComponent) component, node);
         return component;
     }
 
@@ -41,7 +38,7 @@ public class ComponentTypeTreeCellRenderer extends DefaultTreeCellRenderer {
         component.setComponentPopupMenu(fNodePopUpMenu);
     }
 
-    void setToolTip(ULCComponent component, Object node) {
-        component.setToolTipText("");
+    void setToolTip(ULCComponent component, TypeTreeNode node) {
+        component.setToolTipText(node.getPackagePath()+"."+node.getName());
     }
 }
