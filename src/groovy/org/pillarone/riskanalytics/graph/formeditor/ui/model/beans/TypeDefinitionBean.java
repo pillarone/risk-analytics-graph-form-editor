@@ -3,7 +3,7 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.model.beans;
 
 public class TypeDefinitionBean {
     private String name;
-    private String packageName;
+    private String packageName = "models";
     private String baseType;
 
     public String getName() {
