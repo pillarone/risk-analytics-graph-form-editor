@@ -14,12 +14,9 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeTreeNode;
 
 public abstract class AbstractComponentDefinitionTree extends ULCBoxPane {
 
-    private static final String PATHSEP = ".";
-
     private ITreeModel fTreeModel;
     private ULCTree fTree;
-    private ComponentTypeTreeCellRenderer fTreeCellRenderer;
-    private GraphModelEditor fParent;
+    private GraphModelEditor fParent; // TODO: this is somewhat ugly
 
     public AbstractComponentDefinitionTree(GraphModelEditor parent) {
         super();
@@ -36,9 +33,9 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane {
         fTree.setDragEnabled(true);
         fTree.setModel(fTreeModel);
         fTree.getSelectionModel().setSelectionMode(ULCTreeSelectionModel.SINGLE_TREE_SELECTION);
-        fTreeCellRenderer = new ComponentTypeTreeCellRenderer();
-        fTreeCellRenderer.setShowComponentMenuListener(new ShowComponentAction());
-        fTree.setCellRenderer(fTreeCellRenderer);
+        ComponentTypeTreeCellRenderer treeCellRenderer = new ComponentTypeTreeCellRenderer();
+        treeCellRenderer.setShowComponentMenuListener(new ShowComponentAction());
+        fTree.setCellRenderer(treeCellRenderer);
 
         ULCScrollPane treeScrollPane = new ULCScrollPane(fTree);
         treeScrollPane.setMinimumSize(new Dimension(200, 600));
