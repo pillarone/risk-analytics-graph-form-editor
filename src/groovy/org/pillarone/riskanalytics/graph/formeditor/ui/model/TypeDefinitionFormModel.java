@@ -20,6 +20,6 @@ public class TypeDefinitionFormModel extends FormModel<TypeDefinitionBean> {
 
     @Override
     protected IValidator[] createValidators() {
-        return new IValidator[]{new PropertySpellChecker("name")};
+        return new IValidator[]{new PropertySpellChecker("name"), new PropertySpellChecker("packageName")};
     }
 }
