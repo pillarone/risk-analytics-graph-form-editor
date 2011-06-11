@@ -26,7 +26,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListe
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeNameFormModel;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeNameBean;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GroovyUtils;
 
 import java.lang.reflect.Field;
@@ -369,13 +369,13 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         @SuppressWarnings("serial")
         private void createBeanView() {
-            NodeNameFormModel model = new NodeNameFormModel(new NodeNameBean(), fGraphModel);
+            NodeNameFormModel model = new NodeNameFormModel(new NameBean(), fGraphModel);
             NodeNameForm form = new NodeNameForm(model);
             fBeanForm = new BeanFormDialog<NodeNameFormModel>(form);
             add(fBeanForm.getContentPane());
             fBeanForm.addSaveActionListener(new IActionListener() {
                 public void actionPerformed(ActionEvent event) {
-                    NodeNameBean bean = fBeanForm.getModel().getBean();
+                    NameBean bean = fBeanForm.getModel().getBean();
                     String nodeName = bean.getName();
                     setVisible(false);
                     fBeanForm.reset();
