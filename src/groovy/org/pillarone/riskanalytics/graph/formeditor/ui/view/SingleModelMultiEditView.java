@@ -10,6 +10,8 @@ import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
 
+import java.util.Map;
+
 public class SingleModelMultiEditView extends AbstractBean {
     private ApplicationContext fApplicationContext;
 
@@ -20,6 +22,7 @@ public class SingleModelMultiEditView extends AbstractBean {
     private SingleModelFormView fFormEditorView;
     private SingleModelTextView fTextEditorView;
     private SingleModelVisualView fVisualEditorView;
+    private ULCTabbedPane fDataSetSheets;
 
     public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model) {
         super();
@@ -63,7 +66,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         ULCBoxPane viewSelector = new ULCBoxPane(false);
         ULCRadioButton formSelectButton = new ULCRadioButton("Forms", true);
         formSelectButton.setToolTipText("Edit (model | component) by filling in forms with nodes and connections.");
-        ULCRadioButton textSelectButton = new ULCRadioButton("Groovy");
+        ULCRadioButton textSelectButton = new ULCRadioButton("Code");
         textSelectButton.setToolTipText("Inspect (model | component) by looking at its groovy code.");
         ULCRadioButton visualSelectButton = new ULCRadioButton("Visual");
         visualSelectButton.setToolTipText("Edit (model | component) in the graphical editor.");
@@ -139,11 +142,14 @@ public class SingleModelMultiEditView extends AbstractBean {
         tabbedPane.addTab("Comments", comments);
         tabbedPane.setEnabledAt(0,false);
         ULCBoxPane data = new ULCBoxPane();
+        fDataSetSheets = new ULCTabbedPane();
+        data.add(ULCBoxPane.BOX_EXPAND_EXPAND, fDataSetSheets);
         tabbedPane.addTab("Parameters", data);
-        tabbedPane.setEnabledAt(1,false);
+        tabbedPane.setEnabledAt(1,true);
         ULCBoxPane results = new ULCBoxPane();
         tabbedPane.addTab("Results", results);
         tabbedPane.setEnabledAt(2,false);
+        tabbedPane.setSelectedIndex(1);
         propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, tabbedPane);
         splitPane2.setLeftComponent(propertyPane);
 
@@ -160,6 +166,16 @@ public class SingleModelMultiEditView extends AbstractBean {
 
     public ULCBoxPane getView() {
         return fMainView;
+    }
+
+    public AbstractGraphModel getGraphModel() {
+        return fGraphModel;
+    }
+    
+    public void addNewDataSet(String name) {
+        if (fGraphModel instanceof ModelGraphModel) {
+            fDataSetSheets.addTab(name, new DataTable((ModelGraphModel)fGraphModel, 1, name));
+        }
     }
 
     /*@Action
