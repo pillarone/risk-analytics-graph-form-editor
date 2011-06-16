@@ -14,26 +14,59 @@ import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 @ComponentCategory(categories={"Claims","Generators","Risk"})
 public class SingleClaimsGenerator extends Component {
 
-    private RandomVariateGen generator = new NormalGen(MathUtils.getRandomStreamBase(), 100, 5);
+    private double parmMean = 0.0;
+    private double parmStdev = 0.0;
 
     @WiringValidation(connections = {0,Integer.MAX_VALUE},packets = {0,Integer.MAX_VALUE})
     private PacketList<FrequencyPacket> inFrequency = new PacketList<FrequencyPacket>(FrequencyPacket.class);
-
     private PacketList<ClaimPacket> outClaims = new PacketList<ClaimPacket>(ClaimPacket.class);
 
     public void doCalculation() {
+        RandomVariateGen generator =  new NormalGen(MathUtils.getRandomStreamBase(), getParmMean(), getParmStdev());
         int freq = 0;
-        if (isReceiverWired(inFrequency)) {
-            for (int i = 0; i < inFrequency.size(); i++) {
-                freq += inFrequency.get(i).getValue();
+        if (isReceiverWired(getInFrequency())) {
+            for (FrequencyPacket f : getInFrequency()) {
+                freq += f.getValue();
             }
         } else {
             freq = 1;
         }
-        for (int i = 0; i < inFrequency.get(0).getValue(); i++) {
+        for (int i = 0; i < freq; i++) {
             ClaimPacket c = new ClaimPacket();
             c.setValue(generator.nextDouble());
-            outClaims.add(c);
+            getOutClaims().add(c);
         }
+    }
+
+    public double getParmMean() {
+        return parmMean;
+    }
+
+    public void setParmMean(double parmMean) {
+        this.parmMean = parmMean;
+    }
+
+    public double getParmStdev() {
+        return parmStdev;
+    }
+
+    public void setParmStdev(double parmStdev) {
+        this.parmStdev = parmStdev;
+    }
+
+    public PacketList<FrequencyPacket> getInFrequency() {
+        return inFrequency;
+    }
+
+    public void setInFrequency(PacketList<FrequencyPacket> inFrequency) {
+        this.inFrequency = inFrequency;
+    }
+
+    public PacketList<ClaimPacket> getOutClaims() {
+        return outClaims;
+    }
+
+    public void setOutClaims(PacketList<ClaimPacket> outClaims) {
+        this.outClaims = outClaims;
     }
 }

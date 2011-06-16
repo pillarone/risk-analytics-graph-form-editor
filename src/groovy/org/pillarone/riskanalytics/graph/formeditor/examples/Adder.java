@@ -20,7 +20,31 @@ public class Adder extends Component {
 
     public void doCalculation() {
         ClaimPacket claim = new ClaimPacket();
-        claim.setValue(inClaims1.get(0).getValue()+inClaims2.get(0).getValue());
-        outClaims.add(claim);
+        claim.setValue(getInClaims1().get(0).getValue()+ getInClaims2().get(0).getValue());
+        getOutClaims().add(claim);
+    }
+
+    public PacketList<ClaimPacket> getInClaims1() {
+        return inClaims1;
+    }
+
+    public void setInClaims1(PacketList<ClaimPacket> inClaims1) {
+        this.inClaims1 = inClaims1;
+    }
+
+    public PacketList<ClaimPacket> getInClaims2() {
+        return inClaims2;
+    }
+
+    public void setInClaims2(PacketList<ClaimPacket> inClaims2) {
+        this.inClaims2 = inClaims2;
+    }
+
+    public PacketList<ClaimPacket> getOutClaims() {
+        return outClaims;
+    }
+
+    public void setOutClaims(PacketList<ClaimPacket> outClaims) {
+        this.outClaims = outClaims;
     }
 }

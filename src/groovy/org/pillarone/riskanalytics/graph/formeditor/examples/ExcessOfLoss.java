@@ -21,16 +21,56 @@ public class ExcessOfLoss extends Component {
     private PacketList<ClaimPacket> outRetainedClaims = new PacketList<ClaimPacket>(ClaimPacket.class);
 
     public void doCalculation() {
-        for (int i = 0; i < inClaims.size(); i++) {
-            double gross = inClaims.get(i).getValue();
-            double ceded = Math.min(parmLimit, Math.max(gross - parmRetention, 0));
+        for (int i = 0; i < getInClaims().size(); i++) {
+            double gross = getInClaims().get(i).getValue();
+            double ceded = Math.min(getParmLimit(), Math.max(gross - getParmRetention(), 0));
             double retained = gross-ceded;
             ClaimPacket claimCeded = new ClaimPacket();
             claimCeded.setValue(ceded);
-            outCededClaims.add(claimCeded);
+            getOutCededClaims().add(claimCeded);
             ClaimPacket claimRetained = new ClaimPacket();
             claimRetained.setValue(retained);
-            outCededClaims.add(claimRetained);
+            getOutRetainedClaims().add(claimRetained);
         }
+    }
+
+    public double getParmRetention() {
+        return parmRetention;
+    }
+
+    public void setParmRetention(double parmRetention) {
+        this.parmRetention = parmRetention;
+    }
+
+    public double getParmLimit() {
+        return parmLimit;
+    }
+
+    public void setParmLimit(double parmLimit) {
+        this.parmLimit = parmLimit;
+    }
+
+    public PacketList<ClaimPacket> getInClaims() {
+        return inClaims;
+    }
+
+    public void setInClaims(PacketList<ClaimPacket> inClaims) {
+        this.inClaims = inClaims;
+    }
+
+    public PacketList<ClaimPacket> getOutCededClaims() {
+        return outCededClaims;
+    }
+
+    public void setOutCededClaims(PacketList<ClaimPacket> outCededClaims) {
+        this.outCededClaims = outCededClaims;
+    }
+
+    public PacketList<ClaimPacket> getOutRetainedClaims() {
+        return outRetainedClaims;
+    }
+
+    public void setOutRetainedClaims(PacketList<ClaimPacket> outRetainedClaims) {
+        this.outRetainedClaims = outRetainedClaims;
     }
 }
