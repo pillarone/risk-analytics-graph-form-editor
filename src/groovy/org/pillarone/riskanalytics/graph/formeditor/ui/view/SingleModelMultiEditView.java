@@ -2,13 +2,17 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 
 import com.ulcjava.applicationframework.application.AbstractBean;
+import com.ulcjava.applicationframework.application.Action;
+import com.ulcjava.applicationframework.application.ApplicationActionMap;
 import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
+import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
+import org.pillarone.riskanalytics.graph.formeditor.util.ProbeSimulationService;
 
 import java.util.Map;
 
@@ -23,6 +27,7 @@ public class SingleModelMultiEditView extends AbstractBean {
     private SingleModelTextView fTextEditorView;
     private SingleModelVisualView fVisualEditorView;
     private ULCTabbedPane fDataSetSheets;
+    private ULCTabbedPane fResultSheets;
 
     public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model) {
         super();
@@ -137,18 +142,24 @@ public class SingleModelMultiEditView extends AbstractBean {
         // the property editing area --> comments, help, ...etc.
         ULCBoxPane propertyPane = new ULCBoxPane(true,1);
         ULCTabbedPane tabbedPane = new ULCTabbedPane();
+        // comments
         ULCTextArea comments = new ULCTextArea();
         comments.setEditable(true);
         tabbedPane.addTab("Comments", comments);
         tabbedPane.setEnabledAt(0,false);
+        // parameters
         ULCBoxPane data = new ULCBoxPane();
         fDataSetSheets = new ULCTabbedPane();
         data.add(ULCBoxPane.BOX_EXPAND_EXPAND, fDataSetSheets);
         tabbedPane.addTab("Parameters", data);
-        tabbedPane.setEnabledAt(1,true);
+        tabbedPane.setEnabledAt(1, true);
+        // results
         ULCBoxPane results = new ULCBoxPane();
+        fResultSheets = new ULCTabbedPane();
+        results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
         tabbedPane.addTab("Results", results);
-        tabbedPane.setEnabledAt(2,false);
+        tabbedPane.setEnabledAt(2,true);
+
         tabbedPane.setSelectedIndex(1);
         propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, tabbedPane);
         splitPane2.setLeftComponent(propertyPane);
@@ -177,6 +188,52 @@ public class SingleModelMultiEditView extends AbstractBean {
             fDataSetSheets.addTab(name, new DataTable((ModelGraphModel)fGraphModel, 1, name));
         }
     }
+
+    public void addSimulationResult(Map output, String name) {
+        fResultSheets.addTab(name, new SimulationResultTable(output));
+    }
+    
+    public Parameterization getSelectedParametrization() {
+        ULCComponent comp = fDataSetSheets.getSelectedComponent();
+        if (comp != null) {
+            return ((DataTable)fDataSetSheets.getSelectedComponent()).getModel().getParametrization();
+        }
+        return null;
+    }
+
+    private void addParametersContextMenu() {
+        ULCPopupMenu menu = new ULCPopupMenu();
+        ApplicationActionMap actionMap = fApplicationContext.getActionMap(this);
+
+        ULCMenuItem addItem = new ULCMenuItem("simulate");
+        addItem.addActionListener(actionMap.get("simulateAction"));
+        menu.add(addItem);
+
+        fDataSetSheets.setComponentPopupMenu(menu);
+    }
+
+    @Action
+    public void simulateAction() {
+        if (fGraphModel instanceof ModelGraphModel) {
+            ModelGraphModel model = (ModelGraphModel) fGraphModel;
+            Parameterization parametrization = this.getSelectedParametrization();
+            if (parametrization != null) {
+                ProbeSimulationService simulationService = new ProbeSimulationService();
+                try {
+                    simulationService.getSimulationRunner(model, parametrization).start();
+                    Map output = simulationService.getOutput();
+                    this.addSimulationResult(output, "results");
+                } catch (Exception ex) {
+                    ULCAlert alert = new ULCAlert("Simulation failed",
+                        "Reason: " + ex.getMessage(), "ok");
+                    alert.show();
+                }
+            }
+        }
+    }
+
+
+
 
     /*@Action
     public void saveAction() {
