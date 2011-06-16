@@ -11,8 +11,10 @@ import org.pillarone.riskanalytics.core.simulation.item.parameter.ParameterHolde
 import org.pillarone.riskanalytics.core.simulation.item.parameter.ParameterHolderFactory
 import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraphImport
 import org.pillarone.riskanalytics.graph.core.graph.model.*
+import com.ulcjava.base.application.tabletree.IMutableTableTreeNode
 
 /**
+ * 
  */
 class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeModel, IGraphModelChangeListener {
 
@@ -32,7 +34,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
         injectParametrizationToTree(fParametrization)
     }
 
-    interface IDataTreeNode extends ITableTreeNode {
+    interface IDataTreeNode extends IMutableTableTreeNode  {
         String getPath()
         String getName()
     }
@@ -54,11 +56,29 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
 
         ITableTreeNode getChildAt(int i) { return null }
         int getChildCount() { return 0 }
+        void insert(IMutableTableTreeNode iMutableTableTreeNode, int i) {
+            throw new RuntimeException("No child can be inserted in a data leaf node.")
+        }
+        void remove(int i) {
+            throw new RuntimeException("There are no children that could be removed in a data leaf node.")
+        }
         ITableTreeNode getParent() { return parentNode }
+        void setParent(IMutableTableTreeNode iMutableTableTreeNode) {
+            if (parentNode instanceof DataTreeComponentNode) {
+                parentNode = (DataTreeComponentNode) iMutableTableTreeNode
+                path = parentNode.path+PATHSEP+name
+                // TODO do I need to remove this node as child from the prior parent and this as new child to the new parent?
+            }
+        }
         int getIndex(ITableTreeNode child) { throw new IndexOutOfBoundsException("No children attached to this data node in the data tree.") }
         Object getValueAt(int column) { return column==0 ? name : parameters.get(column-1).getBusinessObject() }
-        void setValueAt(int column, Object value) { if (column>0) parameters.get(column-1).setValue(value) }
+        void setValueAt(Object value, int column) {
+            if (column>0) {
+                parameters.get(column-1).setValue(value)
+            }
+        }
         boolean isLeaf() { return true }
+        boolean isCellEditable(int column) { return column>0 }
     }
 
     class DataTreeComponentNode implements IDataTreeNode {
@@ -75,12 +95,39 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
             graphElement = node
         }
 
-        void addChild(ITableTreeNode child) { children << child }
+        void addChild(IDataTreeNode child) { insert(child, children.size()) }
+        void insert(IMutableTableTreeNode child, int i) {
+            if (child instanceof IDataTreeNode) {
+                if (i < getChildCount()) {
+                    children.add(i, (IDataTreeNode) child)
+                } else {
+                    children << (IDataTreeNode) child
+                }
+            }
+        }
         ITableTreeNode getChildAt(int i) { return children[i] }
         int getChildCount() { return children.size() }
+        void remove(int i) {
+            if (i < getChildCount()) {
+                children.remove(i)
+            }
+        }
         ITableTreeNode getParent() { return parentNode }
+        void setParent(IMutableTableTreeNode iMutableTableTreeNode) {
+            if (parentNode instanceof DataTreeComponentNode) {
+                parentNode = (DataTreeComponentNode) iMutableTableTreeNode
+                path = parentNode.path+PATHSEP+name
+                // TODO do I need to remove this node as child from the prior parent and this as new child to the new parent?
+            }
+        }
         int getIndex(ITableTreeNode child) { return children.indexOf(child) }
         Object getValueAt(int column) { return column==0 ? name : "" }
+        void setValueAt(Object o, int i) {
+            throw new RuntimeException("Value of a non-leaf node cannot be changed.")
+        }
+        boolean isCellEditable(int i) {
+            return false  //To change body of implemented methods use File | Settings | File Templates.
+        }
         boolean isLeaf() { return false }
     }
 
@@ -183,12 +230,20 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
     }
 
     public Object getValueAt(Object parent, int column) {
-        return ((ITableTreeNode)parent).getValueAt(column)
+        return ((IDataTreeNode)parent).getValueAt(column)
     }
 
     public void setValueAt(Object node, Object value, int column) {
         if (node instanceof DataTreeParameterNode) {
-            ((DataTreeParameterNode)node).setValueAt(column, value)
+            ((DataTreeParameterNode)node).setValueAt(value, column)
+            /*Object[] path = [node]
+            ITableTreeNode parent = ((ITableTreeNode)node).getParent()
+            while (parent != null) {
+                path << parent
+                parent = parent.getParent()
+            }
+            path = path.reverse()
+            nodeChanged(new TreePath(path), column)*/
         }
     }
 
@@ -237,7 +292,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
     protected void linkLeafParametrization(DataTreeParameterNode leaf, Parameterization parametrization) {
         Map<Integer,ParameterHolder> existingHoldersInNode = [:]
         leaf.parameters.each { holder -> existingHoldersInNode[holder.periodIndex] = holder }
-        List<ParameterHolder> parameterHolders = fParametrization.getParameters( leaf.path )
+        List<ParameterHolder> parameterHolders = parametrization.getParameters( leaf.path )
         for (int periodIndex = 0; periodIndex < parametrization.periodCount; periodIndex++) {
             def matchingPeriodHolders = parameterHolders.findAll { holder -> holder.periodIndex==periodIndex }
             if (matchingPeriodHolders.size()>0) {
@@ -248,10 +303,9 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
             } else {
                 ParameterHolder holder = ParameterHolderFactory.getHolder(leaf.path, periodIndex, leaf.paramObject)
                 leaf.parameters.add(holder)
-                fParametrization.addParameter(holder)
+                parametrization.addParameter(holder)
             }
         }
-
     }
 
     public Parameterization getParametrization() {
@@ -265,7 +319,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
         if (hasDataNodes) {
             fRoot.addChild treeNode
             List<DataTreeParameterNode> leaves = getAllLeaves(treeNode)
-            leaves.each { leaf -> linkLeafParametrization(leaf, parametrization) }
+            leaves.each { leaf -> linkLeafParametrization(leaf, fParametrization) }
             structureChanged()
         }
     }
