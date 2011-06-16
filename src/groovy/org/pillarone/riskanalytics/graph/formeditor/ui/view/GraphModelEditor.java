@@ -334,6 +334,14 @@ public class GraphModelEditor extends AbstractBean {
     }
 
     @Action
+    public void simulateAction() {
+        ULCComponent comp = fEditorArea.getSelectedComponent();
+        if (comp != null) {
+            fModelTabs.get(comp).simulateAction();
+        }
+    }
+
+    @Action
     public void saveModelAction() {
         AbstractGraphModel model = getSelectedModel();
         if (!fModelRepositoryTree.getTreeModel().containsModel(model)) {
@@ -428,7 +436,7 @@ public class GraphModelEditor extends AbstractBean {
     }
 
     public ULCToolBar getToolBar() {
-        return new ToolBarFactory(getActionMap()).createToolBar("newModelAction", "importModelAction", "saveModelAction", "exportModelToGroovyAction", "exportModelToApplicationAction", "createParametersAction");
+        return new ToolBarFactory(getActionMap()).createToolBar("newModelAction", "importModelAction", "saveModelAction", "exportModelToGroovyAction", "exportModelToApplicationAction", "createParametersAction", "simulateAction");
     }
 
     /*private class DataNameDialog extends ULCDialog {
