@@ -162,6 +162,11 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         clearSelectionsItem.addActionListener(actionMap.get("clearSelectionsAction"));
         menu.add(clearSelectionsItem);
 
+        /*menu.addSeparator();
+
+        ULCMenuItem addParameterSetItem = new ULCMenuItem("create parameter set");
+        clearSelectionsItem.addActionListener(actionMap.get("createParametersAction"));
+        menu.add(clearSelectionsItem);*/
 
         fNodesTable.setComponentPopupMenu(menu);
     }
