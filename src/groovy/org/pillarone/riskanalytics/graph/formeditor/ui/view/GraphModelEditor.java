@@ -17,6 +17,7 @@ import com.ulcjava.base.shared.FileChooserConfig;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.model.Model;
+import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
@@ -29,6 +30,7 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHand
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
+import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities;
 
 import java.io.*;
 import java.util.HashMap;
@@ -183,6 +185,17 @@ public class GraphModelEditor extends AbstractBean {
         //fModelRepositoryTree.getTreeModel().addNode(model);
     }
 
+    private void addParameterSet(Parameterization p, String name) {
+        ULCComponent comp = fEditorArea.getSelectedComponent();
+        if (comp != null && fModelTabs.containsKey(comp)) {
+            SingleModelMultiEditView modelView = fModelTabs.get(comp);
+            modelView.addParameterSet(p, name);
+        } else {
+            ULCAlert alert = new ULCAlert("No model view available", "Create or load the model view before you ingest the parametrization.", "ok");
+            alert.show();
+        }
+    }
+
     /**
      * Show the type definition dialog - create the dialog if not yet instantiated
      */
@@ -329,7 +342,7 @@ public class GraphModelEditor extends AbstractBean {
     public void createParametersAction() {
         ULCComponent comp = fEditorArea.getSelectedComponent();
         if (comp != null) {
-            fModelTabs.get(comp).addNewDataSet("dataset");
+            fModelTabs.get(comp).addParameterSet(null, "dataset");
         }
     }
 
@@ -436,7 +449,48 @@ public class GraphModelEditor extends AbstractBean {
     }
 
     public ULCToolBar getToolBar() {
-        return new ToolBarFactory(getActionMap()).createToolBar("newModelAction", "importModelAction", "saveModelAction", "exportModelToGroovyAction", "exportModelToApplicationAction", "createParametersAction", "simulateAction");
+        return new ToolBarFactory(getActionMap()).createToolBar("newModelAction", "importModelAction", "saveModelAction", "exportModelToGroovyAction", "exportModelToApplicationAction", "createParametersAction", "importParametersAction", "simulateAction");
+    }
+
+    @Action
+    public void importParametersAction() {
+        FileChooserConfig config = new FileChooserConfig();
+        config.setDialogTitle("Choose Parameter File");
+        config.setDialogType(FileChooserConfig.FILES_ONLY);
+        config.addFileFilterConfig(new FileChooserConfig.FileFilterConfig(
+                new String[]{"groovy"}, "groovy files (*.groovy)")
+        );
+
+        IFileLoadHandler handler = new IFileLoadHandler() {
+            public void onSuccess(InputStream[] inputStreams, String[] filePaths, String[] fileNames) {
+                try {
+                    InputStream in = inputStreams[0];
+                    String name = fileNames[0];
+                    Writer writer = new StringWriter();
+                    char[] buffer = new char[1024];
+                    try {
+                        Reader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+                        int n;
+                        while ((n = reader.read(buffer)) != -1) {
+                            writer.write(buffer, 0, n);
+                        }
+                    } finally {
+                        in.close();
+                    }
+                    String content = writer.toString();
+                    Parameterization params = ParameterUtilities.loadParametrization(content);
+                    addParameterSet(params, name);
+                } catch (Exception ex) {
+                    new ULCAlert(UlcUtilities.getWindowAncestor(fEditorArea), "Import failed", "The specified file could not be imported. Reason: " + ex.getMessage(), "Ok").show();
+                }
+            }
+
+            public void onFailure(int reason, String description) {
+                new ULCAlert(UlcUtilities.getWindowAncestor(fEditorArea), "Import failed", "The specified file could not be imported.", "Ok").show();
+            }
+        };
+
+        ClientContext.loadFile(handler, config, fEditorArea);
     }
 
     /*private class DataNameDialog extends ULCDialog {
