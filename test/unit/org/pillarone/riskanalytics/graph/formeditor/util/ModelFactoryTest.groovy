@@ -41,7 +41,7 @@ class ModelFactoryTest extends GroovyTestCase {
         return p
     }
 
-    void testGetModel() {
+    void testInitAndWireModel() {
         ModelGraphModel graphModel = getModel()
         StochasticModel model = new ModelFactory().getModelInstance(graphModel)
         model.init()
@@ -49,7 +49,9 @@ class ModelFactoryTest extends GroovyTestCase {
         assertTrue model.getStartComponents().size()==1
 
         model.wire()
-        print model
+        assertTrue model["freq"].allOutputTransmitter.size()==1
+        assertTrue model["claims"].allOutputTransmitter.size()==1
+        assertTrue model["xl"].allOutputTransmitter.size()==1
     }
 
     void testRunModel() {
@@ -59,7 +61,8 @@ class ModelFactoryTest extends GroovyTestCase {
         SimulationRunner runner = service.getSimulationRunner(graphModel, data)
         runner.start()
         Map output = service.output
-        print "finished"
+        assertNotNull(output)
+        assertTrue(output.size()>0)
     }
 
 }
