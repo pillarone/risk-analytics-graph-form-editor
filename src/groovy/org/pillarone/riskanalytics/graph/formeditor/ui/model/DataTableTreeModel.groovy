@@ -91,7 +91,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
         DataTreeComponentNode(GraphElement node, DataTreeComponentNode parent, String parentPath) {
             this.name = node.name
             this.parentNode = parent
-            this.path = parent==null ? "" : parentPath + PATHSEP + node.name
+            this.path = parent==null ? "" : (parentPath.size()==0 ? "" : parentPath + PATHSEP) + node.name
             graphElement = node
         }
 
