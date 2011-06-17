@@ -1,6 +1,7 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 
+import com.canoo.ulc.detachabletabbedpane.server.ULCCloseableTabbedPane;
 import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.Action;
 import com.ulcjava.applicationframework.application.ApplicationActionMap;
@@ -149,13 +150,13 @@ public class SingleModelMultiEditView extends AbstractBean {
         tabbedPane.setEnabledAt(0,false);
         // parameters
         ULCBoxPane data = new ULCBoxPane();
-        fDataSetSheets = new ULCTabbedPane();
+        fDataSetSheets = new ULCCloseableTabbedPane();
         data.add(ULCBoxPane.BOX_EXPAND_EXPAND, fDataSetSheets);
         tabbedPane.addTab("Parameters", data);
         tabbedPane.setEnabledAt(1, true);
         // results
         ULCBoxPane results = new ULCBoxPane();
-        fResultSheets = new ULCTabbedPane();
+        fResultSheets = new ULCCloseableTabbedPane();
         results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
         tabbedPane.addTab("Results", results);
         tabbedPane.setEnabledAt(2,true);
@@ -183,9 +184,15 @@ public class SingleModelMultiEditView extends AbstractBean {
         return fGraphModel;
     }
     
-    public void addNewDataSet(String name) {
+    public void addParameterSet(Parameterization p, String name) {
         if (fGraphModel instanceof ModelGraphModel) {
-            fDataSetSheets.addTab(name, new DataTable((ModelGraphModel)fGraphModel, 1, name));
+            DataTable dataTable;
+            if (p == null) {
+                dataTable = new DataTable((ModelGraphModel)fGraphModel, 1, name);
+            } else {
+                dataTable = new DataTable((ModelGraphModel)fGraphModel, p);
+            }
+            fDataSetSheets.addTab(name, dataTable);
         }
     }
 
