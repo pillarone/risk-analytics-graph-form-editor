@@ -1,19 +1,13 @@
 package org.pillarone.riskanalytics.graph.formeditor.util
 
-import org.pillarone.riskanalytics.core.model.Model
-import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
-import org.pillarone.riskanalytics.core.simulation.IPeriodCounter
-import org.joda.time.DateTime
 import org.pillarone.riskanalytics.core.components.Component
 import org.pillarone.riskanalytics.core.model.StochasticModel
-import org.pillarone.riskanalytics.core.wiring.WiringUtils
+import org.pillarone.riskanalytics.core.packets.PacketList
+import org.pillarone.riskanalytics.core.wiring.ITransmitter
+import org.pillarone.riskanalytics.core.wiring.Transmitter
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection
-import org.pillarone.riskanalytics.core.components.ComposedComponent
-import org.pillarone.riskanalytics.core.packets.PacketList
-import org.pillarone.riskanalytics.core.wiring.Transmitter
-import org.pillarone.riskanalytics.core.wiring.ITransmitter
-import org.pillarone.riskanalytics.core.wiring.WireCategory
+import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 
 /**
  */
@@ -70,7 +64,6 @@ class ModelFactory {
                     component.validateWiring()
                 }
             }
-
         }
 
         return model
