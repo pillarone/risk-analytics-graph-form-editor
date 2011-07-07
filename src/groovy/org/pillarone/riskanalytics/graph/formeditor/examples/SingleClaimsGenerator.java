@@ -22,7 +22,7 @@ public class SingleClaimsGenerator extends Component {
     private PacketList<ClaimPacket> outClaims = new PacketList<ClaimPacket>(ClaimPacket.class);
 
     public void doCalculation() {
-        RandomVariateGen generator =  new NormalGen(MathUtils.getRandomStreamBase(), getParmMean(), getParmStdev());
+        RandomVariateGen generator =  getParmStdev()>0 ? new NormalGen(MathUtils.getRandomStreamBase(), getParmMean(), getParmStdev()) : null;
         int freq = 0;
         if (isReceiverWired(getInFrequency())) {
             for (FrequencyPacket f : getInFrequency()) {
@@ -33,7 +33,7 @@ public class SingleClaimsGenerator extends Component {
         }
         for (int i = 0; i < freq; i++) {
             ClaimPacket c = new ClaimPacket();
-            c.setValue(generator.nextDouble());
+            c.setValue(generator != null ? generator.nextDouble() : 0.0);
             getOutClaims().add(c);
         }
     }
