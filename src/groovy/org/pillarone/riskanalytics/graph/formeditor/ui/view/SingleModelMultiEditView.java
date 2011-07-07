@@ -1,6 +1,8 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 
+import com.canoo.ulc.detachabletabbedpane.server.ITabListener;
+import com.canoo.ulc.detachabletabbedpane.server.TabEvent;
 import com.canoo.ulc.detachabletabbedpane.server.ULCCloseableTabbedPane;
 import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.Action;
@@ -27,8 +29,8 @@ public class SingleModelMultiEditView extends AbstractBean {
     private SingleModelFormView fFormEditorView;
     private SingleModelTextView fTextEditorView;
     private SingleModelVisualView fVisualEditorView;
-    private ULCTabbedPane fDataSetSheets;
-    private ULCTabbedPane fResultSheets;
+    private ULCCloseableTabbedPane fDataSetSheets;
+    private ULCCloseableTabbedPane fResultSheets;
 
     public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model) {
         super();
@@ -151,12 +153,29 @@ public class SingleModelMultiEditView extends AbstractBean {
         // parameters
         ULCBoxPane data = new ULCBoxPane();
         fDataSetSheets = new ULCCloseableTabbedPane();
+        fDataSetSheets.addTabListener(new ITabListener() {
+            public void tabClosing(TabEvent event) {
+                event.getClosableTabbedPane().closeCloseableTab(event.getTabClosingIndex());
+                if (fDataSetSheets.getTabCount() > 0) {
+                    event.getClosableTabbedPane().setSelectedIndex(0);
+                }
+            }
+        });
+
         data.add(ULCBoxPane.BOX_EXPAND_EXPAND, fDataSetSheets);
         tabbedPane.addTab("Parameters", data);
         tabbedPane.setEnabledAt(1, true);
         // results
         ULCBoxPane results = new ULCBoxPane();
         fResultSheets = new ULCCloseableTabbedPane();
+        fResultSheets.addTabListener(new ITabListener() {
+            public void tabClosing(TabEvent event) {
+                event.getClosableTabbedPane().closeCloseableTab(event.getTabClosingIndex());
+                if (fResultSheets.getTabCount() > 0) {
+                    event.getClosableTabbedPane().setSelectedIndex(0);
+                }
+            }
+        });
         results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
         tabbedPane.addTab("Results", results);
         tabbedPane.setEnabledAt(2,true);
@@ -197,7 +216,12 @@ public class SingleModelMultiEditView extends AbstractBean {
     }
 
     public void addSimulationResult(Map output, String name) {
-        fResultSheets.addTab(name, new SimulationResultTable(output));
+        SimulationResultTable resultTable = new SimulationResultTable(output);
+        ULCScrollPane resultScrollPane = new ULCScrollPane(resultTable);
+        ULCBoxPane resultTablePane = new ULCBoxPane(true);
+        resultTablePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, resultScrollPane);
+        resultTablePane.setBorder(BorderFactory.createEmptyBorder());
+        fResultSheets.addTab(name, resultTablePane);
     }
     
     public Parameterization getSelectedParametrization() {
