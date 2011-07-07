@@ -11,7 +11,7 @@ import org.pillarone.riskanalytics.core.wiring.WiringValidation;
 @ComponentCategory(categories={"Claims","Reinsurance","Risk"})
 public class ExcessOfLoss extends Component {
 
-    private double parmRetention = Double.MAX_VALUE;
+    private double parmRetention = 0.0;
     private double parmLimit = 0.0;
 
     @WiringValidation(connections={1,1000},packets={1,1000})

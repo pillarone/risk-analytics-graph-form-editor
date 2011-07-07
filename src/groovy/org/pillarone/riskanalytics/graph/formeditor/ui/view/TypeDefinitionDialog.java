@@ -59,6 +59,7 @@ public class TypeDefinitionDialog extends ULCDialog {
                 });
             }
         });
+        fBeanForm.getModel().getBean().setBaseType("Model");
         pack();
     }
 
