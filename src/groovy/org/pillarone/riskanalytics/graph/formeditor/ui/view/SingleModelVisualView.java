@@ -110,6 +110,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         for (Vertex v : fNodesToBeAdded.keySet()) {
             try {
                 fULCGraph.addVertex(v);
+                fULCGraphComponent.shrinkVertex(v);
                 ComponentNode node = fNodesToBeAdded.get(v);
                 fNodesMap.put(v.getId(), node);
             } catch (Exception ex) {
@@ -144,6 +145,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         vertex.setId(node.getName());
         vertex.setTemplateId(node.getType().getTypeClass().getName());
         vertex.setStyle("swimlane");
+        addPorts(vertex, PaletteService.getInstance().getComponentDefinition(vertex.getTemplateId()), node.getName());
         return vertex;
     }
 
@@ -155,7 +157,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             final String className = entry.getValue().getName();
             final Port port = new Port(nodeName + "_" + portName, PortType.IN, className, portName);
             port.addConstraint(new PortConstraint(className, 0, 100));
-            fULCGraph.addPort(vertex, port);
+            vertex.addPort(port);
         }
         fieldClassMap = GroovyUtils.obtainPorts(componentDefinition, "out");
         for (Map.Entry<Field, Class> entry : fieldClassMap.entrySet()) {
@@ -163,7 +165,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             final String className = entry.getValue().getName();
             final Port port = new Port(nodeName + "_" + portName, PortType.OUT, className, portName);
             port.addConstraint(new PortConstraint(className, 0, 100));
-            fULCGraph.addPort(vertex, port);
+            vertex.addPort(port);
         }
     }
 
@@ -272,7 +274,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 fCurrentVertex = null;
             } else {
                 Vertex vertex = createVertex(node);
-                addPorts(vertex, PaletteService.getInstance().getComponentDefinition(vertex.getTemplateId()), node.getName());
                 fNodesToBeAdded.put(vertex, node);
                 fCurrentVertex = null;
             }
