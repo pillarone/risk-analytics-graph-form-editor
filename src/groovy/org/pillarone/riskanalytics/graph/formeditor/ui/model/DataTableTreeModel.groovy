@@ -34,9 +34,10 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
         injectParametrizationToTree(fParametrization)
     }
 
-    interface IDataTreeNode extends IMutableTableTreeNode  {
+    public interface IDataTreeNode extends IMutableTableTreeNode  {
         String getPath()
         String getName()
+        Class getType()
     }
 
     class DataTreeParameterNode implements IDataTreeNode {
@@ -44,6 +45,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
         String name
         DataTreeComponentNode parentNode
         Object paramObject
+        Class type
         List<ParameterHolder> parameters
 
         DataTreeParameterNode(String path, Object paramObject, DataTreeComponentNode parent) {
@@ -51,6 +53,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
             this.path = path
             this.parentNode = parent
             this.paramObject = paramObject
+            this.type = paramObject.class
             parameters = []
         }
 
@@ -87,6 +90,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
         DataTreeComponentNode parentNode
         GraphElement graphElement
         List<IDataTreeNode> children = []
+        Class type = null
 
         DataTreeComponentNode(GraphElement node, DataTreeComponentNode parent, String parentPath) {
             this.name = node.name
@@ -247,9 +251,9 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
         }
     }
 
-    /*public Class getColumnClass(int column) {
-        return column==0 ? String.class : Object.class
-    }*/
+    public Class getColumnClass(int column) {
+        return column==0 ? String.class : Double.class
+    }
 
     public boolean isCellEditable(Object node, int column) {
         return node instanceof DataTreeParameterNode && column > 0
