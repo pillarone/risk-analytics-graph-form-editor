@@ -6,6 +6,7 @@ import com.ulcjava.base.application.datatype.ULCNumberDataType;
 import com.ulcjava.base.application.tabletree.*;
 import com.ulcjava.base.application.util.Color;
 import com.ulcjava.base.application.util.Dimension;
+import com.ulcjava.base.shared.UlcEventConstants;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel;
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 
+ *
  */
 public class DataTable extends ULCBoxPane {
 
@@ -42,6 +43,7 @@ public class DataTable extends ULCBoxPane {
     }
 
     public void createView() {
+        ClientContext.setModelUpdateMode(fTableModel, UlcEventConstants.SYNCHRONOUS_MODE);
         fTableTree = new ULCTableTree(fTableModel);
         //fTableTree.createDefaultColumnsFromModel();
         fTableTree.setShowGrid(true);

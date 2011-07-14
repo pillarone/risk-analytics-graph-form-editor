@@ -14,9 +14,9 @@ import org.pillarone.riskanalytics.graph.core.graph.model.*
 import com.ulcjava.base.application.tabletree.IMutableTableTreeNode
 
 /**
- * 
+ *
  */
-class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeModel, IGraphModelChangeListener {
+class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelChangeListener {
 
     private static final String PATHSEP = ':'
     private DataTreeComponentNode fRoot
@@ -27,7 +27,6 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
     }
 
     public DataTableTreeModel(ModelGraphModel model, Parameterization parametrization) {
-        super()
         fRoot = new DataTreeComponentNode(model, null, "")
         createTree()
         fParametrization = parametrization
@@ -143,7 +142,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements ITableTreeMod
 
     private boolean addChildren(DataTreeComponentNode parent) {
         List<IDataTreeNode> children = getChildren(parent)
-        for (IDataTreeNode child : children) { 
+        for (IDataTreeNode child : children) {
             if (child instanceof DataTreeComponentNode) {
                 boolean hasChildren = addChildren(child)
                 if (hasChildren) {
