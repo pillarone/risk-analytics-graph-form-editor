@@ -23,11 +23,14 @@ import com.ulcjava.base.application.event.WindowEvent;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
+import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.jetbrains.annotations.NotNull;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener;
+import org.pillarone.riskanalytics.graph.core.layout.ComponentLayout;
+import org.pillarone.riskanalytics.graph.core.layout.GraphLayoutService;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeNameFormModel;
@@ -53,6 +56,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
     private ULCBoxPane fMainView;
     private ULCBoxPane fContent;
+
+    private GraphLayoutService fLayoutService;
 
     public SingleModelVisualView(ApplicationContext ctx, AbstractGraphModel model) {
         super();
@@ -106,7 +111,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     private void updateULCGraph() {
         List<Vertex> vertices = new ArrayList<Vertex>();
         vertices.addAll(fNodesToBeAdded.keySet());
-        fLayOuter.layout(vertices);
+        //fLayOuter.layout(vertices);
         for (Vertex v : fNodesToBeAdded.keySet()) {
             try {
                 fULCGraph.addVertex(v);
@@ -213,6 +218,93 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         return null;
     }
 
+    private void saveLayout(long uid, String name) {
+        String graphName = fGraphModel.getPackageName() + "." + fGraphModel.getName();
+        if (getPersistenceService().findLayout(uid, name, graphName)) {
+            //Dialog to verify if overwrite existing save
+            return;
+        }
+        List<ComponentLayout> components = new ArrayList<ComponentLayout>();
+        Map<ComponentNode, String> inverse = invertMap(fNodesMap);
+        for (Map.Entry<String, List<ComponentNode>> entry : getComponentPaths().entrySet()) {
+            for (ComponentNode n : entry.getValue()) {
+                Vertex v = fULCGraph.getVertex(inverse.get(n));
+                if (v != null) {
+                    ComponentLayout cl = new ComponentLayout();
+                    cl.setName(entry.getKey());
+                    cl.setType(n.getType().getTypeClass());
+                    cl.setX(0);
+                    cl.setY(0);
+                    cl.setH(0);
+                    cl.setW(0);
+                    cl.setUnfolded(!v.isCollapsed());
+                    components.add(cl);
+                }
+            }
+        }
+        getPersistenceService().saveLayout(uid, name, graphName, components);
+    }
+
+    private GraphLayoutService getPersistenceService() {
+        if (fLayoutService == null) {
+            org.springframework.context.ApplicationContext ctx = ApplicationHolder.getApplication().getMainContext();
+            fLayoutService = ctx.getBean(GraphLayoutService.class);
+        }
+
+        return fLayoutService;
+    }
+
+
+    private void loadLayout(long uid, String name) {
+        String graphName = fGraphModel.getPackageName() + "." + fGraphModel.getName();
+        Map<ComponentNode, String> inverse = invertMap(fNodesMap);
+        Map<String, List<ComponentNode>> paths = getComponentPaths();
+        Set<ComponentLayout> components = getPersistenceService().loadLayout(uid, name, graphName);
+        for (ComponentLayout cl : components) {
+            List<ComponentNode> cList = paths.get(cl.getName());
+            if (cList != null) {
+                ComponentNode match = null;
+                //match=find{it.typeClass.equals(cl.getTyp)}
+                for (ComponentNode n : cList) {
+                    if (n.getType().getTypeClass().equals(cl.getType())) {
+                        match = n;
+                        break;
+                    }
+                }
+                if (match != null) {
+                    Vertex v = fULCGraph.getVertex(inverse.get(match));
+                    if (v != null) {
+                        v.setRectangle(new Rectangle(cl.getX(), cl.getY(), cl.getW(), cl.getH()));
+                        v.setCollapsed(!cl.getUnfolded());
+                    }
+                }
+            }
+        }
+    }
+
+    //invert 1:1 map
+    private Map<ComponentNode, String> invertMap(Map<String, ComponentNode> map) {
+        HashMap<ComponentNode, String> inverse = new HashMap<ComponentNode, String>();
+        for (Map.Entry<String, ComponentNode> entry : map.entrySet()) {
+            inverse.put(entry.getValue(), entry.getKey());
+        }
+        return inverse;
+    }
+
+
+    private HashMap<String, List<ComponentNode>> getComponentPaths() {
+        HashMap<String, List<ComponentNode>> paths = new HashMap<String, List<ComponentNode>>();
+        for (Map.Entry<String, ComponentNode> entry : fNodesMap.entrySet()) {
+            List<ComponentNode> tmpList;
+            if ((tmpList = paths.get(entry.getValue().getName())) == null) {
+                tmpList = new ArrayList<ComponentNode>();
+                paths.put(entry.getValue().getName(), tmpList);
+            }
+            tmpList.add(entry.getValue());
+        }
+        return paths;
+    }
+
 
     /**
      * Reacts to changes in the ULC graph - updates the graph model
@@ -221,7 +313,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         public void vertexAdded(@NotNull Vertex vertex) {
             if (vertex.getId() == null) {
-                vertex.setId("" + System.currentTimeMillis()+Math.random());
+                vertex.setId("" + System.currentTimeMillis() + Math.random());
             }
             fULCGraphComponent.shrinkVertex(vertex);
         }

@@ -44,8 +44,8 @@ grails.project.dependency.resolution = {
         test ":code-coverage:1.2.2"
 
         if (appName == "RiskAnalyticsGraphFormEditor") {
-            runtime "org.pillarone:risk-analytics-core:1.4-ALPHA-2.5.1-kti"
-            runtime("org.pillarone:risk-analytics-graph-core:0.3.3") { transitive = false }
+            runtime "org.pillarone:risk-analytics-core:1.4-ALPHA-2.5.6-kti"
+            runtime("org.pillarone:risk-analytics-graph-core:0.3.4") { transitive = false }
         }
 
     }
@@ -96,3 +96,5 @@ coverage {
     ]
 
 }
+//grails.plugin.location.'risk-analytics-core' = "../RiskAnalyticsCore"
+//grails.plugin.location.'risk-analytics-graph-core' = "../risk-analytics-graph-core"
