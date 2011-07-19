@@ -9,10 +9,7 @@ import com.ulcjava.base.application.event.ListSelectionEvent;
 import com.ulcjava.base.application.table.TableRowSorter;
 import com.ulcjava.base.application.util.Color;
 import com.ulcjava.base.application.util.Dimension;
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
-import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener;
+import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ConnectionsTableModel;
 
 import java.util.ArrayList;
@@ -66,6 +63,14 @@ public class ConnectionsTable extends ULCTable {
         }
 
         public void nodeRemoved(ComponentNode node) {
+            // nothing to do
+        }
+
+        public void outerPortAdded(Port p) {
+            // nothing to do
+        }
+
+        public void outerPortRemoved(Port p) {
             // nothing to do
         }
 
