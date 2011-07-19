@@ -44,7 +44,7 @@ class ProbeSimulationService extends SimulationRunner {
         simulation.id = "$time"
         simulation.numberOfIterations = 1
         simulation.beginOfFirstPeriod = new DateTime(time)
-        simulation.randomSeed = null
+        simulation.randomSeed = time
         simulation.modelClass = model.class
         simulation.periodCount = 1
         simulation.parameterization = parametrization
