@@ -4,6 +4,7 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 import com.canoo.ulc.detachabletabbedpane.server.ITabListener;
 import com.canoo.ulc.detachabletabbedpane.server.TabEvent;
 import com.canoo.ulc.detachabletabbedpane.server.ULCCloseableTabbedPane;
+import com.canoo.ulc.graph.ULCGraphOutline;
 import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.Action;
 import com.ulcjava.applicationframework.application.ApplicationActionMap;
@@ -14,6 +15,8 @@ import com.ulcjava.base.application.event.IActionListener;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.ComponentNodeFilterFactory;
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
 import org.pillarone.riskanalytics.graph.formeditor.util.ProbeSimulationService;
 
@@ -26,9 +29,9 @@ public class SingleModelMultiEditView extends AbstractBean {
     private boolean fIsModel;
 
     private ULCBoxPane fMainView;
+    private SingleModelVisualView fVisualEditorView;
     private SingleModelFormView fFormEditorView;
     private SingleModelTextView fTextEditorView;
-    private SingleModelVisualView fVisualEditorView;
     private ULCCloseableTabbedPane fDataSetSheets;
     private ULCCloseableTabbedPane fResultSheets;
 
@@ -66,9 +69,57 @@ public class SingleModelMultiEditView extends AbstractBean {
     }*/
 
     public void createView() {
-        // toolbar
-        //ULCToolBar toolBar = createToolBar();
-        //toolBar.setBorderPainted(true);
+        ///////////////////
+        // toolbar pane
+        //////////////////
+
+        // model filter tool
+        ULCBoxPane modelFilterTool = new ULCBoxPane(false);
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_TOP, new ULCLabel("Filter Type: "));
+        final ULCComboBox filterType = new ULCComboBox(ComponentNodeFilterFactory.getFilterModelNames());
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_TOP, filterType);
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_TOP, new ULCLabel("Value: "));
+        final ULCTextField filterValue = new ULCTextField(10);
+        filterValue.setEditable(false);
+        // TODO: Validation of what has been entered
+        filterType.addActionListener(
+                new IActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        String filterModelName = (String) filterType.getSelectedItem();
+                        if (filterModelName.equalsIgnoreCase(ComponentNodeFilterFactory.NONE)) {
+                            filterValue.setEditable(false);
+                        } else {
+                            filterValue.setEditable(true);
+                        }
+                    }
+                }
+        );
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_TOP, filterValue);
+        modelFilterTool.add(2, ULCFiller.createVerticalGlue());
+
+        ULCButton clear = new ULCButton("Clear");
+        clear.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                filterValue.setText("");
+                filterType.setSelectedItem(ComponentNodeFilterFactory.NONE);
+                fGraphModel.clearNodeFilters();
+            }
+        });
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_BOTTOM, clear);
+
+        ULCButton apply = new ULCButton("Apply");
+        apply.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                String expr = filterValue.getText();
+                String filterModelName = (String) filterType.getSelectedItem();
+                IComponentNodeFilter filter = ComponentNodeFilterFactory.getFilter(filterModelName, expr);
+                if (filter != null) {
+                    fGraphModel.clearNodeFilters();
+                    fGraphModel.addNodeFilter(filter);
+                }
+            }
+        });
+        modelFilterTool.add(ULCBoxPane.BOX_RIGHT_BOTTOM, apply);
 
         // button to select the view
         ULCBoxPane viewSelector = new ULCBoxPane(false);
@@ -89,12 +140,17 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         // pack it in a toolbar pane:
         ULCBoxPane toolBarPane = new ULCBoxPane(false);
-        //toolBarPane.add(ULCBoxPane.BOX_LEFT_CENTER, toolBar);
+        // model filtering
+        toolBarPane.add(ULCBoxPane.BOX_LEFT_CENTER, modelFilterTool);
+
+        // view selector
         toolBarPane.add(ULCBoxPane.BOX_EXPAND_CENTER, ULCFiller.createHorizontalGlue());
         toolBarPane.add(ULCBoxPane.BOX_RIGHT_CENTER, viewSelector);
         toolBarPane.setBorder(BorderFactory.createEtchedBorder());
 
+        //////////////////////////////////////////////////
         // content pane - initialize the different views
+        //////////////////////////////////////////////////
         final ULCCardPane cardPane = new ULCCardPane();
         fFormEditorView = new SingleModelFormView(fApplicationContext, fGraphModel);
         final ULCComponent formView =  fFormEditorView.getView();
@@ -184,9 +240,9 @@ public class SingleModelMultiEditView extends AbstractBean {
         propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, tabbedPane);
         splitPane2.setLeftComponent(propertyPane);
 
-        // filter pane
-        ModelFilterPane filterPane = new ModelFilterPane(fGraphModel);
-        splitPane2.setRightComponent(filterPane);
+        // satellite view - this is a bit ugly that I need to get and inject the component wrapping the ulc graph here!
+        ULCGraphOutline satelliteView = new ULCGraphOutline(fVisualEditorView.getULCGraphComponent());
+        splitPane2.setRightComponent(satelliteView);
         splitPane2.setDividerSize(10);
         splitPane2.setOneTouchExpandable(true);
         splitPane2.setDividerLocation(0.7);
