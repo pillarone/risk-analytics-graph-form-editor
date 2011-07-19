@@ -129,14 +129,16 @@ public class ConnectNodesDialog extends ULCDialog {
         fSaveButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 // validate
-                if (getSelectedPort1().allowedToConnectTo(getSelectedPort2())) {
+                Port p1 = getSelectedPort1();
+                Port p2 = getSelectedPort2();
+                if (!fGraphModel.isConnected(p1,p2) && p1.allowedToConnectTo(p2)) {
                     Port from, to;
-                    if (getSelectedPort1() instanceof InPort) {
-                        from = getSelectedPort2();
-                        to = getSelectedPort1();
+                    if (p1 instanceof InPort) {
+                        from = p2;
+                        to = p1;
                     } else {
-                        from = getSelectedPort1();
-                        to = getSelectedPort2();
+                        from = p1;
+                        to = p2;
                     }
                     fGraphModel.createConnection(from, to);
                     for (IActionListener listener : fSaveActions) {
