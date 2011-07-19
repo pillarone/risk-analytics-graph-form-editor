@@ -236,7 +236,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         return ((IDataTreeNode)parent).getValueAt(column)
     }
 
-    public void setValueAt(Object node, Object value, int column) {
+    public void setValueAt(Object value, Object node, int column) {
         if (node instanceof DataTreeParameterNode) {
             ((DataTreeParameterNode)node).setValueAt(value, column)
             /*Object[] path = [node]
@@ -371,6 +371,8 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
     void connectionsSelected(List<Connection> connections) { }
     void selectionCleared() { }
     void filtersApplied() { }
+    void outerPortAdded(Port p) {}
+    void outerPortRemoved(Port p) {}
 
     // testing utilities
     private void printTree() {
@@ -387,4 +389,5 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
             }
         }
     }
+
 }
