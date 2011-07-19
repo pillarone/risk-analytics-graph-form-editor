@@ -112,16 +112,24 @@ public class AvailablePortsComboBoxModel implements IComboBoxModel {
             }
         }
 
+        public void outerPortAdded(Port p) {
+            // nothing to do
+        }
+
+        public void outerPortRemoved(Port p) {
+            // nothing to do
+        }
+
         public void nodesSelected(List<ComponentNode> nodes) {
-            //To change body of implemented methods use File | Settings | File Templates.
+            // nothing to do
         }
 
         public void connectionsSelected(List<Connection> connections) {
-            //To change body of implemented methods use File | Settings | File Templates.
+            // nothing to do
         }
 
         public void selectionCleared() {
-            //To change body of implemented methods use File | Settings | File Templates.
+            // nothing to do
         }
 
         public void filtersApplied() {
