@@ -53,7 +53,7 @@ public class ModelRepositoryTree extends ULCBoxPane {
                 try {
                     fParent.loadModel(modelName, packageName);
                 } catch (Exception ex) {
-                    ULCAlert alert = new ULCAlert("Model could not be loaded", "Unknown reason", "ok");
+                    ULCAlert alert = new ULCAlert("Model could not be loaded", "Reason: " + ex.getMessage(), "ok");
                     alert.show();
                 }
             }
