@@ -20,9 +20,6 @@ import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.event.IWindowListener;
 import com.ulcjava.base.application.event.WindowEvent;
-import com.ulcjava.base.application.util.Dimension;
-import com.ulcjava.base.application.util.Point;
-import com.ulcjava.base.application.util.Rectangle;
 import org.jetbrains.annotations.NotNull;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
@@ -49,7 +46,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
     private ULCGraph fULCGraph;
     private ULCGraphComponent fULCGraphComponent;
-    private LayOuter fLayOuter;
 
     private ULCBoxPane fMainView;
     private ULCBoxPane fContent;
@@ -78,11 +74,14 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         fConnectionsToBeAdded = new ArrayList<Connection>();
         fCurrentComponentDefinition = null;
         fCurrentVertex = null;
-        fLayOuter = new LayOuter();
     }
 
     public ULCBoxPane getView() {
         return fMainView;
+    }
+
+    public ULCGraphComponent getULCGraphComponent() {
+        return fULCGraphComponent;
     }
 
     public void setVisible(boolean visible) {
@@ -104,9 +103,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     }
 
     private void updateULCGraph() {
-        List<Vertex> vertices = new ArrayList<Vertex>();
-        vertices.addAll(fNodesToBeAdded.keySet());
-        fLayOuter.layout(vertices);
+        // fULCGraphComponent.refresh();
         for (Vertex v : fNodesToBeAdded.keySet()) {
             try {
                 fULCGraph.addVertex(v);
@@ -125,8 +122,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             try {
                 Port outPort = getULCPort(c.getFrom());
                 Port inPort = getULCPort(c.getTo());
-                String id = c.getFrom().getComponentNode().getName() + "." + c.getFrom().getName()
-                        + "_" + c.getTo().getComponentNode().getName() + "." + c.getTo().getName();
+                String id = "conn" + c.getFrom().getComponentNode().getName() + "_" + c.getTo().getComponentNode().getName() + "_" + System.currentTimeMillis();
                 Edge e = new Edge(id, outPort, inPort);
                 fULCGraph.addEdge(e);
                 fConnectionsMap.put(e.getId(), c);
@@ -135,17 +131,18 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             }
         }
         fConnectionsToBeAdded = new ArrayList<Connection>();
-
+        
         fULCGraphComponent.layout();
+        //fULCGraphComponent.refresh();
     }
 
     private Vertex createVertex(ComponentNode node) {
-        Vertex vertex = new Vertex(node.getName());
+        Vertex vertex = new Vertex();
         vertex.setTitle(node.getName());
-        vertex.setId(node.getName());
+        vertex.setId(node.getName()+"_"+System.currentTimeMillis());
         vertex.setTemplateId(node.getType().getTypeClass().getName());
         vertex.setStyle("swimlane");
-        addPorts(vertex, PaletteService.getInstance().getComponentDefinition(vertex.getTemplateId()), node.getName());
+        addPorts(vertex, node.getType(), node.getName());
         return vertex;
     }
 
@@ -155,7 +152,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         for (Map.Entry<Field, Class> entry : fieldClassMap.entrySet()) {
             final String portName = entry.getKey().getName();
             final String className = entry.getValue().getName();
-            final Port port = new Port(nodeName + "_" + portName, PortType.IN, className, portName);
+            final Port port = new Port(nodeName + "_" + portName + "_" + System.currentTimeMillis(), PortType.IN, className, portName);
             port.addConstraint(new PortConstraint(className, 0, 100));
             vertex.addPort(port);
         }
@@ -163,7 +160,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         for (Map.Entry<Field, Class> entry : fieldClassMap.entrySet()) {
             final String portName = entry.getKey().getName();
             final String className = entry.getValue().getName();
-            final Port port = new Port(nodeName + "_" + portName, PortType.OUT, className, portName);
+            final Port port = new Port(nodeName + "_" + portName + "_" + System.currentTimeMillis(), PortType.OUT, className, portName);
             port.addConstraint(new PortConstraint(className, 0, 100));
             vertex.addPort(port);
         }
@@ -177,7 +174,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
         ComponentNode node = fNodesMap.get(vertex.getId());
         if (node == null) {
-            System.out.println("Node to given vertex found: " + vertex.getId());
+            System.out.println("No node to given vertex found: " + vertex.getTitle());
             return null;
         }
         return node.getPort(ulcPort.getTitle());
@@ -185,9 +182,9 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
     private Vertex getParentVertex(Port p) {
         for (String vertexId : fNodesMap.keySet()) {
-            Vertex v = fULCGraph.getVertex(vertexId);
-            if (v.getPorts().contains(p)) {
-                return v;
+            Vertex vertex = fULCGraph.getVertex(vertexId);
+            if (vertex != null && vertex.getPorts().contains(p)) {
+                return vertex;
             }
         }
         return null;
@@ -221,51 +218,49 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         public void vertexAdded(@NotNull Vertex vertex) {
             if (vertex.getId() == null) {
-                vertex.setId("" + System.currentTimeMillis()+Math.random());
+                vertex.setId("noname_" + System.currentTimeMillis()+Math.random());
             }
             fULCGraphComponent.shrinkVertex(vertex);
         }
 
         public void vertexRemoved(@NotNull Vertex vertex) {
-            String id = vertex.getId();
-            if (fNodesMap.containsKey(id)) {
-                // fULCGraph.removeVertex(fULCGraph.getVertex(id));
-                ComponentNode node = fNodesMap.get(id);
-                fNodesMap.remove(id);
+            if (fNodesMap.containsKey(vertex.getId())) {
+                ComponentNode node = fNodesMap.get(vertex.getId());
                 fGraphModel.removeComponentNode(node);
             }
         }
 
         public void edgeAdded(@NotNull Edge edge) {
             fCurrentEdge = edge;
-            edge.setId("conn_" + fGraphModel.getAllConnections().size());
             org.pillarone.riskanalytics.graph.core.graph.model.Port outPort = getGraphPort((Port) edge.getSource());
             org.pillarone.riskanalytics.graph.core.graph.model.Port inPort = getGraphPort((Port) edge.getTarget());
+            if (edge.getId()==null) {
+                edge.setId("conn_" + outPort.getComponentNode().getName() + "_" + inPort.getComponentNode().getName() + "_" + System.currentTimeMillis());
+            }
             if (outPort != null && inPort != null) {
                 fGraphModel.createConnection(outPort, inPort);
             } else {
+                fCurrentEdge = null;
                 System.out.println("Ports could not be properly identified - no connection added to the graph model.");
             }
         }
 
         public void edgeRemoved(@NotNull Edge edge) {
-            String id = edge.getId();
-            if (fConnectionsMap.containsKey(id)) {
-                fULCGraph.removeEdge(fULCGraph.getEdge(id));
-                Connection conn = fConnectionsMap.get(id);
-                fConnectionsMap.remove(id);
+            if (fConnectionsMap.containsKey(edge.getId())) {
+                Connection conn = fConnectionsMap.get(edge.getId());
+                fConnectionsMap.remove(edge.getId());
                 fGraphModel.removeConnection(conn);
             }
         }
-
     }
 
     private class GraphModelListener implements IGraphModelChangeListener {
 
         public void nodeAdded(ComponentNode node) {
             if (fCurrentVertex != null) {
-                fNodesMap.put(fCurrentVertex.getId(), node);
+                fCurrentVertex.setId(node.getName()+"_"+System.currentTimeMillis());
                 fCurrentVertex.setTitle(node.getName());
+                fNodesMap.put(fCurrentVertex.getId(), node);
                 try {
                     fULCGraph.addVertex(fCurrentVertex);
                 } catch (Exception e) {
@@ -305,20 +300,28 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                     fNodesMap.remove(v.getId());
                     fULCGraph.removeVertex(v);
                 }
+                fULCGraph.upload();
             }
-            fULCGraph.upload();
+        }
+
+        public void outerPortAdded(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
+            //nothing to do
+        }
+
+        public void outerPortRemoved(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
+            //nothing to do
         }
 
         public void nodesSelected(List<ComponentNode> nodes) {
-
+            //nothing to do
         }
 
         public void connectionsSelected(List<Connection> connections) {
-
+            //nothing to do
         }
 
         public void selectionCleared() {
-
+            //nothing to do
         }
 
         public void filtersApplied() {
@@ -327,16 +330,18 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         public void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
             if (!fNodesToBeAdded.values().contains(node)) {
-                String oldName = null;
-                Iterator<Map.Entry<String, ComponentNode>> it = fNodesMap.entrySet().iterator();
-                while (it.hasNext() && oldName == null) {
-                    Map.Entry<String, ComponentNode> e = it.next();
+                for (Map.Entry<String, ComponentNode> e : fNodesMap.entrySet()) {
                     if (e.getValue() == node) {
-                        oldName = e.getKey();
-                        fNodesMap.remove(oldName);
-                        fNodesMap.put(node.getName(), node);
+                        Vertex v = fULCGraph.getVertex(e.getKey());
+                        if (v != null) {
+                            v.setTitle(node.getName());
+                            fULCGraph.upload();
+                            return;
+                        }
                     }
                 }
+            } else {
+
             }
         }
 
@@ -365,8 +370,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                     fConnectionsMap.remove(e.getId());
                     fULCGraph.removeEdge(e);
                 }
+                fULCGraph.upload();
             }
-            fULCGraph.upload();
         }
     }
 
@@ -423,10 +428,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
     }
 
-    static final Dimension DIM = new Dimension(150, 100);
-    static final int XOFFSET = 20;
-    static final int YOFFSET = 20;
-
     private class VertexDropHandler extends GraphTransferHandler {
 
         private VertexDropHandler(ULCGraphComponent inGraphComponent) {
@@ -435,73 +436,17 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         @Override
         public boolean importData(final ULCComponent inTargetComponent, final Transferable inTransferable) {
-
             final Object data = inTransferable.getTransferData(DataFlavor.DROP_FLAVOR);
             if (data instanceof Vertex) {
-                final Vertex transferData = (Vertex) data;
-                transferData.setId("internal" + new Date().getTime());
-
-                fCurrentComponentDefinition = PaletteService.getInstance().getComponentDefinition(transferData.getTemplateId());
+                final Vertex vertex = (Vertex) data;
+                fCurrentComponentDefinition = PaletteService.getInstance().getComponentDefinition(vertex.getTemplateId());
                 NodeNameDialog nodeNameDialog = new NodeNameDialog(UlcUtilities.getWindowAncestor(fContent), fGraphModel);
                 nodeNameDialog.setModal(true);
                 nodeNameDialog.setVisible(true);
-                fCurrentVertex = transferData;
-
-
+                fCurrentVertex = vertex;
                 return true;
             }
             return false;
-        }
-    }
-
-    private class LayOuter {
-
-        Map<Vertex, Point> vertexPositions;
-        int xDelta, yDelta;
-        Dimension sceneDimension;
-
-        LayOuter() {
-            sceneDimension = new Dimension(800, 500);
-            vertexPositions = new LinkedHashMap<Vertex, Point>();
-        }
-
-        /**
-         * For the vertices already in the scene find suitable point where to place the vertices to be added.
-         *
-         * @param verticesToAdd
-         */
-        public void layout(List<Vertex> verticesToAdd) {
-            if (verticesToAdd == null || verticesToAdd.size() == 0) {
-                return;
-            }
-            int n = verticesToAdd.size();
-            int row = -1;
-            int col = -1;
-            int rowSize = (int) Math.ceil(Math.sqrt(n));
-            xDelta = (int) (sceneDimension.getWidth() - XOFFSET - DIM.getWidth()) / Math.max(rowSize - 1, 1);
-            int rows = n / rowSize;
-            yDelta = (int) (sceneDimension.getHeight() - YOFFSET - DIM.getHeight()) / Math.max(rows - 1, 1);
-            for (Vertex v : verticesToAdd) {
-                col++;
-                if (col % rowSize == 0) {
-                    row++;
-                    col = 0;
-                }
-                int x = XOFFSET + col * xDelta;
-                int y = YOFFSET + row * yDelta;
-                v.setRectangle(new Rectangle(new Point(x, y), DIM));
-                vertexPositions.put(v, v.getRectangle().getLocation());
-            }
-        }
-
-        public void remove(List<Vertex> verticesToRemove) {
-            for (Vertex v : verticesToRemove) {
-                remove(v);
-            }
-        }
-
-        public void remove(Vertex vertexToRemove) {
-            vertexPositions.remove(vertexToRemove);
         }
     }
 }
