@@ -11,10 +11,8 @@ import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.tree.ULCTreeSelectionModel;
 import com.ulcjava.base.application.util.Color;
 import com.ulcjava.base.application.util.Dimension;
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
-import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener;
+import com.ulcjava.base.shared.UlcEventConstants;
+import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodesTableTreeModel;
 
 import java.util.ArrayList;
@@ -33,8 +31,8 @@ public class NodesTable extends ULCTableTree {
         fGraphModel = model;
         this.setModel(fTableModel);
         this.createDefaultColumnsFromModel();
+        ClientContext.setModelUpdateMode(fTableModel, UlcEventConstants.SYNCHRONOUS_MODE);
         this.setShowGrid(true);
-        //this.setRowSorter(new TableRowSorter(nodesModel));
         int width = ClientContext.getScreenWidth();
         int height = ClientContext.getScreenHeight();
         int preferredWidth = width / 2;
@@ -73,16 +71,32 @@ public class NodesTable extends ULCTableTree {
 
         public void nodeAdded(ComponentNode node) {
             fTableModel.addToCache(node, fGraphModel);
+            //fTableModel.nodesWereInserted(new TreePath(fGraphModel), new int[]{fGraphModel.getAllComponentNodes().size() - 1}); TODO: Does not work some reason ???
             fTableModel.nodeStructureChanged(new TreePath(fGraphModel));
         }
 
         public void nodeRemoved(ComponentNode node) {
-            int index = fTableModel.getIndexOfChild(fGraphModel, node);
-            if (index>=0) {
+            try {
                 fTableModel.removeFromCache(node);
+                // fTableModel.nodesWereRemoved(new TreePath(fGraphModel), new int[]{index}, new Object[]{node}); TODO: DOes not work for some reason
+                fTableModel.nodeStructureChanged(new TreePath(fGraphModel));
+            } catch (Exception ex) {
+                System.out.println("Exception while removing entry in the tree  table: " + node.getName() + " - exception: " + ex.getMessage());
+            }
+        }
+
+        public void outerPortAdded(Port p) {
+            fTableModel.addToCache(p, fGraphModel);
+            fTableModel.nodeStructureChanged(new TreePath(fGraphModel));
+        }
+
+        public void outerPortRemoved(Port p) {
+            int index = fTableModel.getIndexOfChild(fGraphModel, p);
+            if (index>=0) {
+                fTableModel.removeFromCache(p);
                 fTableModel.nodeStructureChanged(new TreePath(fGraphModel));
             } else {
-                System.out.println("Node with name " + node.getName() + " not found in the graph model.");
+                System.out.println("Outer port with name " + p.getName() + " not found in the graph model.");
             }
         }
 
@@ -119,7 +133,10 @@ public class NodesTable extends ULCTableTree {
         List<ComponentNode> nodes = new ArrayList<ComponentNode>();
         if (treePaths != null) {
             for (TreePath path : treePaths) {
-                nodes.add(getComponentNode(path));
+                ComponentNode node = getComponentNode(path);
+                if (node != null) {
+                    nodes.add(node);
+                }
             }
         }
         return nodes;
