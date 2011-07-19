@@ -216,6 +216,8 @@ public class GraphModelEditor extends AbstractBean {
             fTypeDefView.getBeanForm().addSaveActionListener(newModelListener);
         } else {
             TypeDefinitionBean newBean = new TypeDefinitionBean();
+            newBean.setBaseType("Model");
+            newBean.setPackageName("models");
             fTypeDefView.getBeanForm().setModel(new TypeDefinitionFormModel(newBean));
         }
         fTypeDefView.setVisible(true);
@@ -330,8 +332,12 @@ public class GraphModelEditor extends AbstractBean {
     }
 
     public void loadModel(String name, String packageName) {
-        AbstractGraphModel model = getPersistenceService().load(name,packageName);
+        AbstractGraphModel model = null;
         TypeDefinitionBean typeDefBean = new TypeDefinitionBean();
+        try {
+            model = getPersistenceService().load(name,packageName);
+        } catch (Exception ex) {
+        }
         typeDefBean.setName(model.getName());
         typeDefBean.setPackageName(model.getPackageName());
         typeDefBean.setBaseType(model instanceof ModelGraphModel ? "Model" : "ComposedComponent");
