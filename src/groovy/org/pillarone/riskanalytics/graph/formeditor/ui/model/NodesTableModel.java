@@ -60,16 +60,24 @@ public class NodesTableModel extends AbstractTableModel implements ITableModel {
                         fireTableDataChanged();
                     }
 
+                    public void outerPortAdded(Port p) {
+                        // Nothing to do here
+                    }
+
+                    public void outerPortRemoved(Port p) {
+                        // Nothing to do here
+                    }
+
                     public void nodesSelected(List<ComponentNode> nodes) {
-                        //To change body of implemented methods use File | Settings | File Templates.
+                        // Nothing to do here
                     }
 
                     public void connectionsSelected(List<Connection> connections) {
-                        //To change body of implemented methods use File | Settings | File Templates.
+                        // Nothing to do here
                     }
 
                     public void selectionCleared() {
-                        //To change body of implemented methods use File | Settings | File Templates.
+                        // Nothing to do here
                     }
 
                     public void filtersApplied() {
@@ -77,7 +85,7 @@ public class NodesTableModel extends AbstractTableModel implements ITableModel {
                     }
 
                     public void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
-                        //To change body of implemented methods use File | Settings | File Templates.
+                        // Nothing to do here
                     }
                 });
     }
