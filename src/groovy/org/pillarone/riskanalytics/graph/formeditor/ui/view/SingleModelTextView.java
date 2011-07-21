@@ -20,16 +20,18 @@ public class SingleModelTextView extends AbstractBean implements GraphModelViewa
     private ULCBoxPane fMainView;
     private ULCTextArea fTextArea;
 
-    public SingleModelTextView(ApplicationContext ctx, AbstractGraphModel model) {
+    public SingleModelTextView(ApplicationContext ctx) {
         super();
         fApplicationContext = ctx;
+        createView();
+    }
+
+    protected void createView() {
         fTextArea = new ULCTextArea();
         fTextArea.setEditable(false);
         ULCScrollPane scrollPane = new ULCScrollPane(fTextArea);
         fMainView = new ULCBoxPane(1, 1, 2, 2);
         fMainView.set(0, 0, ULCBoxPane.BOX_EXPAND_EXPAND, scrollPane);
-        injectGraphModel(model);
-        setVisible(true);
     }
 
     private String getGroovyCode() {
