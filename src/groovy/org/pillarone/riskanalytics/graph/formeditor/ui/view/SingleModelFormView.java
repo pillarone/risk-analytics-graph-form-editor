@@ -26,43 +26,39 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
     private boolean fIsModel;
 
     private ULCBoxPane fMainView;
+    private ULCScrollPane fNodesPane;
     private ULCTableTree fNodesTable;
+
+    private ULCScrollPane fConnectionsPane;
     private ULCTable fConnectionsTable;
 
     private NodeEditDialog fNodeEditDialog;
     private ConnectNodesDialog fConnectNodesDialog;
-    private ConnectionEditDialog fConnectionEditForm;
-    private ReplicationEditDialog fReplicationEditForm;
+    private ConnectionEditDialog fConnectionEditDialog;
+    private ReplicationEditDialog fReplicationEditDialog;
 
     private boolean fNodesSelected;
     private boolean fTwoNodesSelected;
     private boolean fConnectionSelected;
 
 
-    public SingleModelFormView(ApplicationContext ctx, AbstractGraphModel model) {
+    public SingleModelFormView(ApplicationContext ctx) {
         super();
         fMainView = new ULCBoxPane(true, 1);
         fApplicationContext = ctx;
-        injectGraphModel(model);
-        setVisible(true);
+        createView();
     }
 
     public void createView() {
-        fNodesTable = new NodesTable(fApplicationContext, fGraphModel);
-        fNodesSelected = false;
-        fTwoNodesSelected = false;
-        fNodesTable.setVisible(true);
-        ULCScrollPane nodesScrollPane = new ULCScrollPane(fNodesTable);
+        fNodesPane = new ULCScrollPane();
         ULCBoxPane nodesPane = new ULCBoxPane(true);
         nodesPane.setBorder(BorderFactory.createTitledBorder("Components"));
-        nodesPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, nodesScrollPane);
+        nodesPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, fNodesPane);
 
-        fConnectionsTable = new ConnectionsTable(fApplicationContext, fGraphModel);
-        fConnectionSelected = false;
-        ULCScrollPane connScrollPane = new ULCScrollPane(fConnectionsTable);
+        fConnectionsPane = new ULCScrollPane();
         ULCBoxPane connPane = new ULCBoxPane(true);
         connPane.setBorder(BorderFactory.createTitledBorder("Connections"));
-        connPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, connScrollPane);
+        connPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, fConnectionsPane);
 
         ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(nodesPane);
@@ -91,10 +87,20 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
     public void injectGraphModel(AbstractGraphModel model) {
         fGraphModel = model;
         fIsModel = model instanceof ModelGraphModel;
-        createView();
+        fNodesSelected = false;
+        fTwoNodesSelected = false;
+
+        fNodesTable = new NodesTable(fApplicationContext, fGraphModel);
+        fNodesTable.setVisible(true);
+        fNodesPane.setViewPortView(fNodesTable);
+
+        fConnectionsTable = new ConnectionsTable(fApplicationContext, fGraphModel);
+        fConnectionSelected = false;
+        fConnectionsPane.setViewPortView(fConnectionsTable);
+
         addListeners();
-        addNodesContextMenu();
-        addConnectionsContextMenu();
+        createNodesContextMenu();
+        createConnectionsContextMenu();
     }
 
     @SuppressWarnings("serial")
@@ -124,39 +130,54 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         });
     }
 
-    private void addNodesContextMenu() {
-        ULCPopupMenu menu = new ULCPopupMenu();
+    private void createNodesContextMenu() {
+        ULCPopupMenu nodesMenu = new ULCPopupMenu();
         ApplicationActionMap actionMap = getActionMap();
 
         ULCMenuItem addItem = new ULCMenuItem("add");
         addItem.addActionListener(actionMap.get("newNodeAction"));
-        menu.add(addItem);
+        nodesMenu.add(addItem);
 
         ULCMenuItem connectItem = new ULCMenuItem("connect");
         connectItem.addActionListener(actionMap.get("connectSelectedNodesAction"));
-        menu.add(connectItem);
+        nodesMenu.add(connectItem);
 
         if (fGraphModel instanceof ComposedComponentGraphModel) {
             ULCMenuItem replicateItem = new ULCMenuItem("replicate");
             replicateItem.addActionListener(actionMap.get("replicateSelectedPortAction"));
-            menu.add(replicateItem);
+            nodesMenu.add(replicateItem);
         }
 
-        menu.addSeparator();
+        nodesMenu.addSeparator();
 
         ULCMenuItem deleteItem = new ULCMenuItem("remove");
         deleteItem.addActionListener(actionMap.get("removeNodeAction"));
-        menu.add(deleteItem);
+        nodesMenu.add(deleteItem);
 
-        menu.addSeparator();
+        nodesMenu.addSeparator();
+
+        ULCMenuItem expandItem = new ULCMenuItem("expand");
+        expandItem.addActionListener(actionMap.get("expandAction"));
+        nodesMenu.add(expandItem);
+        ULCMenuItem expandAllItem = new ULCMenuItem("expand all");
+        expandAllItem.addActionListener(actionMap.get("expandAllAction"));
+        nodesMenu.add(expandAllItem);
+        ULCMenuItem collapseItem = new ULCMenuItem("collapse");
+        collapseItem.addActionListener(actionMap.get("collapseAction"));
+        nodesMenu.add(collapseItem);
+        ULCMenuItem collapseAllItem = new ULCMenuItem("collapse all");
+        collapseAllItem.addActionListener(actionMap.get("collapseAllAction"));
+        nodesMenu.add(collapseAllItem);
+
+        nodesMenu.addSeparator();
 
         ULCMenuItem showConnectedItem = new ULCMenuItem("show connected");
         showConnectedItem.addActionListener(actionMap.get("showConnectedElementsAction"));
-        menu.add(showConnectedItem);
+        nodesMenu.add(showConnectedItem);
 
         ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear selections");
         clearSelectionsItem.addActionListener(actionMap.get("clearSelectionsAction"));
-        menu.add(clearSelectionsItem);
+        nodesMenu.add(clearSelectionsItem);
 
         /*menu.addSeparator();
 
@@ -164,40 +185,40 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         clearSelectionsItem.addActionListener(actionMap.get("createParametersAction"));
         menu.add(clearSelectionsItem);*/
 
-        fNodesTable.setComponentPopupMenu(menu);
+        fNodesTable.setComponentPopupMenu(nodesMenu);
     }
 
-    private void addConnectionsContextMenu() {
-        ULCPopupMenu menu = new ULCPopupMenu();
+    private void createConnectionsContextMenu() {
+        ULCPopupMenu connectionsMenu = new ULCPopupMenu();
         ApplicationActionMap actionMap = getActionMap();
 
         ULCMenuItem addItem = new ULCMenuItem("add");
         addItem.addActionListener(actionMap.get("newConnectionAction"));
-        menu.add(addItem);
+        connectionsMenu.add(addItem);
 
         if (fGraphModel instanceof ComposedComponentGraphModel) {
             ULCMenuItem replicateItem = new ULCMenuItem("replicate");
             replicateItem.addActionListener(actionMap.get("newReplicationAction"));
-            menu.add(replicateItem);
+            connectionsMenu.add(replicateItem);
         }
 
-        menu.addSeparator();
+        connectionsMenu.addSeparator();
 
         ULCMenuItem deleteItem = new ULCMenuItem("remove");
         deleteItem.addActionListener(actionMap.get("removeConnectionAction"));
-        menu.add(deleteItem);
+        connectionsMenu.add(deleteItem);
 
-        menu.addSeparator();
+        connectionsMenu.addSeparator();
 
         ULCMenuItem showAttachedNodesItem = new ULCMenuItem("show connected");
         showAttachedNodesItem.addActionListener(actionMap.get("showAttachedNodesAction"));
-        menu.add(showAttachedNodesItem);
+        connectionsMenu.add(showAttachedNodesItem);
 
         ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear selections");
         clearSelectionsItem.addActionListener(actionMap.get("clearSelectionsAction"));
-        menu.add(clearSelectionsItem);
+        connectionsMenu.add(clearSelectionsItem);
 
-        fConnectionsTable.setComponentPopupMenu(menu);
+        fConnectionsTable.setComponentPopupMenu(connectionsMenu);
     }
 
 
@@ -225,18 +246,18 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
     }
 
     private void showNewConnectionDialog() {
-        if (fConnectionEditForm == null) {
-            fConnectionEditForm = new ConnectionEditDialog(UlcUtilities.getWindowAncestor(fConnectionsTable), fGraphModel);
+        if (fConnectionEditDialog == null) {
+            fConnectionEditDialog = new ConnectionEditDialog(UlcUtilities.getWindowAncestor(fConnectionsTable), fGraphModel);
         }
-        fConnectionEditForm.setVisible(true);
+        fConnectionEditDialog.setVisible(true);
     }
 
     private void showReplicationDialog() {
         if (fGraphModel instanceof ComposedComponentGraphModel) {
-            if (fReplicationEditForm == null) {
-                fReplicationEditForm = new ReplicationEditDialog(UlcUtilities.getWindowAncestor(fConnectionsTable), (ComposedComponentGraphModel) fGraphModel);
+            if (fReplicationEditDialog == null) {
+                fReplicationEditDialog = new ReplicationEditDialog(UlcUtilities.getWindowAncestor(fConnectionsTable), (ComposedComponentGraphModel) fGraphModel);
             }
-            fReplicationEditForm.setVisible(true);
+            fReplicationEditDialog.setVisible(true);
         } else {
             ULCAlert alert = new ULCAlert("Port replication not possible.",
                     "Port replication not possible for models.", "ok");
@@ -491,18 +512,44 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
 
     @Action
     public void newConnectionAction() {
-        if (fConnectionEditForm == null || !fConnectionEditForm.isVisible()) {
+        if (fConnectionEditDialog == null || !fConnectionEditDialog.isVisible()) {
             showNewConnectionDialog();
         }
-        fConnectionEditForm.getBeanForm().getModel().getBean().reset();
+        fConnectionEditDialog.getBeanForm().getModel().getBean().reset();
     }
 
     @Action(enabledProperty = "isModel")
     public void newReplicationAction() {
-        if (fReplicationEditForm == null || !fReplicationEditForm.isVisible()) {
+        if (fReplicationEditDialog == null || !fReplicationEditDialog.isVisible()) {
             showReplicationDialog();
         }
-        fReplicationEditForm.getBeanForm().getModel().getBean().reset();
+        fReplicationEditDialog.getBeanForm().getModel().getBean().reset();
+    }
+
+    @SuppressWarnings("serial")
+    @Action(enabledProperty = "nodesSelected")
+    public void expandAction() {
+        TreePath[] selectedPaths = fNodesTable.getSelectedPaths();
+        fNodesTable.expandPaths(selectedPaths, true);
+    }
+
+    @SuppressWarnings("serial")
+    @Action(enabledProperty = "nodesSelected")
+    public void expandAllAction() {
+        fNodesTable.expandAll();
+    }
+
+    @SuppressWarnings("serial")
+    @Action(enabledProperty = "nodesSelected")
+    public void collapseAction() {
+        TreePath[] selectedPaths = fNodesTable.getSelectedPaths();
+        fNodesTable.collapsePaths(selectedPaths, true);
+    }
+
+    @SuppressWarnings("serial")
+    @Action(enabledProperty = "nodesSelected")
+    public void collapseAllAction() {
+        fNodesTable.collapseAll();
     }
 
     @Action
@@ -531,17 +578,17 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         Connection selectedConnection = getSelectedConnection();
         if (selectedConnection != null) {
             if (!selectedConnection.isReplicatingConnection()) {
-                if (fConnectionEditForm == null || !fConnectionEditForm.isVisible()) {
+                if (fConnectionEditDialog == null || !fConnectionEditDialog.isVisible()) {
                     showNewConnectionDialog();
                 }
-                ConnectionBean bean = fConnectionEditForm.getBeanForm().getModel().getBean();
+                ConnectionBean bean = fConnectionEditDialog.getBeanForm().getModel().getBean();
                 bean.setFrom(GraphModelUtilities.getPortName(selectedConnection.getFrom()));
                 bean.setFrom(GraphModelUtilities.getPortName(selectedConnection.getTo()));
             } else {
-                if (fReplicationEditForm == null || !fReplicationEditForm.isVisible()) {
+                if (fReplicationEditDialog == null || !fReplicationEditDialog.isVisible()) {
                     showReplicationDialog();
                 }
-                ReplicationBean bean = fReplicationEditForm.getBeanForm().getModel().getBean();
+                ReplicationBean bean = fReplicationEditDialog.getBeanForm().getModel().getBean();
                 String fromPortName = GraphModelUtilities.getPortName(selectedConnection.getFrom());
                 String toPortName = GraphModelUtilities.getPortName(selectedConnection.getTo());
                 if (fromPortName.split(".").length == 1) {
