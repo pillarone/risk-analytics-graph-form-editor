@@ -4,6 +4,7 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 import com.canoo.ulc.detachabletabbedpane.server.ITabListener;
 import com.canoo.ulc.detachabletabbedpane.server.TabEvent;
 import com.canoo.ulc.detachabletabbedpane.server.ULCCloseableTabbedPane;
+import com.canoo.ulc.detachabletabbedpane.server.ULCDetachableTabbedPane;
 import com.canoo.ulc.graph.ULCGraphOutline;
 import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.Action;
@@ -37,11 +38,9 @@ public class SingleModelMultiEditView extends AbstractBean {
 
     public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model) {
         super();
-        fMainView = new ULCBoxPane(true, 1);
         fApplicationContext = ctx;
-        fGraphModel = model;
-        fIsModel = model instanceof ModelGraphModel;
         createView();
+        injectGraphModel(model);
     }
 
     public void setTransferHandler(TypeTransferHandler transferHandler) {
@@ -69,6 +68,8 @@ public class SingleModelMultiEditView extends AbstractBean {
     }*/
 
     public void createView() {
+        fMainView = new ULCBoxPane(true, 1);
+
         ///////////////////
         // toolbar pane
         //////////////////
@@ -123,11 +124,11 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         // button to select the view
         ULCBoxPane viewSelector = new ULCBoxPane(false);
-        ULCRadioButton formSelectButton = new ULCRadioButton("Forms", true);
+        ULCRadioButton formSelectButton = new ULCRadioButton("Forms");
         formSelectButton.setToolTipText("Edit (model | component) by filling in forms with nodes and connections.");
         ULCRadioButton textSelectButton = new ULCRadioButton("Code");
         textSelectButton.setToolTipText("Inspect (model | component) by looking at its groovy code.");
-        ULCRadioButton visualSelectButton = new ULCRadioButton("Visual");
+        ULCRadioButton visualSelectButton = new ULCRadioButton("Visual", true);
         visualSelectButton.setToolTipText("Edit (model | component) in the graphical editor.");
         ULCButtonGroup buttonGroup = new ULCButtonGroup();
         formSelectButton.setGroup(buttonGroup);
@@ -152,13 +153,13 @@ public class SingleModelMultiEditView extends AbstractBean {
         // content pane - initialize the different views
         //////////////////////////////////////////////////
         final ULCCardPane cardPane = new ULCCardPane();
-        fFormEditorView = new SingleModelFormView(fApplicationContext, fGraphModel);
+        fFormEditorView = new SingleModelFormView(fApplicationContext);
         final ULCComponent formView =  fFormEditorView.getView();
         cardPane.addCard("Form", formView);
-        fTextEditorView = new SingleModelTextView(fApplicationContext, fGraphModel);
+        fTextEditorView = new SingleModelTextView(fApplicationContext);
         final ULCComponent textView =  fTextEditorView.getView();
         cardPane.addCard("Text", textView);
-        fVisualEditorView = new SingleModelVisualView(fApplicationContext, fGraphModel);
+        fVisualEditorView = new SingleModelVisualView(fApplicationContext);
         final ULCComponent visualView =  fVisualEditorView.getView();
         cardPane.addCard("Visual", visualView);
 
@@ -183,6 +184,9 @@ public class SingleModelMultiEditView extends AbstractBean {
                 cardPane.setSelectedComponent(visualView);
             }
         });
+
+        cardPane.setSelectedComponent(visualView);
+
         ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.VERTICAL_SPLIT);
         splitPane.setOneTouchExpandable(true);
         splitPane.setDividerLocation(0.65);
@@ -200,12 +204,19 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         // the property editing area --> comments, help, ...etc.
         ULCBoxPane propertyPane = new ULCBoxPane(true,1);
-        ULCTabbedPane tabbedPane = new ULCTabbedPane();
+        ULCDetachableTabbedPane tabbedPane = new ULCDetachableTabbedPane();
+        // help
+        ULCTextArea help = new ULCTextArea();
+        help.setEditable(true);
+        help.setText("No help available yet");
+        tabbedPane.addTab("Help", help);
+        tabbedPane.setEnabledAt(0,true);
         // comments
         ULCTextArea comments = new ULCTextArea();
         comments.setEditable(true);
+        comments.setText("No comments available yet");
         tabbedPane.addTab("Comments", comments);
-        tabbedPane.setEnabledAt(0,false);
+        tabbedPane.setEnabledAt(1,true);
         // parameters
         ULCBoxPane data = new ULCBoxPane();
         fDataSetSheets = new ULCCloseableTabbedPane();
@@ -220,7 +231,7 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         data.add(ULCBoxPane.BOX_EXPAND_EXPAND, fDataSetSheets);
         tabbedPane.addTab("Parameters", data);
-        tabbedPane.setEnabledAt(1, true);
+        tabbedPane.setEnabledAt(2, true);
         // results
         ULCBoxPane results = new ULCBoxPane();
         fResultSheets = new ULCCloseableTabbedPane();
@@ -234,9 +245,9 @@ public class SingleModelMultiEditView extends AbstractBean {
         });
         results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
         tabbedPane.addTab("Results", results);
-        tabbedPane.setEnabledAt(2,true);
+        tabbedPane.setEnabledAt(3,true);
 
-        tabbedPane.setSelectedIndex(1);
+        tabbedPane.setSelectedIndex(2);
         propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, tabbedPane);
         splitPane2.setLeftComponent(propertyPane);
 
@@ -249,6 +260,14 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         splitPane.setBottomComponent(lower);
         fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane);
+    }
+
+    public void injectGraphModel(AbstractGraphModel model) {
+        fGraphModel = model;
+        fIsModel = model instanceof ModelGraphModel;
+        fVisualEditorView.injectGraphModel(model);
+        fFormEditorView.injectGraphModel(model);
+        fTextEditorView.injectGraphModel(model);
     }
 
     public ULCBoxPane getView() {

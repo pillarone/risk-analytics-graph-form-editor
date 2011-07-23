@@ -9,8 +9,12 @@ import com.canoo.ulc.graph.model.Edge;
 import com.canoo.ulc.graph.model.Port;
 import com.canoo.ulc.graph.model.Vertex;
 import com.canoo.ulc.graph.shared.PortConstraint;
+import com.canoo.ulc.graph.shared.PortTemplate;
 import com.canoo.ulc.graph.shared.PortType;
+import com.canoo.ulc.graph.shared.ShapeTemplate;
 import com.ulcjava.applicationframework.application.AbstractBean;
+import com.ulcjava.applicationframework.application.Action;
+import com.ulcjava.applicationframework.application.ApplicationActionMap;
 import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.applicationframework.application.form.BeanFormDialog;
 import com.ulcjava.base.application.*;
@@ -20,13 +24,12 @@ import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.event.IWindowListener;
 import com.ulcjava.base.application.event.WindowEvent;
+import com.ulcjava.base.application.util.Dimension;
+import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.jetbrains.annotations.NotNull;
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
-import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener;
+import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.layout.ComponentLayout;
 import org.pillarone.riskanalytics.graph.core.layout.GraphLayoutService;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
@@ -40,46 +43,43 @@ import java.util.*;
 
 public class SingleModelVisualView extends AbstractBean implements GraphModelViewable {
     private AbstractGraphModel fGraphModel;
+
     Map<String, ComponentNode> fNodesMap;
     Map<Vertex, ComponentNode> fNodesToBeAdded;
-    Vertex fCurrentVertex;
-    ComponentDefinition fCurrentComponentDefinition;
     Map<String, Connection> fConnectionsMap;
     List<Connection> fConnectionsToBeAdded;
+
+    Vertex fCurrentVertex;
+    ComponentDefinition fCurrentComponentDefinition;
     Edge fCurrentEdge;
+    ShapeTemplate fComposedComponentShape;
 
     private ULCGraph fULCGraph;
     private ULCGraphComponent fULCGraphComponent;
 
     private ULCBoxPane fMainView;
-    private ULCBoxPane fContent;
 
     private GraphLayoutService fLayoutService;
 
-    public SingleModelVisualView(ApplicationContext ctx, AbstractGraphModel model) {
-        super();
-        fMainView = new ULCBoxPane(1, 1, 2, 2);
-        fContent = new ULCBoxPane(2, 1);
-        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, fContent);
-        fGraphModel = model;
-        fGraphModel.addGraphModelChangeListener(new GraphModelListener());
-        initComponents();
+    private ApplicationContext fApplicationContext;
 
-        injectGraphModel(model);
+    public SingleModelVisualView(ApplicationContext ctx) {
+        super();
+        fApplicationContext = ctx;
+        createView();
     }
 
-    protected void initComponents() {
+    protected void createView() {
+        fMainView = new ULCBoxPane(1, 1, 2, 2);
+        ULCBoxPane content = new ULCBoxPane(2, 1);
+        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, content);
         fULCGraph = new ULCGraph();
         fULCGraph.addGraphListener(new ULCGraphListener());
         fULCGraphComponent = new ULCGraphComponent(fULCGraph);
         fULCGraphComponent.setTransferHandler(new VertexDropHandler(fULCGraphComponent));
-        fContent.add(ULCBoxPane.BOX_EXPAND_EXPAND, fULCGraphComponent);
-        fNodesMap = new LinkedHashMap<String, ComponentNode>();
-        fNodesToBeAdded = new LinkedHashMap<Vertex, ComponentNode>();
-        fConnectionsMap = new LinkedHashMap<String, Connection>();
-        fConnectionsToBeAdded = new ArrayList<Connection>();
-        fCurrentComponentDefinition = null;
-        fCurrentVertex = null;
+        content.add(ULCBoxPane.BOX_EXPAND_EXPAND, fULCGraphComponent);
+        fULCGraph.upload();
+        fULCGraphComponent.upload();
     }
 
     public ULCBoxPane getView() {
@@ -91,21 +91,36 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     }
 
     public void setVisible(boolean visible) {
-        if (fMainView != null) {
-            fMainView.setVisible(visible);
-            updateULCGraph();
-        }
+        fMainView.setVisible(visible);
+        updateULCGraph();
     }
 
     public void injectGraphModel(AbstractGraphModel model) {
+        fGraphModel = model;
+        fGraphModel.addGraphModelChangeListener(new GraphModelListener());
+
+        fCurrentComponentDefinition = null;
+        fCurrentVertex = null;
+
+        if (fGraphModel instanceof ComposedComponentGraphModel) {
+            addComposedComponentBoundingBox((ComposedComponentGraphModel) model);
+        }
+
+        fNodesMap = new LinkedHashMap<String, ComponentNode>();
+        fNodesToBeAdded = new LinkedHashMap<Vertex, ComponentNode>();
         for (ComponentNode node : model.getAllComponentNodes()) {
             Vertex vertex = createVertex(node);
             fNodesToBeAdded.put(vertex, node);
-            fCurrentVertex = null;
         }
+
+        fConnectionsMap = new LinkedHashMap<String, Connection>();
+        fConnectionsToBeAdded = new ArrayList<Connection>();
         for (Connection c : model.getAllConnections()) {
             fConnectionsToBeAdded.add(c);
         }
+
+        // this can be created only now - since now we know whether we have a Model or a ComposedComponent
+        fULCGraphComponent.setComponentPopupMenu(createPopupMenu());
     }
 
     private void updateULCGraph() {
@@ -136,15 +151,37 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             }
         }
         fConnectionsToBeAdded = new ArrayList<Connection>();
-        
+        fULCGraph.upload();
         fULCGraphComponent.layout();
-        //fULCGraphComponent.refresh();
+    }
+
+    private void addComposedComponentBoundingBox(ComposedComponentGraphModel model) {
+        fComposedComponentShape = new ShapeTemplate(ShapeTemplate.ShapeType.Rectangle, model.getPackageName()+"."+model.getName(), model.getName());
+
+        Vertex vertex = new Vertex();
+        vertex.setTitle(fComposedComponentShape.getDisplayName());
+        vertex.setId(fComposedComponentShape.getName() + "_" + System.currentTimeMillis());
+        vertex.setTemplateId(fComposedComponentShape.getName());
+        vertex.setStyle("swimlane");
+
+        int width = ClientContext.getScreenWidth()/2;
+        int height = ClientContext.getScreenHeight()/2;
+        Dimension dim = new Dimension(width-30, height-30);
+        Point point = new Point(15,15);
+        vertex.setRectangle(new Rectangle(point, dim));
+        try {
+            fULCGraph.addVertex(vertex);
+            //fULCGraphComponent.shrinkVertex(vertex);
+        } catch (Exception e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        fULCGraphComponent.layout();
     }
 
     private Vertex createVertex(ComponentNode node) {
         Vertex vertex = new Vertex();
         vertex.setTitle(node.getName());
-        vertex.setId(node.getName()+"_"+System.currentTimeMillis());
+        vertex.setId(node.getName() + "_" + System.currentTimeMillis());
         vertex.setTemplateId(node.getType().getTypeClass().getName());
         vertex.setStyle("swimlane");
         addPorts(vertex, node.getType(), node.getName());
@@ -169,6 +206,39 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             port.addConstraint(new PortConstraint(className, 0, 100));
             vertex.addPort(port);
         }
+    }
+
+    @Action
+    public void replicatePortAction() {
+        ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel;
+        Set<Port> selectedPorts = fULCGraph.getSelectionModel().getSelectedPorts();
+        for (Port port : selectedPorts) {
+            org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort = getGraphPort(port);
+            if (graphPort != null) {
+                if (graphPort instanceof InPort) {
+                    InPort outerPort = ccGraphModel.createOuterInPort(graphPort.getPacketType(), graphPort.getName()); // TODO --> check if name is already occupied, ask for name in dialog
+                    ccGraphModel.createConnection(outerPort, graphPort);
+                } else {
+                    OutPort outerPort = ccGraphModel.createOuterOutPort(graphPort.getPacketType(), graphPort.getName()); // TODO --> check if name is already occupied, ask for name in dialog
+                    ccGraphModel.createConnection(graphPort, outerPort);
+                }
+            } else {
+                ULCAlert alert = new ULCAlert("Port not replicated.",
+                        "Port " + port.getTitle() + " cannot be replicated.", "ok");
+                alert.show();
+            }
+        }
+    }
+
+    private ULCPopupMenu createPopupMenu() {
+        ULCPopupMenu popupMenu = new ULCPopupMenu();
+        ApplicationActionMap actionMap = fApplicationContext.getActionMap(this);
+        if (fGraphModel instanceof ComposedComponentGraphModel) {
+            ULCMenuItem replicatePortItem = new ULCMenuItem("replicate port");
+            replicatePortItem.addActionListener(actionMap.get("replicatePortAction"));
+            popupMenu.add(replicatePortItem);
+        }
+        return popupMenu;
     }
 
     private org.pillarone.riskanalytics.graph.core.graph.model.Port getGraphPort(Port ulcPort) {
@@ -302,7 +372,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         return paths;
     }
 
-
     /**
      * Reacts to changes in the ULC graph - updates the graph model
      */
@@ -397,7 +466,13 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
 
         public void outerPortAdded(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
-            //nothing to do
+            if (p instanceof org.pillarone.riskanalytics.graph.core.graph.model.InPort) {
+                PortTemplate portTemplate = new PortTemplate(PortType.IN, p.getPacketType().getClass().getName(), p.getName(), Arrays.asList(new PortConstraint(p.getPacketType().getClass().getName(), 0, 100)));
+                fComposedComponentShape.addPortTemplate(portTemplate);
+            } else {
+                PortTemplate portTemplate = new PortTemplate(PortType.OUT, p.getPacketType().getClass().getName(), p.getName(), Arrays.asList(new PortConstraint(p.getPacketType().getClass().getName(), 0, 100)));
+                fComposedComponentShape.addPortTemplate(portTemplate);
+            }
         }
 
         public void outerPortRemoved(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
@@ -532,7 +607,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             if (data instanceof Vertex) {
                 final Vertex vertex = (Vertex) data;
                 fCurrentComponentDefinition = PaletteService.getInstance().getComponentDefinition(vertex.getTemplateId());
-                NodeNameDialog nodeNameDialog = new NodeNameDialog(UlcUtilities.getWindowAncestor(fContent), fGraphModel);
+                NodeNameDialog nodeNameDialog = new NodeNameDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), fGraphModel);
                 nodeNameDialog.setModal(true);
                 nodeNameDialog.setVisible(true);
                 fCurrentVertex = vertex;

@@ -367,12 +367,12 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
 
     void connectionAdded(Connection c) { }
     void connectionRemoved(Connection c) { }
+    void outerPortAdded(Port p) {}
+    void outerPortRemoved(Port p) {}
     void nodesSelected(List<ComponentNode> nodes) { }
     void connectionsSelected(List<Connection> connections) { }
     void selectionCleared() { }
     void filtersApplied() { }
-    void outerPortAdded(Port p) {}
-    void outerPortRemoved(Port p) {}
 
     // testing utilities
     private void printTree() {

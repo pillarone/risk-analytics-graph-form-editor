@@ -1,13 +1,18 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
+import com.ulcjava.applicationframework.application.ApplicationActionMap;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.datatype.IDataType;
 import com.ulcjava.base.application.datatype.ULCNumberDataType;
+import com.ulcjava.base.application.event.ActionEvent;
+import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.tabletree.*;
+import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.Color;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.shared.UlcEventConstants;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel;
 
@@ -57,11 +62,51 @@ public class DataTable extends ULCBoxPane {
         ULCScrollPane scrollPane = new ULCScrollPane(fTableTree);
         this.add(ULCBoxPane.BOX_EXPAND_EXPAND, scrollPane);
         this.setBorder(BorderFactory.createEmptyBorder());
+
+        createContextMenu();
     }
 
     public DataTableTreeModel getModel() {
         return fTableModel;
     }
+
+    private void createContextMenu() {
+        ULCPopupMenu menu = new ULCPopupMenu();
+
+        ULCMenuItem expandItem = new ULCMenuItem("expand");
+        expandItem.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                TreePath[] selectedPaths = fTableTree.getSelectedPaths();
+                fTableTree.expandPaths(selectedPaths, true);
+            }
+        });
+        menu.add(expandItem);
+        ULCMenuItem expandAllItem = new ULCMenuItem("expand all");
+        expandAllItem.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                fTableTree.expandAll();
+            }
+        });
+        menu.add(expandAllItem);
+        ULCMenuItem collapseItem = new ULCMenuItem("collapse");
+        collapseItem.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                TreePath[] selectedPaths = fTableTree.getSelectedPaths();
+                fTableTree.collapsePaths(selectedPaths, true);
+            }
+        });
+        menu.add(collapseItem);
+        ULCMenuItem collapseAllItem = new ULCMenuItem("collapse all");
+        collapseAllItem.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                fTableTree.collapseAll();
+            }
+        });
+        menu.add(collapseAllItem);
+
+        fTableTree.setComponentPopupMenu(menu);
+    }
+
 
     private void addCellEditorsAndRenderers() {
         Map<Class, ITableTreeCellEditor> editors = createEditors();
