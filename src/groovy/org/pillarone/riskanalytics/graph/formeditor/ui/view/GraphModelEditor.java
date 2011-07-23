@@ -106,18 +106,14 @@ public class GraphModelEditor extends AbstractBean {
         repositoryTreePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, fModelRepositoryTree);
 
         ULCSplitPane typeSelectionPane = new ULCSplitPane(ULCSplitPane.VERTICAL_SPLIT);
-        typeSelectionPane.setTopComponent(fPaletteArea);
-        typeSelectionPane.setBottomComponent(repositoryTreePane);
-        typeSelectionPane.setDividerLocationAnimationEnabled(true);
-        typeSelectionPane.setOneTouchExpandable(true);
+        typeSelectionPane.setTopComponent(new ULCScrollPane(fPaletteArea));
+        typeSelectionPane.setBottomComponent(new ULCScrollPane(repositoryTreePane));
         typeSelectionPane.setDividerLocation(0.8);
         typeSelectionPane.setDividerSize(10);
 
         ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(typeSelectionPane);
         splitPane.setRightComponent(modelEdit);
-        splitPane.setDividerLocationAnimationEnabled(true);
-        splitPane.setOneTouchExpandable(true);
         splitPane.setDividerLocation(0.3);
         splitPane.setDividerSize(10);
 
