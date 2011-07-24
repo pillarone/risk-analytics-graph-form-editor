@@ -74,7 +74,7 @@ public class GraphModelUtilities {
         if (p == null) {
             return null;
         }
-        String portName = p.toString();
+        String portName = p.getDisplayName();
         if (p.getComponentNode() != null) {
             String compName = p.getComponentNode().getName();
             return compName + "." + portName;

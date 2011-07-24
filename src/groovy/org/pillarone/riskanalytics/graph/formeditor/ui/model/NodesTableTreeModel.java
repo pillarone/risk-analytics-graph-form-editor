@@ -133,9 +133,9 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
         if (o instanceof AbstractGraphModel) { // root node
             switch (column) {
                 case NAMEID:
-                    return fGraphModel.getName();
+                    return fGraphModel.getDisplayName();
                 case TYPEID:
-                    return fGraphModel.getName()+" ("+fGraphModel.getPackageName() + ")";
+                    return fGraphModel.getDisplayName()+" ("+fGraphModel.getPackageName() + ")";
                 case INFOID:
                     return "M";
                 default:
@@ -145,7 +145,7 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
             ComponentNode node = (ComponentNode) o;
             switch (column) {
                 case NAMEID:
-                    return node.getName();
+                    return node.getDisplayName();
                 case TYPEID:
                     return node.getType().getTypeClass().getSimpleName() + " (" + node.getType().getTypeClass().getPackage().getName() + ")";
                 case INFOID:
@@ -157,7 +157,7 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
             Port port = (Port) o;
             switch (column) {
                 case NAMEID:
-                    return port.getName();
+                    return port.getDisplayName();
                 case TYPEID:
                     return port.getPacketType().getSimpleName() + " (" + port.getPacketType().getPackage().getName() + ")";
                 case INFOID:
