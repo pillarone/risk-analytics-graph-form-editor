@@ -393,8 +393,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         public void edgeAdded(@NotNull Edge edge) {
             fCurrentEdge = edge;
-            org.pillarone.riskanalytics.graph.core.graph.model.Port outPort = getGraphPort((Port) edge.getSource());
-            org.pillarone.riskanalytics.graph.core.graph.model.Port inPort = getGraphPort((Port) edge.getTarget());
+            org.pillarone.riskanalytics.graph.core.graph.model.Port outPort = getGraphPort(fULCGraph.getPort(edge.getSourceId()));
+            org.pillarone.riskanalytics.graph.core.graph.model.Port inPort = getGraphPort(fULCGraph.getPort(edge.getTargetId()));
             if (edge.getId()==null) {
                 edge.setId("conn_" + outPort.getComponentNode().getName() + "_" + inPort.getComponentNode().getName() + "_" + System.currentTimeMillis());
             }

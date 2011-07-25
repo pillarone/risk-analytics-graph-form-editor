@@ -45,7 +45,7 @@ grails.project.dependency.resolution = {
 
         if (appName == "RiskAnalyticsGraphFormEditor") {
             runtime "org.pillarone:risk-analytics-core:1.4-ALPHA-2.5.5-kti"
-            // runtime("org.pillarone:risk-analytics-graph-core:0.3.4") { transitive = false }
+            runtime("org.pillarone:risk-analytics-graph-core:0.3.4.1") { transitive = false }
         }
 
     }
@@ -58,12 +58,9 @@ grails.project.dependency.resolution = {
         compile group: 'canoo', name: 'ulc-servlet-client', version: ulcVersion
         compile group: 'canoo', name: 'ulc-standalone-client', version: ulcVersion
 
-        compile(group: 'com.canoo.ulc.community', name: 'ULCGraph-client', version: "0.3.5") {
-            exclude "ulc-core-client"
-        }
-        compile(group: 'com.canoo.ulc.community', name: 'ULCGraph-server', version: "0.3.5") {
-            exclude "ulc-core-server"
-        }
+        compile group: 'canoo', name: 'ULCGraph-client', version: "0.4-SNAPSHOT"
+        compile group: 'jgraphx', name: 'jgraphx', version: "1.7.1.0"
+
     }
 }
 
@@ -94,8 +91,4 @@ coverage {
             '**GrailsPlugin**',
             '**TagLib**'
     ]
-
-    grails.plugin.location.'risk-analytics-graph-core' = "../RiskAnalyticsGraphCore"
-    /*grails.plugin.location.'risk-analytics-pc' = "../RiskAnalyticsCore"
-    grails.plugin.location.'risk-analytics-pc' = "../RiskAnalyticsPropertyCasualty"*/
 }
