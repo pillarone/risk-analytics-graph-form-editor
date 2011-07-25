@@ -1,3 +1,5 @@
+import org.pillarone.riskanalytics.core.util.ResourceBundleRegistry
+
 class RiskAnalyticsGraphFormEditorGrailsPlugin {
     // the plugin version
     def version = "0.1"
@@ -34,7 +36,7 @@ Brief description of the plugin.
     }
 
     def doWithApplicationContext = { applicationContext ->
-        // TODO Implement post initialization spring config (optional)
+        ResourceBundleRegistry.addBundle("COMPONENT_DEFINITION_HELP","org.pillarone.riskanalytics.graph.formeditor.examples.componentDefinitionHelp")
     }
 
     def onChange = { event ->

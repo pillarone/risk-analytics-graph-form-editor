@@ -58,12 +58,9 @@ grails.project.dependency.resolution = {
         compile group: 'canoo', name: 'ulc-servlet-client', version: ulcVersion
         compile group: 'canoo', name: 'ulc-standalone-client', version: ulcVersion
 
-        compile(group: 'com.canoo.ulc.community', name: 'ULCGraph-client', version: "0.3.5") {
-            exclude "ulc-core-client"
-        }
-        compile(group: 'com.canoo.ulc.community', name: 'ULCGraph-server', version: "0.3.5") {
-            exclude "ulc-core-server"
-        }
+        compile group: 'canoo', name: 'ULCGraph-client', version: "0.4-SNAPSHOT"
+        compile group: 'jgraphx', name: 'jgraphx', version: "1.7.1.0"
+
     }
 }
 

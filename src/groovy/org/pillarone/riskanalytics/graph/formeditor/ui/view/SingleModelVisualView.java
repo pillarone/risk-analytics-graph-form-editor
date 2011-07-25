@@ -1,7 +1,6 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 
-import com.canoo.ulc.graph.IGraphSelectionListener;
 import com.canoo.ulc.graph.ULCGraph;
 import com.canoo.ulc.graph.ULCGraphComponent;
 import com.canoo.ulc.graph.dnd.GraphTransferHandler;
@@ -161,7 +160,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     }
 
     private void addComposedComponentBoundingBox(ComposedComponentGraphModel model) {
-        fComposedComponentShape = new ShapeTemplate(ShapeTemplate.ShapeType.Rectangle, model.getPackageName() + "." + model.getName(), model.getName());
+        fComposedComponentShape = new ShapeTemplate(ShapeTemplate.ShapeType.Rectangle, model.getPackageName()+"."+model.getName(), model.getName());
 
         Vertex vertex = new Vertex();
         vertex.setTitle(fComposedComponentShape.getDisplayName());
@@ -169,10 +168,10 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         vertex.setTemplateId(fComposedComponentShape.getName());
         vertex.setStyle("swimlane");
 
-        int width = ClientContext.getScreenWidth() / 2;
-        int height = ClientContext.getScreenHeight() / 2;
-        Dimension dim = new Dimension(width - 30, height - 30);
-        Point point = new Point(15, 15);
+        int width = ClientContext.getScreenWidth()/2;
+        int height = ClientContext.getScreenHeight()/2;
+        Dimension dim = new Dimension(width-30, height-30);
+        Point point = new Point(15,15);
         vertex.setRectangle(new Rectangle(point, dim));
         try {
             fULCGraph.addVertex(vertex);
@@ -384,7 +383,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         public void vertexAdded(@NotNull Vertex vertex) {
             if (vertex.getId() == null) {
-                vertex.setId("noname_" + System.currentTimeMillis() + Math.random());
+                vertex.setId("noname_" + System.currentTimeMillis()+Math.random());
             }
             fULCGraphComponent.shrinkVertex(vertex);
         }
@@ -398,9 +397,9 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         public void edgeAdded(@NotNull Edge edge) {
             fCurrentEdge = edge;
-            org.pillarone.riskanalytics.graph.core.graph.model.Port outPort = getGraphPort((Port) edge.getSource());
-            org.pillarone.riskanalytics.graph.core.graph.model.Port inPort = getGraphPort((Port) edge.getTarget());
-            if (edge.getId() == null) {
+            org.pillarone.riskanalytics.graph.core.graph.model.Port outPort = getGraphPort(fULCGraph.getPort(edge.getSourceId()));
+            org.pillarone.riskanalytics.graph.core.graph.model.Port inPort = getGraphPort(fULCGraph.getPort(edge.getTargetId()));
+            if (edge.getId()==null) {
                 edge.setId("conn_" + outPort.getComponentNode().getName() + "_" + inPort.getComponentNode().getName() + "_" + System.currentTimeMillis());
             }
             if (outPort != null && inPort != null) {
@@ -424,7 +423,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         public void nodeAdded(ComponentNode node) {
             if (fCurrentVertex != null) {
-                fCurrentVertex.setId(node.getName() + "_" + System.currentTimeMillis());
+                fCurrentVertex.setId(node.getName()+"_"+System.currentTimeMillis());
                 fCurrentVertex.setTitle(node.getName());
                 fNodesMap.put(fCurrentVertex.getId(), node);
                 try {
@@ -485,6 +484,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
 
         public void nodesSelected(List<ComponentNode> nodes) {
+            //nothing to do
         }
 
         public void connectionsSelected(List<Connection> connections) {
