@@ -10,6 +10,7 @@ import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
+import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.IFileChooseHandler;
 import com.ulcjava.base.application.util.IFileLoadHandler;
 import com.ulcjava.base.application.util.IFileStoreHandler;
@@ -83,6 +84,7 @@ public class GraphModelEditor extends AbstractBean {
      */
     public ULCComponent getContentView() {
         ULCBoxPane modelEdit = new ULCBoxPane(true);
+        modelEdit.setPreferredSize(new Dimension(600, 600));
         modelEdit.add(ULCBoxPane.BOX_EXPAND_BOTTOM, ULCFiller.createVerticalStrut(3));
         ULCSeparator separator = new ULCSeparator();
         separator.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
@@ -102,18 +104,23 @@ public class GraphModelEditor extends AbstractBean {
         fPaletteArea = getPalettePane();
 
         ULCBoxPane repositoryTreePane = new ULCBoxPane(true);
+        repositoryTreePane.setPreferredSize(new Dimension(200, 200));
         fModelRepositoryTree = new ModelRepositoryTree(this);
         repositoryTreePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, fModelRepositoryTree);
 
         ULCSplitPane typeSelectionPane = new ULCSplitPane(ULCSplitPane.VERTICAL_SPLIT);
+        typeSelectionPane.setPreferredSize(new Dimension(200, 600));
         typeSelectionPane.setTopComponent(new ULCScrollPane(fPaletteArea));
         typeSelectionPane.setBottomComponent(new ULCScrollPane(repositoryTreePane));
+        typeSelectionPane.setOneTouchExpandable(true);
         typeSelectionPane.setDividerLocation(0.8);
         typeSelectionPane.setDividerSize(10);
 
         ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setPreferredSize(new Dimension(800, 600));
         splitPane.setLeftComponent(typeSelectionPane);
-        splitPane.setRightComponent(modelEdit);
+        splitPane.setRightComponent(new ULCScrollPane(modelEdit));
+        splitPane.setOneTouchExpandable(true);
         splitPane.setDividerLocation(0.3);
         splitPane.setDividerSize(10);
 
@@ -331,7 +338,7 @@ public class GraphModelEditor extends AbstractBean {
         AbstractGraphModel model = null;
         TypeDefinitionBean typeDefBean = new TypeDefinitionBean();
         try {
-            model = getPersistenceService().load(name,packageName);
+            model = getPersistenceService().load(name, packageName);
         } catch (Exception ex) {
         }
         typeDefBean.setName(model.getName());
@@ -366,7 +373,7 @@ public class GraphModelEditor extends AbstractBean {
     }
 
     private GraphPersistenceService getPersistenceService() {
-        if (fPersistenceService==null) {
+        if (fPersistenceService == null) {
             org.springframework.context.ApplicationContext ctx = ApplicationHolder.getApplication().getMainContext();
             fPersistenceService = ctx.getBean(GraphPersistenceService.class);
         }

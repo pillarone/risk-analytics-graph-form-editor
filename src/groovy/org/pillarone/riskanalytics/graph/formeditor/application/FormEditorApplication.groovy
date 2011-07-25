@@ -16,7 +16,9 @@ class FormEditorApplication extends SingleFrameApplication {
     protected void initFrame(ULCFrame frame) {
         super.initFrame(frame)
         frame.defaultCloseOperation = ULCFrame.TERMINATE_ON_CLOSE
-        frame.size = new Dimension(1000, 750)
+        frame.setSize(1000, 750)
+        frame.setExtendedState(ULCFrame.NORMAL)
+        frame.toFront()
         frame.locationRelativeTo = null
     }
 
