@@ -5,6 +5,7 @@ import com.canoo.ulc.graph.shared.PortConstraint;
 import com.canoo.ulc.graph.shared.PortTemplate;
 import com.canoo.ulc.graph.shared.PortType;
 import com.canoo.ulc.graph.shared.ShapeTemplate;
+import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.util.GroovyUtils;
@@ -24,13 +25,13 @@ public class ComponentWidgetsView extends ULCGraphPalette {
 
             for (Map.Entry<Field, Class> entry : GroovyUtils.obtainPorts(definition, "in").entrySet()) {
                 shapeTemplate.addPortTemplate(
-                        new PortTemplate(PortType.IN, entry.getValue().getName(), entry.getKey().getName(), Arrays.asList(new PortConstraint(entry.getValue().getName(), 0, 100)))
+                        new PortTemplate(PortType.IN, entry.getValue().getName(), UIUtils.formatDisplayName(entry.getKey().getName()), Arrays.asList(new PortConstraint(entry.getValue().getName(), 0, 100)))
                 );
             }
 
             for (Map.Entry<Field, Class> entry : GroovyUtils.obtainPorts(definition, "out").entrySet()) {
                 shapeTemplate.addPortTemplate(
-                        new PortTemplate(PortType.OUT, entry.getValue().getName(), entry.getKey().getName(), Arrays.asList(new PortConstraint(entry.getValue().getName(), 0, 100)))
+                        new PortTemplate(PortType.OUT, entry.getValue().getName(), UIUtils.formatDisplayName(entry.getKey().getName()), Arrays.asList(new PortConstraint(entry.getValue().getName(), 0, 100)))
                 );
             }
 

@@ -5,7 +5,9 @@ import com.canoo.ulc.detachabletabbedpane.server.ITabListener;
 import com.canoo.ulc.detachabletabbedpane.server.TabEvent;
 import com.canoo.ulc.detachabletabbedpane.server.ULCCloseableTabbedPane;
 import com.canoo.ulc.detachabletabbedpane.server.ULCDetachableTabbedPane;
+import com.canoo.ulc.graph.IGraphSelectionListener;
 import com.canoo.ulc.graph.ULCGraphOutline;
+import com.canoo.ulc.graph.model.Vertex;
 import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.Action;
 import com.ulcjava.applicationframework.application.ApplicationActionMap;
@@ -21,7 +23,10 @@ import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNode
 import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
 import org.pillarone.riskanalytics.graph.formeditor.util.ProbeSimulationService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class SingleModelMultiEditView extends AbstractBean {
     private ApplicationContext fApplicationContext;
@@ -154,13 +159,13 @@ public class SingleModelMultiEditView extends AbstractBean {
         //////////////////////////////////////////////////
         final ULCCardPane cardPane = new ULCCardPane();
         fFormEditorView = new SingleModelFormView(fApplicationContext);
-        final ULCComponent formView =  fFormEditorView.getView();
+        final ULCComponent formView = fFormEditorView.getView();
         cardPane.addCard("Form", formView);
         fTextEditorView = new SingleModelTextView(fApplicationContext);
-        final ULCComponent textView =  fTextEditorView.getView();
+        final ULCComponent textView = fTextEditorView.getView();
         cardPane.addCard("Text", textView);
         fVisualEditorView = new SingleModelVisualView(fApplicationContext);
-        final ULCComponent visualView =  fVisualEditorView.getView();
+        final ULCComponent visualView = fVisualEditorView.getView();
         cardPane.addCard("Visual", visualView);
 
         formSelectButton.addActionListener(new IActionListener() {
@@ -192,31 +197,29 @@ public class SingleModelMultiEditView extends AbstractBean {
         splitPane.setDividerLocation(0.65);
         splitPane.setDividerSize(10);
         // the model editing area
-        ULCBoxPane modelPane = new ULCBoxPane(true,2);
+        ULCBoxPane modelPane = new ULCBoxPane(true, 2);
         modelPane.add(ULCBoxPane.BOX_EXPAND_TOP, toolBarPane);
         modelPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, cardPane);
         splitPane.setTopComponent(modelPane);
 
         // lower pane - consisting of a property pane and a model filter pane
-        ULCBoxPane lower = new ULCBoxPane(true,1);
+        ULCBoxPane lower = new ULCBoxPane(true, 1);
         ULCSplitPane splitPane2 = new ULCSplitPane();
         lower.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane2);
 
         // the property editing area --> comments, help, ...etc.
-        ULCBoxPane propertyPane = new ULCBoxPane(true,1);
+        ULCBoxPane propertyPane = new ULCBoxPane(true, 1);
         ULCDetachableTabbedPane tabbedPane = new ULCDetachableTabbedPane();
         // help
-        ULCTextArea help = new ULCTextArea();
-        help.setEditable(true);
-        help.setText("No help available yet");
-        tabbedPane.addTab("Help", help);
-        tabbedPane.setEnabledAt(0,true);
+        HelpView helpView = new HelpView(fVisualEditorView.getULCGraph());
+        tabbedPane.addTab("Help", helpView.getContent());
+        tabbedPane.setEnabledAt(0, true);
         // comments
         ULCTextArea comments = new ULCTextArea();
         comments.setEditable(true);
         comments.setText("No comments available yet");
         tabbedPane.addTab("Comments", comments);
-        tabbedPane.setEnabledAt(1,true);
+        tabbedPane.setEnabledAt(1, true);
         // parameters
         ULCBoxPane data = new ULCBoxPane();
         fDataSetSheets = new ULCCloseableTabbedPane();
@@ -245,7 +248,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         });
         results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
         tabbedPane.addTab("Results", results);
-        tabbedPane.setEnabledAt(3,true);
+        tabbedPane.setEnabledAt(3, true);
 
         tabbedPane.setSelectedIndex(2);
         propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, tabbedPane);
@@ -277,14 +280,14 @@ public class SingleModelMultiEditView extends AbstractBean {
     public AbstractGraphModel getGraphModel() {
         return fGraphModel;
     }
-    
+
     public void addParameterSet(Parameterization p, String name) {
         if (fGraphModel instanceof ModelGraphModel) {
             DataTable dataTable;
             if (p == null) {
-                dataTable = new DataTable((ModelGraphModel)fGraphModel, 1, name);
+                dataTable = new DataTable((ModelGraphModel) fGraphModel, 1, name);
             } else {
-                dataTable = new DataTable((ModelGraphModel)fGraphModel, p);
+                dataTable = new DataTable((ModelGraphModel) fGraphModel, p);
             }
             fDataSetSheets.addTab(name, dataTable);
         }
@@ -298,11 +301,11 @@ public class SingleModelMultiEditView extends AbstractBean {
         resultTablePane.setBorder(BorderFactory.createEmptyBorder());
         fResultSheets.addTab(name, resultTablePane);
     }
-    
+
     public Parameterization getSelectedParametrization() {
         ULCComponent comp = fDataSetSheets.getSelectedComponent();
         if (comp != null) {
-            return ((DataTable)fDataSetSheets.getSelectedComponent()).getModel().getParametrization();
+            return ((DataTable) fDataSetSheets.getSelectedComponent()).getModel().getParametrization();
         }
         return null;
     }
@@ -331,14 +334,12 @@ public class SingleModelMultiEditView extends AbstractBean {
                     this.addSimulationResult(output, "results");
                 } catch (Exception ex) {
                     ULCAlert alert = new ULCAlert("Simulation failed",
-                        "Reason: " + ex.getMessage(), "ok");
+                            "Reason: " + ex.getMessage(), "ok");
                     alert.show();
                 }
             }
         }
     }
-
-
 
 
     /*@Action
