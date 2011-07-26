@@ -2,10 +2,12 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.ClientContext;
+import com.ulcjava.base.application.IRendererComponent;
 import com.ulcjava.base.application.ULCTableTree;
 import com.ulcjava.base.application.event.ITreeSelectionListener;
 import com.ulcjava.base.application.event.TreeSelectionEvent;
 import com.ulcjava.base.application.tabletree.AbstractTableTreeModel;
+import com.ulcjava.base.application.tabletree.DefaultTableTreeCellRenderer;
 import com.ulcjava.base.application.tabletree.ULCTableTreeColumn;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.tree.ULCTreeSelectionModel;
@@ -14,12 +16,13 @@ import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.shared.UlcEventConstants;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodesTableTreeModel;
+import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 
+ *
  */
 public class NodesTable extends ULCTableTree {
 
@@ -51,6 +54,8 @@ public class NodesTable extends ULCTableTree {
         this.getSelectionModel().setSelectionMode(ULCTreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
         this.setSelectionBackground(Color.green);
         ULCTableTreeColumn col = this.getColumnModel().getColumn(NodesTableTreeModel.INFOID);
+        DefaultTableTreeCellRenderer renderer = new InfoTableTreeCellRenderer();
+        col.setCellRenderer(renderer);
         col.setMaxWidth(50);
     }
 
@@ -92,7 +97,7 @@ public class NodesTable extends ULCTableTree {
 
         public void outerPortRemoved(Port p) {
             int index = fTableModel.getIndexOfChild(fGraphModel, p);
-            if (index>=0) {
+            if (index >= 0) {
                 fTableModel.removeFromCache(p);
                 fTableModel.nodeStructureChanged(new TreePath(fGraphModel));
             } else {
@@ -114,7 +119,7 @@ public class NodesTable extends ULCTableTree {
         }
 
         public void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
-            fTableModel.nodeChanged(new TreePath(new Object[]{fGraphModel,node}));
+            fTableModel.nodeChanged(new TreePath(new Object[]{fGraphModel, node}));
         }
     }
 
@@ -123,7 +128,7 @@ public class NodesTable extends ULCTableTree {
     }
 
     public ComponentNode getComponentNode(TreePath treePath) {
-        if (treePath != null && treePath.getPathCount()==2 && treePath.getPath()[1] instanceof ComponentNode) {
+        if (treePath != null && treePath.getPathCount() == 2 && treePath.getPath()[1] instanceof ComponentNode) {
             return (ComponentNode) treePath.getPath()[1];
         }
         return null;

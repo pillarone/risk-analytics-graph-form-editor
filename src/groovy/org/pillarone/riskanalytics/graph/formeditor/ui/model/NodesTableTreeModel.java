@@ -2,12 +2,14 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.model;
 
 import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.applicationframework.application.ResourceMap;
+import com.ulcjava.base.application.ULCLabel;
 import com.ulcjava.base.application.tabletree.AbstractTableTreeModel;
 import com.ulcjava.base.application.tabletree.ITableTreeModel;
 import com.ulcjava.base.application.tree.TreePath;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange;
 import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraphImport;
+import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +23,7 @@ import java.util.List;
  * The table listens to changes in the graph model through a {@link org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener}.
  * <p/>
  * For {@link org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel}'s the table consists of 3 columns (name, type).
-  *
+ *
  * @author martin.melchior
  */
 public class NodesTableTreeModel extends AbstractTableTreeModel implements ITableTreeModel {
@@ -33,7 +35,7 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
     private ApplicationContext fContext;
     private AbstractGraphModel fGraphModel;
     private String[] fColumnNames;
-    private HashMap<GraphElement,List<GraphElement>> fCache;
+    private HashMap<GraphElement, List<GraphElement>> fCache;
 
     /**
      * @param ctx   is used basically to access the presentation of the table headers.
@@ -59,17 +61,17 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
     }
 
     private List<GraphElement> searchForChildren(GraphElement parent) {
-        if (parent instanceof ComposedComponentNode){
-            ComposedComponentNode cc = (ComposedComponentNode)parent;
-            if (cc.getComponentGraph()==null) {
+        if (parent instanceof ComposedComponentNode) {
+            ComposedComponentNode cc = (ComposedComponentNode) parent;
+            if (cc.getComponentGraph() == null) {
                 ComposedComponentGraphImport importer = new ComposedComponentGraphImport();
                 ComposedComponentGraphModel ccModel = (ComposedComponentGraphModel) importer.importGraph(cc.getType().getTypeClass(), "");
                 cc.setComponentGraph(ccModel);
             }
-            return searchForChildren(((ComposedComponentNode)parent).getComponentGraph());
+            return searchForChildren(((ComposedComponentNode) parent).getComponentGraph());
         }
         List<GraphElement> children = new ArrayList<GraphElement>();
-        if (parent instanceof ComponentNode){
+        if (parent instanceof ComponentNode) {
             ComponentNode node = (ComponentNode) parent;
             children.addAll(node.getInPorts());
             children.addAll(node.getOutPorts());
@@ -77,7 +79,7 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
             if (parent == fGraphModel) {
                 children.addAll(fGraphModel.getFilteredComponentsList());
             } else {
-                children.addAll(((AbstractGraphModel)parent).getAllComponentNodes());
+                children.addAll(((AbstractGraphModel) parent).getAllComponentNodes());
             }
             if (parent instanceof ComposedComponentGraphModel) {
                 ComposedComponentGraphModel node = (ComposedComponentGraphModel) parent;
@@ -98,7 +100,7 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
     }
 
     private void markToRemove(GraphElement node, List<GraphElement> toRemove) {
-        if (toRemove==null) {
+        if (toRemove == null) {
             toRemove = new ArrayList<GraphElement>();
         }
         if (fCache.containsKey(node)) {
@@ -135,9 +137,9 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
                 case NAMEID:
                     return fGraphModel.getDisplayName();
                 case TYPEID:
-                    return fGraphModel.getDisplayName()+" ("+fGraphModel.getPackageName() + ")";
+                    return fGraphModel.getDisplayName() + " (" + fGraphModel.getPackageName() + ")";
                 case INFOID:
-                    return "M";
+                    return EnumGraphElementInfo.M.getDisplayValue();
                 default:
                     return null;
             }
@@ -149,7 +151,7 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
                 case TYPEID:
                     return node.getType().getTypeClass().getSimpleName() + " (" + node.getType().getTypeClass().getPackage().getName() + ")";
                 case INFOID:
-                    return o instanceof ComposedComponentNode ? "CC" : "C";
+                    return o instanceof ComposedComponentNode ? EnumGraphElementInfo.CC.getDisplayValue() : EnumGraphElementInfo.C.getDisplayValue();
                 default:
                     return null;
             }
@@ -162,23 +164,23 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
                     return port.getPacketType().getSimpleName() + " (" + port.getPacketType().getPackage().getName() + ")";
                 case INFOID:
                     if (port instanceof InPort) {
-                        String value = "IN";
+                        String value = EnumGraphElementInfo.IN.getDisplayValue();
                         IntegerRange range = port.getConnectionCardinality();
                         if (range != null) {
-                            int numOfConn = ((InPort)port).getConnectionCount();
-                            if (numOfConn<range.getTo()) {
-                                value = "IN (+)";
+                            int numOfConn = ((InPort) port).getConnectionCount();
+                            if (numOfConn < range.getTo()) {
+                                value = EnumGraphElementInfo.IN_PLUS.getDisplayValue();
                             }
-                            if (numOfConn<range.getFrom()) {
-                                value = "IN +!";
+                            if (numOfConn < range.getFrom()) {
+                                value = EnumGraphElementInfo.IN_PLUS_EX.getDisplayValue();
                             }
-                            if (numOfConn>range.getTo()) {
-                                value = "IN -!";
+                            if (numOfConn > range.getTo()) {
+                                value = EnumGraphElementInfo.IN_MINUS.getDisplayValue();
                             }
                         }
                         return value;
                     } else {
-                        return "OUT";
+                        return EnumGraphElementInfo.OUT.getDisplayValue();
                     }
                 default:
                     return null;
@@ -204,7 +206,7 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
     }
 
     public boolean isLeaf(Object o) {
-        return getChildCount(o)==0;
+        return getChildCount(o) == 0;
     }
 
     public int getIndexOfChild(Object parent, Object child) {
@@ -216,7 +218,7 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
     }
 
     public void resetCache() {
-        fCache = new HashMap<GraphElement,List<GraphElement>>();
+        fCache = new HashMap<GraphElement, List<GraphElement>>();
         fCache.put(fGraphModel, new ArrayList<GraphElement>());
         for (GraphElement node : searchForChildren(fGraphModel)) {
             addToCache(node, fGraphModel);
@@ -230,7 +232,7 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
         List<GraphElement> availableNodes = fCache.get(fGraphModel);
         for (GraphElement node : nodes) {
             if (availableNodes.contains(node)) {
-                TreePath path = new TreePath(new Object[]{fGraphModel,node});
+                TreePath path = new TreePath(new Object[]{fGraphModel, node});
                 paths.add(path);
             }
         }
@@ -239,22 +241,22 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
 
     private void printTree() {
         if (fCache.containsKey(fGraphModel)) {
-            printNode(fGraphModel,"");
+            printNode(fGraphModel, "");
         }
     }
 
     private void printNode(Object node, String tab) {
         String name = null;
         if (node instanceof AbstractGraphModel) {
-            name = ((AbstractGraphModel)node).getName();
+            name = ((AbstractGraphModel) node).getName();
         } else if (node instanceof ComponentNode) {
-            name = ((ComponentNode)node).getName();
+            name = ((ComponentNode) node).getName();
         } else if (node instanceof Port) {
-            name = ((Port)node).getName();
+            name = ((Port) node).getName();
         }
         System.out.println(tab + name);
         for (Object child : fCache.get(node)) {
-            printNode(child, tab+"   ");
+            printNode(child, tab + "   ");
         }
     }
 }
