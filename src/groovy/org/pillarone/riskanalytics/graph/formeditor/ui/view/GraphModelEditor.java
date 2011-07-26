@@ -10,10 +10,8 @@ import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.util.Dimension;
-import com.ulcjava.base.application.util.IFileChooseHandler;
-import com.ulcjava.base.application.util.IFileLoadHandler;
-import com.ulcjava.base.application.util.IFileStoreHandler;
+import com.ulcjava.base.application.event.KeyEvent;
+import com.ulcjava.base.application.util.*;
 import com.ulcjava.base.shared.FileChooserConfig;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.pillarone.riskanalytics.core.components.ComposedComponent;
@@ -217,6 +215,8 @@ public class GraphModelEditor extends AbstractBean {
                 }
             };
             fTypeDefView.getBeanForm().addSaveActionListener(newModelListener);
+            KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+            fTypeDefView.getTypeDefinitionForm().registerKeyboardAction(enter, newModelListener);
         } else {
             TypeDefinitionBean newBean = new TypeDefinitionBean();
             newBean.setBaseType("Model");
