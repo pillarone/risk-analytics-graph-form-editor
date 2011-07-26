@@ -15,6 +15,9 @@ import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
+import com.ulcjava.base.application.event.KeyEvent;
+import com.ulcjava.base.application.util.Dimension;
+import com.ulcjava.base.application.util.KeyStroke;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
@@ -22,6 +25,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.filters.ComponentNodeF
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
 import org.pillarone.riskanalytics.graph.formeditor.util.ProbeSimulationService;
+import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,10 +85,10 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         // model filter tool
         ULCBoxPane modelFilterTool = new ULCBoxPane(false);
-        modelFilterTool.add(ULCBoxPane.BOX_LEFT_TOP, new ULCLabel("Filter Type: "));
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, new ULCLabel("Filter Type: "));
         final ULCComboBox filterType = new ULCComboBox(ComponentNodeFilterFactory.getFilterModelNames());
-        modelFilterTool.add(ULCBoxPane.BOX_LEFT_TOP, filterType);
-        modelFilterTool.add(ULCBoxPane.BOX_LEFT_TOP, new ULCLabel("Value: "));
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, filterType);
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, new ULCLabel("Value: "));
         final ULCTextField filterValue = new ULCTextField(10);
         filterValue.setEditable(false);
         // TODO: Validation of what has been entered
@@ -100,10 +104,12 @@ public class SingleModelMultiEditView extends AbstractBean {
                     }
                 }
         );
-        modelFilterTool.add(ULCBoxPane.BOX_LEFT_TOP, filterValue);
-        modelFilterTool.add(2, ULCFiller.createVerticalGlue());
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, filterValue);
 
-        ULCButton clear = new ULCButton("Clear");
+        ULCButton clear = new ULCButton(UIUtils.getIcon("delete-active.png"));
+        clear.setPreferredSize(new Dimension(16,16));
+        clear.setContentAreaFilled(false);
+        clear.setOpaque(false);
         clear.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 filterValue.setText("");
@@ -111,10 +117,9 @@ public class SingleModelMultiEditView extends AbstractBean {
                 fGraphModel.clearNodeFilters();
             }
         });
-        modelFilterTool.add(ULCBoxPane.BOX_LEFT_BOTTOM, clear);
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, clear);
 
-        ULCButton apply = new ULCButton("Apply");
-        apply.addActionListener(new IActionListener() {
+        IActionListener action = new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 String expr = filterValue.getText();
                 String filterModelName = (String) filterType.getSelectedItem();
@@ -124,8 +129,9 @@ public class SingleModelMultiEditView extends AbstractBean {
                     fGraphModel.addNodeFilter(filter);
                 }
             }
-        });
-        modelFilterTool.add(ULCBoxPane.BOX_RIGHT_BOTTOM, apply);
+        };
+        KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+        filterValue.registerKeyboardAction(action, enter, ULCComponent.WHEN_FOCUSED);
 
         // button to select the view
         ULCBoxPane viewSelector = new ULCBoxPane(false);
