@@ -21,11 +21,9 @@ import com.ulcjava.applicationframework.application.form.BeanFormDialog;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.dnd.DataFlavor;
 import com.ulcjava.base.application.dnd.Transferable;
-import com.ulcjava.base.application.event.ActionEvent;
-import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.event.IWindowListener;
-import com.ulcjava.base.application.event.WindowEvent;
+import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.util.Dimension;
+import com.ulcjava.base.application.util.KeyStroke;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
@@ -570,8 +568,9 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             NodeNameForm form = new NodeNameForm(model);
             fBeanForm = new BeanFormDialog<NodeNameFormModel>(form);
             add(fBeanForm.getContentPane());
-            fBeanForm.addSaveActionListener(new IActionListener() {
+            IActionListener action = new IActionListener() {
                 public void actionPerformed(ActionEvent event) {
+                    if(fBeanForm.getModel().hasErrors()) return;
                     NameBean bean = fBeanForm.getModel().getBean();
                     String nodeName = bean.getName();
                     setVisible(false);
@@ -580,8 +579,12 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                         fGraphModel.createComponentNode(fCurrentComponentDefinition, nodeName);
                     }
                 }
-            });
-
+            };
+            fBeanForm.addSaveActionListener(action);
+            KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+            form.registerKeyboardAction(enter, action);
+            form.addKeyListener();
+            
             setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
             addWindowListener(new IWindowListener() {
                 public void windowClosing(WindowEvent event) {

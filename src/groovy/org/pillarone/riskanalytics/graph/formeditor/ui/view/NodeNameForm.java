@@ -3,7 +3,7 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 import com.ulcjava.applicationframework.application.form.AbstractFormBuilder;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeNameFormModel;
 
-public class NodeNameForm extends AbstractFormBuilder<NodeNameFormModel> {
+public class NodeNameForm extends AbstractRegistryFormBuilder<NodeNameFormModel> {
 
     public NodeNameForm(NodeNameFormModel bean) {
         super(bean);

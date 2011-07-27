@@ -5,10 +5,8 @@ import com.ulcjava.base.application.ClientContext;
 import com.ulcjava.base.application.ULCButton;
 import com.ulcjava.base.application.ULCDialog;
 import com.ulcjava.base.application.ULCWindow;
-import com.ulcjava.base.application.event.ActionEvent;
-import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.event.IWindowListener;
-import com.ulcjava.base.application.event.WindowEvent;
+import com.ulcjava.base.application.event.*;
+import com.ulcjava.base.application.util.KeyStroke;
 import org.pillarone.riskanalytics.core.packets.Packet;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.InPort;
@@ -51,8 +49,9 @@ public class ReplicationEditDialog extends ULCDialog {
         });
 
         fBeanForm.addToButtons(fCancel);
-        fBeanForm.addSaveActionListener(new IActionListener() {
+        IActionListener action = new IActionListener() {
             public void actionPerformed(ActionEvent event) {
+                if(fBeanForm.getModel().hasErrors()) return;
                 ReplicationBean bean = (ReplicationBean) fBeanForm.getModel().getBean();
                 Port inner = GraphModelUtilities.getPortFromName(bean.getInner(), fGraphModel);
                 Class<? extends Packet> packetClass = inner.getPacketType();
@@ -65,7 +64,11 @@ public class ReplicationEditDialog extends ULCDialog {
                 }
                 setVisible(false);
             }
-        });
+        };
+
+        fBeanForm.addSaveActionListener(action);
+        KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+        form.registerKeyboardAction(enter, action);
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new IWindowListener() {

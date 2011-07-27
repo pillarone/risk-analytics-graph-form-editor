@@ -126,6 +126,7 @@ public class ConnectNodesDialog extends ULCDialog {
                 }
         );
         fSaveButton = new ULCButton("ok");
+        setDefaultButton(fSaveButton);
         fSaveButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 // validate

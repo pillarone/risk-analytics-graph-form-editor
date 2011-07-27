@@ -5,10 +5,8 @@ import com.ulcjava.base.application.ClientContext;
 import com.ulcjava.base.application.ULCButton;
 import com.ulcjava.base.application.ULCDialog;
 import com.ulcjava.base.application.ULCWindow;
-import com.ulcjava.base.application.event.ActionEvent;
-import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.event.IWindowListener;
-import com.ulcjava.base.application.event.WindowEvent;
+import com.ulcjava.base.application.event.*;
+import com.ulcjava.base.application.util.KeyStroke;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
@@ -67,8 +65,9 @@ public class NodeEditDialog extends ULCDialog {
             }
         });
         fBeanForm.addToButtons(fCancel);
-        fBeanForm.addSaveActionListener(new IActionListener() {
+        IActionListener action = new IActionListener() {
             public void actionPerformed(ActionEvent event) {
+                if (fBeanForm.getModel().hasErrors()) return;
                 NodeBean bean = (NodeBean) fBeanForm.getModel().getBean();
                 if (fEditedNode != null) {
                     if (!fEditedNode.getName().equals(bean.getName())) {
@@ -100,7 +99,11 @@ public class NodeEditDialog extends ULCDialog {
                 }
                 setVisible(false);
             }
-        });
+        };
+        fBeanForm.addSaveActionListener(action);
+        KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+        form.registerKeyboardAction(enter, action);
+        form.addKeyListener();
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new IWindowListener() {

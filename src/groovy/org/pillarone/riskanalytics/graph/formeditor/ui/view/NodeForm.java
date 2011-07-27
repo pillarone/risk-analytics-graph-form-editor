@@ -8,7 +8,7 @@ import org.pillarone.riskanalytics.graph.formeditor.util.PaletteUtilities;
 
 import java.util.List;
 
-public class NodeForm extends AbstractFormBuilder<NodeFormModel> {
+public class NodeForm extends AbstractRegistryFormBuilder<NodeFormModel> {
     private boolean fIsModel;
 
     public NodeForm(NodeFormModel bean, boolean isModel) {

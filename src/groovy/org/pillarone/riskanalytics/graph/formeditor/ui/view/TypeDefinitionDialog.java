@@ -12,7 +12,7 @@ import java.util.Collection;
 
 public class TypeDefinitionDialog extends ULCDialog {
     private BeanFormDialog<TypeDefinitionFormModel> fBeanForm;
-    public TypeDefinitionForm form;
+    private TypeDefinitionForm form;
     private ULCButton fCancel;
     private Collection<TypeDefinitionBean> fTypeDefs;
 

@@ -5,7 +5,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.AvailablePortsComboBoxModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ReplicationFormModel;
 
-public class ReplicationForm extends AbstractFormBuilder<ReplicationFormModel> {
+public class ReplicationForm extends AbstractRegistryFormBuilder<ReplicationFormModel> {
 
     AbstractGraphModel fGraphModel;
 

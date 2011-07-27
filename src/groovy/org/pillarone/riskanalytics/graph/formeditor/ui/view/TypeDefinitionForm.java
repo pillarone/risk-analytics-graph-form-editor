@@ -11,9 +11,7 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormM
 import java.util.ArrayList;
 import java.util.List;
 
-public class TypeDefinitionForm extends AbstractFormBuilder<TypeDefinitionFormModel> {
-
-    List<TextFieldParameter> textFieldParameters = new ArrayList<TextFieldParameter>();
+public class TypeDefinitionForm extends AbstractRegistryFormBuilder<TypeDefinitionFormModel>{
 
     public TypeDefinitionForm(TypeDefinitionFormModel bean) {
         super(bean);
@@ -25,15 +23,9 @@ public class TypeDefinitionForm extends AbstractFormBuilder<TypeDefinitionFormMo
         DefaultComboBoxModel comboBoxModel = new DefaultComboBoxModel(new String[]{"Model", "Composed Component"});
         comboBoxModel.setSelectedItem("Model");
         addComboBox("baseType", comboBoxModel);
-        textFieldParameters.add(addTextField("name").columns(15));
-        textFieldParameters.add(addTextField("packageName").columns(15));
+        addTextField("name").columns(15);
+        addTextField("packageName").columns(15);
 
-    }
-
-    public void registerKeyboardAction(KeyStroke enter, IActionListener action){
-        for(TextFieldParameter textFieldParameter: textFieldParameters){
-            textFieldParameter.getWidget().registerKeyboardAction(action, enter, ULCComponent.WHEN_FOCUSED);
-        }
     }
 
 

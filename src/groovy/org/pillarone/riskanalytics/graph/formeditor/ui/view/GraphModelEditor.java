@@ -206,7 +206,9 @@ public class GraphModelEditor extends AbstractBean {
             IActionListener newModelListener = new IActionListener() {
 
                 public void actionPerformed(ActionEvent event) {
-                    TypeDefinitionBean typeDef = fTypeDefView.getBeanForm().getModel().getBean();
+                    TypeDefinitionFormModel typeDefinitionFormModel = fTypeDefView.getBeanForm().getModel();
+                    if (typeDefinitionFormModel.hasErrors()) return;
+                    TypeDefinitionBean typeDef = typeDefinitionFormModel.getBean();
                     AbstractGraphModel model = typeDef.getBaseType().equals("Model") ? new ModelGraphModel() : new ComposedComponentGraphModel();
                     model.setPackageName(typeDef.getPackageName());
                     model.setName(typeDef.getName());
@@ -217,6 +219,7 @@ public class GraphModelEditor extends AbstractBean {
             fTypeDefView.getBeanForm().addSaveActionListener(newModelListener);
             KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
             fTypeDefView.getTypeDefinitionForm().registerKeyboardAction(enter, newModelListener);
+            fTypeDefView.getTypeDefinitionForm().addKeyListener();
         } else {
             TypeDefinitionBean newBean = new TypeDefinitionBean();
             newBean.setBaseType("Model");
