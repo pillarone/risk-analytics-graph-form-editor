@@ -15,7 +15,7 @@ import com.ulcjava.applicationframework.application.form.model.FormModel
 /**
  * @author fouad.jaada@intuitive-collaboration.com
  */
-abstract class AbstractRegistryFormBuilder<T> extends AbstractFormBuilder<T> {
+abstract class AbstractRegistryFormBuilder<T extends FormModel> extends AbstractFormBuilder {
 
     List<TextFieldParameter> textFieldParameters = new ArrayList<TextFieldParameter>();
 
@@ -26,6 +26,7 @@ abstract class AbstractRegistryFormBuilder<T> extends AbstractFormBuilder<T> {
     @Override
     protected TextFieldParameter addTextField(String propertyName) {
         TextFieldParameter textFieldParameter = super.addTextField(propertyName)
+        textFieldParameter.getWidget().name = propertyName
         textFieldParameters.add(textFieldParameter)
         return textFieldParameter
     }
@@ -41,9 +42,18 @@ abstract class AbstractRegistryFormBuilder<T> extends AbstractFormBuilder<T> {
         for (TextFieldParameter textFieldParameter: textFieldParameters) {
             ULCTextField textField = textFieldParameter.getWidget()
             textField.addKeyListener([keyTyped: {KeyEvent keyEvent ->
-                ((FormModel)model).updatePresentationState()
+                ((FormModel) model).updatePresentationState()
             }] as IKeyListener)
         }
+    }
+
+    ULCComponent getComponent(String componentName) {
+        for (TextFieldParameter textFieldParameter: textFieldParameters) {
+            ULCTextField textField = textFieldParameter.getWidget()
+            if (textField.name == componentName)
+                return textField
+        }
+        return null
     }
 
 
