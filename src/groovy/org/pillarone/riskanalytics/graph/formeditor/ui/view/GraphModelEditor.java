@@ -107,7 +107,7 @@ public class GraphModelEditor extends AbstractBean {
         repositoryTreePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, fModelRepositoryTree);
 
         ULCSplitPane typeSelectionPane = new ULCSplitPane(ULCSplitPane.VERTICAL_SPLIT);
-        typeSelectionPane.setPreferredSize(new Dimension(200, 600));
+        typeSelectionPane.setPreferredSize(new Dimension(150, 600));
         typeSelectionPane.setTopComponent(new ULCScrollPane(fPaletteArea));
         typeSelectionPane.setBottomComponent(new ULCScrollPane(repositoryTreePane));
         typeSelectionPane.setOneTouchExpandable(true);
@@ -127,38 +127,46 @@ public class GraphModelEditor extends AbstractBean {
 
     private ULCBoxPane getPalettePane() {
         ULCBoxPane viewSelector = new ULCBoxPane(false);
-        ULCRadioButton typeTreeSelectButton = new ULCRadioButton("Types", true);
-        ULCRadioButton categoryTreeSelectButton = new ULCRadioButton("Categories");
-        ULCRadioButton paletteSelectButton = new ULCRadioButton("Widgets");
+        ULCRadioButton categoryTreeSelectButton = new ULCRadioButton("Categories", true);
+        ULCRadioButton packageSelectButton = new ULCRadioButton("Package");
+        ULCRadioButton alphabeticalButton = new ULCRadioButton("Alphabetical");
         ULCButtonGroup buttonGroup = new ULCButtonGroup();
-        typeTreeSelectButton.setGroup(buttonGroup);
+        packageSelectButton.setGroup(buttonGroup);
         categoryTreeSelectButton.setGroup(buttonGroup);
-        paletteSelectButton.setGroup(buttonGroup);
-        viewSelector.add(typeTreeSelectButton);
-        viewSelector.add(categoryTreeSelectButton);
-        viewSelector.add(paletteSelectButton);
-        //viewSelector.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
+        alphabeticalButton.setGroup(buttonGroup);
+
+        viewSelector.add(ULCBoxPane.BOX_LEFT_CENTER, categoryTreeSelectButton);
+        viewSelector.add(ULCBoxPane.BOX_LEFT_CENTER, alphabeticalButton);
+        viewSelector.add(ULCBoxPane.BOX_LEFT_CENTER, packageSelectButton);
+        viewSelector.add(ULCBoxPane.BOX_EXPAND_EXPAND, new ULCFiller());
 
         final ULCCardPane views = new ULCCardPane();
-        final ComponentTypeTree typeTree = new ComponentTypeTree(this);
-        views.addCard("TypeTree", typeTree);
+
         final ComponentCategoryTree categoryTree = new ComponentCategoryTree(this);
-        views.addCard("CategoryTree", categoryTree);
-        final ULCGraphPalette palette = new ComponentWidgetsView();
-        views.addCard("PaletteView", palette);
-        typeTreeSelectButton.addActionListener(new IActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                views.setSelectedComponent(typeTree);
-            }
-        });
+        views.addCard("categoryTree", categoryTree);
+
+        final ComponentTypeTree packagePalette = new ComponentTypeTree(this);
+        views.addCard("packagePalette", packagePalette);
+
+        final ULCGraphPalette alphabeticalPalette = new ComponentWidgetsView();
+        views.addCard("alphabeticalPalette", alphabeticalPalette);
+
+
         categoryTreeSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 views.setSelectedComponent(categoryTree);
             }
         });
-        paletteSelectButton.addActionListener(new IActionListener() {
+
+        packageSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
-                views.setSelectedComponent(palette);
+                views.setSelectedComponent(packagePalette);
+            }
+        });
+
+        alphabeticalButton.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                views.setSelectedComponent(alphabeticalPalette);
             }
         });
         ULCBoxPane paletteArea = new ULCBoxPane(true);
@@ -227,6 +235,9 @@ public class GraphModelEditor extends AbstractBean {
             fTypeDefView.getBeanForm().setModel(new TypeDefinitionFormModel(newBean));
         }
         fTypeDefView.setVisible(true);
+        ULCComponent nameTextField = fTypeDefView.getTypeDefinitionForm().getComponent("name");
+        if (nameTextField != null)
+            nameTextField.requestFocus();
     }
 
     /**

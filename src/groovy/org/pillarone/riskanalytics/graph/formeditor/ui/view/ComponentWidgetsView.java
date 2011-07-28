@@ -12,6 +12,8 @@ import org.pillarone.riskanalytics.graph.formeditor.util.GroovyUtils;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,7 +22,9 @@ import java.util.Map;
 public class ComponentWidgetsView extends ULCGraphPalette {
     public ComponentWidgetsView() {
         super();
-        for (ComponentDefinition definition : PaletteService.getInstance().getAllComponentDefinitions()) {
+        List<ComponentDefinition> allComponentDefinitions = PaletteService.getInstance().getAllComponentDefinitions();
+
+        for (ComponentDefinition definition : allComponentDefinitions) {
             final ShapeTemplate shapeTemplate = new ShapeTemplate(ShapeTemplate.ShapeType.Container, definition.getTypeClass().getName(), definition.getTypeClass().getSimpleName());
 
             for (Map.Entry<Field, Class> entry : GroovyUtils.obtainPorts(definition, "in").entrySet()) {
@@ -37,6 +41,6 @@ public class ComponentWidgetsView extends ULCGraphPalette {
 
             addShapeTemplate(shapeTemplate);
         }
-
+        setPreferredWidth(50);
     }
 }
