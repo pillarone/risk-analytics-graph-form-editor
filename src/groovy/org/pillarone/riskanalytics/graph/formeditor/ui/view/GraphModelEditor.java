@@ -100,6 +100,10 @@ public class GraphModelEditor extends AbstractBean {
         modelEdit.add(ULCBoxPane.BOX_EXPAND_EXPAND, fEditorArea);
 
         fPaletteArea = getPalettePane();
+        ULCBoxPane palettePane = new ULCBoxPane(1, 2);
+        TabularFilterView filterView = new TabularFilterView();
+        palettePane.add(ULCBoxPane.BOX_LEFT_TOP, filterView.getContent());
+        palettePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, new ULCScrollPane(fPaletteArea));
 
         ULCBoxPane repositoryTreePane = new ULCBoxPane(true);
         repositoryTreePane.setPreferredSize(new Dimension(200, 200));
@@ -108,7 +112,7 @@ public class GraphModelEditor extends AbstractBean {
 
         ULCSplitPane typeSelectionPane = new ULCSplitPane(ULCSplitPane.VERTICAL_SPLIT);
         typeSelectionPane.setPreferredSize(new Dimension(150, 600));
-        typeSelectionPane.setTopComponent(new ULCScrollPane(fPaletteArea));
+        typeSelectionPane.setTopComponent(palettePane);
         typeSelectionPane.setBottomComponent(new ULCScrollPane(repositoryTreePane));
         typeSelectionPane.setOneTouchExpandable(true);
         typeSelectionPane.setDividerLocation(0.8);
