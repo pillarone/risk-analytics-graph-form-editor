@@ -10,6 +10,8 @@ import com.ulcjava.base.application.event.ActionEvent
 import com.ulcjava.base.application.event.KeyEvent
 import com.ulcjava.base.application.event.IKeyListener
 import com.ulcjava.base.application.ULCAlert
+import com.ulcjava.base.application.util.KeyStroke
+import com.ulcjava.base.application.ULCComponent
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com
@@ -19,9 +21,11 @@ class TabularFilterView {
     ULCBoxPane content
     ULCTextField searchTextField
     ULCButton cleanButton
+    List<ISearchListener> searchListeners
 
     public TabularFilterView() {
         init()
+        searchListeners = []
     }
 
     public void init() {
@@ -52,13 +56,31 @@ class TabularFilterView {
     protected void attachListeners() {
         cleanButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
-                new ULCAlert("TODO", "action not implemented yet", "OK").show()
+                searchListeners.each {ISearchListener searchListener ->
+                    searchTextField.setText("")
+                    searchListener.search(null)
+                }
             }
         });
 
-        searchTextField.addKeyListener([keyTyped: {KeyEvent keyEvent ->
-            new ULCAlert("TODO", "action not implemented yet", "OK").show()
-        }] as IKeyListener)
+        IActionListener actionListener = new IActionListener() {
+            void actionPerformed(ActionEvent actionEvent) {
+                searchListeners.each {ISearchListener searchListener ->
+                    searchListener.search(searchTextField.getText())
+                }
+            }
+        }
 
+        KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+        searchTextField.registerKeyboardAction(actionListener, enter, ULCComponent.WHEN_FOCUSED);
+
+    }
+
+    public void addSearchListener(ISearchListener searchListener) {
+        searchListeners << searchListener
+    }
+
+    public void removeSearchListener(ISearchListener searchListener) {
+        searchListeners.remove(searchListener)
     }
 }

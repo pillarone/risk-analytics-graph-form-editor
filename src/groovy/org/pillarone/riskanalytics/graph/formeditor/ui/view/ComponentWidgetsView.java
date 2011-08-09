@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  *
  */
-public class ComponentWidgetsView extends ULCGraphPalette {
+public class ComponentWidgetsView extends ULCGraphPalette implements ISearchListener {
     public ComponentWidgetsView() {
         super();
         List<ComponentDefinition> allComponentDefinitions = PaletteService.getInstance().getAllComponentDefinitions();
@@ -43,4 +43,11 @@ public class ComponentWidgetsView extends ULCGraphPalette {
         }
         setPreferredWidth(50);
     }
+
+    
+    public void search(String text) {
+        System.out.println("looking for shape with name : "+text);
+    }
+
+
 }
