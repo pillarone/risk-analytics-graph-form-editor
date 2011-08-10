@@ -8,13 +8,13 @@ import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils
  */
 public enum EnumGraphElementInfo {
 
-    M{
+    M {
         public String getDisplayValue() {
             return "M"
         }
 
         public String getIcon() {
-            return null
+            return "model.png"
         }
     },
     C {
@@ -23,7 +23,7 @@ public enum EnumGraphElementInfo {
         }
 
         public String getIcon() {
-            return "delete-active.png"
+            return "component.png"
         }
     },
     CC {
@@ -32,7 +32,7 @@ public enum EnumGraphElementInfo {
         }
 
         public String getIcon() {
-            return null
+            return "composed_component.png"
         }
     },
     IN {
@@ -41,34 +41,34 @@ public enum EnumGraphElementInfo {
         }
 
         public String getIcon() {
-            return null
+            return "in_complete.png"
         }
     },
-    IN_PLUS {
+    IN_MORE_POSSIBLE {
         public String getDisplayValue() {
             return "IN (+)"
         }
 
         public String getIcon() {
-            return null
+            return "in_more_possible.png"
         }
     },
-    IN_PLUS_EX {
+    IN_MORE_NEEDED {
         public String getDisplayValue() {
             return "IN +!"
         }
 
         public String getIcon() {
-            return null
+            return "in_more_needed.png"
         }
     },
-    IN_MINUS {
+    IN_LESS_NEEDED {
         public String getDisplayValue() {
             return "IN -!"
         }
 
         public String getIcon() {
-            return null
+            return "in_less_needed.png"
         }
     },
     OUT {
@@ -77,20 +77,18 @@ public enum EnumGraphElementInfo {
         }
 
         public String getIcon() {
-            return null
+            return "out.png"
         }
     },
     UNKNOW {
+        public String getDisplayValue() {
+            return ""
+        }
 
-    }
-
-    public String getDisplayValue() {
-        return ""
-    }
-
-    public String getIcon() {
-        return null
-    }
+        public String getIcon() {
+            return null
+        }
+    };
 
     public static EnumGraphElementInfo getEnumGraphElementInfo(String displayValue) {
         for (EnumGraphElementInfo info: EnumGraphElementInfo.values()) {
@@ -99,5 +97,4 @@ public enum EnumGraphElementInfo {
         }
         return UNKNOW
     }
-
 }
