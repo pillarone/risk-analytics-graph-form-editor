@@ -107,7 +107,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, filterValue);
 
         ULCButton clear = new ULCButton(UIUtils.getIcon("delete-active.png"));
-        clear.setPreferredSize(new Dimension(16,16));
+        clear.setPreferredSize(new Dimension(16, 16));
         clear.setContentAreaFilled(false);
         clear.setOpaque(false);
         clear.addActionListener(new IActionListener() {
@@ -217,7 +217,19 @@ public class SingleModelMultiEditView extends AbstractBean {
         ULCBoxPane propertyPane = new ULCBoxPane(true, 1);
         ULCDetachableTabbedPane tabbedPane = new ULCDetachableTabbedPane();
         // help
-        HelpView helpView = new HelpView(fVisualEditorView.getULCGraph());
+        final HelpView helpView = new HelpView();
+        IGraphSelectionListener selectionListener = new IGraphSelectionListener() {
+            public void selectionChanged() {
+                Set<Vertex> selectedVertices = fVisualEditorView.getULCGraph().getSelectionModel().getSelectedVertices();
+                if (selectedVertices.size() == 1) {
+                    String templateId = ((Vertex) selectedVertices.toArray()[0]).getTemplateId();
+                    helpView.updateView(templateId);
+                }
+            }
+        };
+        fVisualEditorView.getULCGraph().getSelectionModel().addGraphSelectionListener(selectionListener);
+        fFormEditorView.addVertexHelpListener(helpView);
+
         tabbedPane.addTab("Help", helpView.getContent());
         tabbedPane.setEnabledAt(0, true);
         // comments
