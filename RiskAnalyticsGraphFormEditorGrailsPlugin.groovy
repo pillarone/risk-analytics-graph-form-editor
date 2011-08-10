@@ -20,11 +20,13 @@ class RiskAnalyticsGraphFormEditorGrailsPlugin {
 Brief description of the plugin.
 '''
 
+    def groupId = "org.pillarone"
+
     // URL to the plugin's documentation
     def documentation = "http://grails.org/plugin/risk-analytics-graph-form-editor"
 
     def doWithWebDescriptor = { xml ->
-        // TODO Implement additions to web.xml (optional), this event occurs before 
+        // TODO Implement additions to web.xml (optional), this event occurs before
     }
 
     def doWithSpring = {
