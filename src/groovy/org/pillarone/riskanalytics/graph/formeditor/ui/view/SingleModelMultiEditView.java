@@ -214,8 +214,14 @@ public class SingleModelMultiEditView extends AbstractBean {
         lower.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane2);
 
         // the property editing area --> comments, help, ...etc.
-        ULCBoxPane propertyPane = new ULCBoxPane(true, 1);
-        ULCDetachableTabbedPane tabbedPane = new ULCDetachableTabbedPane();
+        ULCSplitPane propertiesAreaSplitPane = new ULCSplitPane();
+        propertiesAreaSplitPane.setDividerSize(10);
+        propertiesAreaSplitPane.setOneTouchExpandable(true);
+        propertiesAreaSplitPane.setDividerLocation(0.5);
+
+        ULCDetachableTabbedPane leftTabbedPane = new ULCDetachableTabbedPane();
+        ULCDetachableTabbedPane rightTabbedPane = new ULCDetachableTabbedPane();
+
         // help
         final HelpView helpView = new HelpView();
         IGraphSelectionListener selectionListener = new IGraphSelectionListener() {
@@ -230,14 +236,10 @@ public class SingleModelMultiEditView extends AbstractBean {
         fVisualEditorView.getULCGraph().getSelectionModel().addGraphSelectionListener(selectionListener);
         fFormEditorView.addVertexHelpListener(helpView);
 
-        tabbedPane.addTab("Help", helpView.getContent());
-        tabbedPane.setEnabledAt(0, true);
         // comments
         ULCTextArea comments = new ULCTextArea();
         comments.setEditable(true);
         comments.setText("No comments available yet");
-        tabbedPane.addTab("Comments", comments);
-        tabbedPane.setEnabledAt(1, true);
         // parameters
         ULCBoxPane data = new ULCBoxPane();
         fDataSetSheets = new ULCCloseableTabbedPane();
@@ -251,8 +253,6 @@ public class SingleModelMultiEditView extends AbstractBean {
         });
 
         data.add(ULCBoxPane.BOX_EXPAND_EXPAND, fDataSetSheets);
-        tabbedPane.addTab("Parameters", data);
-        tabbedPane.setEnabledAt(2, true);
         // results
         ULCBoxPane results = new ULCBoxPane();
         fResultSheets = new ULCCloseableTabbedPane();
@@ -265,11 +265,17 @@ public class SingleModelMultiEditView extends AbstractBean {
             }
         });
         results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
-        tabbedPane.addTab("Results", results);
-        tabbedPane.setEnabledAt(3, true);
+        leftTabbedPane.addTab("Help", helpView.getContent());
+        leftTabbedPane.addTab("Parameters", data);
+        rightTabbedPane.addTab("Results", results);
+        rightTabbedPane.addTab("Comments", comments);
+        leftTabbedPane.setSelectedIndex(0);
+        rightTabbedPane.setSelectedIndex(0);
 
-        tabbedPane.setSelectedIndex(2);
-        propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, tabbedPane);
+        propertiesAreaSplitPane.setLeftComponent(leftTabbedPane);
+        propertiesAreaSplitPane.setRightComponent(rightTabbedPane);
+        ULCBoxPane propertyPane = new ULCBoxPane(1, 1);
+        propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, propertiesAreaSplitPane);
         splitPane2.setLeftComponent(propertyPane);
 
         // satellite view - this is a bit ugly that I need to get and inject the component wrapping the ulc graph here!
