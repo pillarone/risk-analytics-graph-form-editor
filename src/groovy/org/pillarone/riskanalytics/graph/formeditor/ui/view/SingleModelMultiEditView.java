@@ -114,7 +114,9 @@ public class SingleModelMultiEditView extends AbstractBean {
             public void actionPerformed(ActionEvent event) {
                 filterValue.setText("");
                 filterType.setSelectedItem(ComponentNodeFilterFactory.NONE);
+                IComponentNodeFilter filter = ComponentNodeFilterFactory.getFilter(ComponentNodeFilterFactory.NONE, null);
                 fGraphModel.clearNodeFilters();
+                fGraphModel.addNodeFilter(filter);
             }
         });
         modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, clear);
