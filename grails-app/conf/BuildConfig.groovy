@@ -41,7 +41,7 @@ grails.project.dependency.resolution = {
         compile "com.canoo:ulc:${ulcVersion}"
         runtime "org.pillarone:pillar-one-ulc-extensions:0.1"
 
-        test ":code-coverage:1.2.2"
+        test ":code-coverage:1.2.4"
 
         if (appName == "RiskAnalyticsGraphFormEditor") {
             runtime "org.pillarone:risk-analytics-core:1.4-ALPHA-2.5.5-kti"
@@ -81,6 +81,8 @@ grails.project.dependency.distribution = {
 }
 
 coverage {
+    enabledByDefault = true
+    xml = true
     exclusions = [
             'models/**',
             '**/*Test*',
@@ -91,8 +93,4 @@ coverage {
             '**GrailsPlugin**',
             '**TagLib**'
     ]
-
-//    grails.plugin.location.'risk-analytics-graph-core' = "../RiskAnalyticsGraphCore"
-    /*grails.plugin.location.'risk-analytics-pc' = "../RiskAnalyticsCore"
-    grails.plugin.location.'risk-analytics-pc' = "../RiskAnalyticsPropertyCasualty"*/
 }
