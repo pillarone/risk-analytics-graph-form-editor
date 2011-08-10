@@ -120,6 +120,16 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
 
             }
         });
+
+        fNodesTable.getSelectionModel().addTreeSelectionListener(new ITreeSelectionListener() {
+            public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
+                Object componentNode = fNodesTable.getLastSelectedPathComponent();
+                if(componentNode instanceof ComponentNode){
+                    String propertyKey = ((ComponentNode) componentNode).getType().getTypeClass().getName();
+                    selectionChanged(propertyKey);
+                }
+            }
+        });
         fConnectionsTable.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 modifyConnectionAction();
@@ -625,5 +635,21 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
 
     private ApplicationActionMap getActionMap() {
         return fApplicationContext.getActionMap(this);
+    }
+
+    List<IVertexHelpListener> vertexHelpListeners = new ArrayList<IVertexHelpListener>();
+
+    public void selectionChanged(String propertyKey) {
+        for (IVertexHelpListener helpListener : vertexHelpListeners) {
+            helpListener.updateView(propertyKey);
+        }
+    }
+
+    public void addVertexHelpListener(IVertexHelpListener listener) {
+        vertexHelpListeners.add(listener);
+    }
+
+    public void removeVertexHelpListener(IVertexHelpListener listener) {
+        vertexHelpListeners.remove(listener);
     }
 }

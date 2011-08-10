@@ -4,6 +4,7 @@ import com.ulcjava.base.application.tree.DefaultTreeModel;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.ComponentTypeTreeCellRenderer;
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.INameFilter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,16 +53,16 @@ public class ComponentTypeTreeModelFactory {
     private static void addNode(TypeTreeNode parent, ComponentDefinition cd) {
         String parentPath = parent.getPackagePath();
         String path = cd.getTypeClass().getName();
-        String reducedPath = path.substring(parentPath.length()==0 ? 0 : parentPath.length()+1);
+        String reducedPath = path.substring(parentPath.length() == 0 ? 0 : parentPath.length() + 1);
         String[] pathElements = reducedPath.split(PATHSEP);
         if (pathElements == null) {
             return;
         }
-        if (pathElements.length==1) {
+        if (pathElements.length == 1) {
             TypeTreeNode node = new TypeTreeNode(cd);
             node.setLeaf(true);
             parent.add(node);
-        } else if (pathElements.length>1) {
+        } else if (pathElements.length > 1) {
             String nodeName = pathElements[0];
             TypeTreeNode node = getNode(parent, nodeName);
             if (node != null) {
@@ -79,9 +80,9 @@ public class ComponentTypeTreeModelFactory {
             }
         }
         String parentPath = parent.getPackagePath();
-        String nodePath = parentPath==null || parentPath.length()==0
-                            ? name
-                            : parentPath+"."+name;
+        String nodePath = parentPath == null || parentPath.length() == 0
+                ? name
+                : parentPath + "." + name;
         TypeTreeNode node = new TypeTreeNode(nodePath, name);
         parent.add(node);
         return node;

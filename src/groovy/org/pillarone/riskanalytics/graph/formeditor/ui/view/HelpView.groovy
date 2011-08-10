@@ -8,6 +8,7 @@ import com.canoo.ulc.graph.model.Vertex
 import com.ulcjava.base.application.ULCFiller
 import com.ulcjava.base.application.ULCHtmlPane
 import com.ulcjava.base.application.util.Color
+import com.canoo.ulc.graph.IGraphSelectionListener
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com
@@ -16,10 +17,8 @@ class HelpView implements IVertexHelpListener {
 
     ULCBoxPane content
     ULCHtmlPane label
-    ULCGraph fULCGraph
 
-    public HelpView(ULCGraph fULCGraph) {
-        this.fULCGraph = fULCGraph
+    public HelpView() {
         init()
     }
 
@@ -41,20 +40,13 @@ class HelpView implements IVertexHelpListener {
     }
 
     private void attachListeners() {
-        VertexSelectionListener listener = new VertexSelectionListener()
-        listener.addVertexHelpListener(this)
-        fULCGraph.getSelectionModel().addGraphSelectionListener(listener);
     }
 
-    public void updateView() {
-        Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
-        if (selectedVertices.size() == 1) {
-            String templateId = ((Vertex) selectedVertices.toArray()[0]).getTemplateId();
-            String value = UIUtils.getPropertyValue(null, "COMPONENT_DEFINITION_HELP", "['$templateId']")
-            label.setText(HTMLUtilities.convertToHtml(value ? value : ""))
-        }
-
+    public void updateView(String propertyKey) {
+        String value = UIUtils.getPropertyValue(null, "COMPONENT_DEFINITION_HELP", "['$propertyKey']")
+        label.setText(HTMLUtilities.convertToHtml(value ? value : ""))
     }
+
 
 }
 

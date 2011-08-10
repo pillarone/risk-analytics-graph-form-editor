@@ -10,9 +10,10 @@ import com.ulcjava.base.application.tree.ITreeModel;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.tree.ULCTreeSelectionModel;
 import com.ulcjava.base.application.util.Dimension;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.FilteringTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeTreeNode;
 
-public abstract class AbstractComponentDefinitionTree extends ULCBoxPane {
+public abstract class AbstractComponentDefinitionTree extends ULCBoxPane implements  ISearchListener{
 
     private ITreeModel fTreeModel;
     private ULCTree fTree;
@@ -69,5 +70,9 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane {
                 }
             }
         }
+    }
+
+    public void search(String text) {
+        ((FilteringTreeModel)fTreeModel).setFilter(new NameFilter(text));
     }
 }

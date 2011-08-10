@@ -99,9 +99,9 @@ public class GraphModelEditor extends AbstractBean {
         });
         modelEdit.add(ULCBoxPane.BOX_EXPAND_EXPAND, fEditorArea);
 
-        fPaletteArea = getPalettePane();
         ULCBoxPane palettePane = new ULCBoxPane(1, 2);
         TabularFilterView filterView = new TabularFilterView();
+        fPaletteArea = getPalettePane(filterView);
         palettePane.add(ULCBoxPane.BOX_LEFT_TOP, filterView.getContent());
         palettePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, new ULCScrollPane(fPaletteArea));
 
@@ -129,7 +129,7 @@ public class GraphModelEditor extends AbstractBean {
         return splitPane;
     }
 
-    private ULCBoxPane getPalettePane() {
+    private ULCBoxPane getPalettePane(TabularFilterView filterView) {
         ULCBoxPane viewSelector = new ULCBoxPane(false);
         ULCRadioButton categoryTreeSelectButton = new ULCRadioButton("Categories", true);
         ULCRadioButton packageSelectButton = new ULCRadioButton("Package");
@@ -147,12 +147,15 @@ public class GraphModelEditor extends AbstractBean {
         final ULCCardPane views = new ULCCardPane();
 
         final ComponentCategoryTree categoryTree = new ComponentCategoryTree(this);
+        filterView.addSearchListener(categoryTree);
         views.addCard("categoryTree", categoryTree);
 
         final ComponentTypeTree packagePalette = new ComponentTypeTree(this);
+        filterView.addSearchListener(packagePalette);
         views.addCard("packagePalette", packagePalette);
 
         final ULCGraphPalette alphabeticalPalette = new ComponentWidgetsView();
+        filterView.addSearchListener((ComponentWidgetsView) alphabeticalPalette);
         views.addCard("alphabeticalPalette", alphabeticalPalette);
 
 
