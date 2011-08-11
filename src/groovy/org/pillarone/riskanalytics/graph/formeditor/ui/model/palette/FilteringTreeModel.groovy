@@ -3,7 +3,7 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.model.palette
 import com.ulcjava.base.application.tree.DefaultTreeModel
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.INameFilter
 import com.ulcjava.base.application.tree.ITreeNode
-import org.pillarone.riskanalytics.graph.formeditor.ui.view.FilterTreeNode
+
 import com.ulcjava.base.application.tree.TreePath
 
 /**
