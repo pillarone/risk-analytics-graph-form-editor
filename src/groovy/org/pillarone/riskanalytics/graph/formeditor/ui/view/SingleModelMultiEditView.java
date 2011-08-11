@@ -267,7 +267,7 @@ public class SingleModelMultiEditView extends AbstractBean {
             }
         });
         results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
-        leftTabbedPane.addTab("Help", helpView.getContent());
+        leftTabbedPane.addTab("Help", new ULCScrollPane(helpView.getContent()));
         leftTabbedPane.addTab("Parameters", data);
         rightTabbedPane.addTab("Results", results);
         rightTabbedPane.addTab("Comments", comments);
