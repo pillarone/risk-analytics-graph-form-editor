@@ -14,6 +14,7 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHand
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ConnectionBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ReplicationBean;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.GraphElementNode;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 import java.beans.PropertyChangeEvent;
@@ -91,7 +92,7 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         fNodesSelected = false;
         fTwoNodesSelected = false;
 
-        fNodesTable = new NodesTable(fApplicationContext, fGraphModel);
+        fNodesTable = new ComponentNodesTable(fApplicationContext, fGraphModel);
         fNodesTable.setVisible(true);
         fNodesPane.setViewPortView(fNodesTable);
 
@@ -320,8 +321,11 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         TreePath[] selected = fNodesTable.getSelectedPaths();
         if (selected.length > 0) {
             TreePath selected0 = selected[0];
-            if (selected0.getPath().length == 2 && selected0.getPath()[1] instanceof ComponentNode) {
-                return (ComponentNode) selected0.getPath()[1];
+            if (selected0.getPath().length == 2) {
+                GraphElementNode node = (GraphElementNode) selected0.getPath()[1];
+                if (node.getElement() instanceof ComponentNode) {
+                    return (ComponentNode) node.getElement();
+                }
             }
         }
         return null;
@@ -335,8 +339,11 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         if (selected.length > 0) {
             List<ComponentNode> nodes = new ArrayList<ComponentNode>();
             for (TreePath path : selected) {
-                if (path.getPath().length == 2 && path.getPath()[1] instanceof ComponentNode) {
-                    nodes.add((ComponentNode) path.getPath()[1]);
+                if (path.getPath().length == 2) {
+                    GraphElementNode node = (GraphElementNode)path.getPath()[1];
+                    if (node.getElement() instanceof ComponentNode) {
+                        nodes.add((ComponentNode) node.getElement());
+                    }
                 }
             }
             return nodes;
@@ -349,8 +356,9 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         if (selected.length > 0) {
             List<Port> ports = new ArrayList<Port>();
             for (TreePath path : selected) {
-                if (path.getLastPathComponent() instanceof Port) {
-                    ports.add((Port) path.getLastPathComponent());
+                GraphElementNode node = (GraphElementNode)path.getLastPathComponent();
+                if (node.getElement() instanceof Port) {
+                    ports.add((Port) node.getElement());
                 }
             }
             return ports;
