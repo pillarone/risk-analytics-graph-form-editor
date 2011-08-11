@@ -10,8 +10,8 @@ import com.ulcjava.base.application.tree.ITreeModel;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.tree.ULCTreeSelectionModel;
 import com.ulcjava.base.application.util.Dimension;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.FilteringTreeModel;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeTreeNode;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.FilteringTreeModel;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 
 public abstract class AbstractComponentDefinitionTree extends ULCBoxPane implements  ISearchListener{
 
@@ -51,7 +51,7 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
             TreePath treePath = fTree.getSelectionModel().getSelectionPath();
             Object selectedNode = treePath.getLastPathComponent();
             if (selectedNode instanceof TypeTreeNode) {
-                String clazzName = ((TypeTreeNode)selectedNode).getPackagePath();
+                String clazzName = ((TypeTreeNode)selectedNode).getFullName();
                 try {
                     boolean success = fParent.importComponentType(clazzName);
                     if (!success) {

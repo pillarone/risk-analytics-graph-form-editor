@@ -6,7 +6,7 @@ import com.ulcjava.base.application.dnd.DnDTreeData;
 import com.ulcjava.base.application.dnd.TransferHandler;
 import com.ulcjava.base.application.dnd.Transferable;
 import com.ulcjava.base.application.tree.TreePath;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeTreeNode;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.GraphModelEditable;
 
 public class TypeTransferHandler extends TransferHandler {
@@ -28,7 +28,7 @@ public class TypeTransferHandler extends TransferHandler {
         TreePath[] paths = dragData.getTreePaths();
         Object selected = paths[0].getLastPathComponent();
         if (selected instanceof TypeTreeNode) {
-            String componentType = ((TypeTreeNode) selected).getPackagePath();
+            String componentType = ((TypeTreeNode) selected).getFullName();
             if (componentType != null && fModelEditView != null) {
                 fModelEditView.newNodeAction(componentType);
                 return true;

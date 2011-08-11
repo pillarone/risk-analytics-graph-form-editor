@@ -179,13 +179,13 @@ public class SingleModelMultiEditView extends AbstractBean {
         formSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 //fFormEditorView.injectGraphModel(fGraphModel);
-                fFormEditorView.setVisible(true);
                 cardPane.setSelectedComponent(formView);
+                fFormEditorView.setVisible(true);
             }
         });
         textSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
-                fTextEditorView.injectGraphModel(fGraphModel);
+                fTextEditorView.injectGraphModel(fGraphModel); // here the situation is different -> on each switch to the text view the code is generated
                 fTextEditorView.setVisible(true);
                 cardPane.setSelectedComponent(textView);
             }
@@ -193,8 +193,8 @@ public class SingleModelMultiEditView extends AbstractBean {
         visualSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
 //                fVisualEditorView.injectGraphModel(fGraphModel);
-                fVisualEditorView.setVisible(true);
                 cardPane.setSelectedComponent(visualView);
+                fVisualEditorView.setVisible(true);
             }
         });
 

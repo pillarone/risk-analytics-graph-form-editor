@@ -34,9 +34,7 @@ public class ComponentWidgetsView extends ULCGraphPalette implements ISearchList
             }
 
             for (Map.Entry<Field, Class> entry : GroovyUtils.obtainPorts(definition, "out").entrySet()) {
-                shapeTemplate.addPortTemplate(
-                        new PortTemplate(PortType.OUT, entry.getValue().getName(), UIUtils.formatDisplayName(entry.getKey().getName()), Arrays.asList(new PortConstraint(entry.getValue().getName(), 0, 100)))
-                );
+                shapeTemplate.addPortTemplate( new PortTemplate(PortType.OUT, entry.getValue().getName(), UIUtils.formatDisplayName(entry.getKey().getName()), Arrays.asList(new PortConstraint(entry.getValue().getName(), 0, Integer.MAX_VALUE))));
             }
 
             addShapeTemplate(shapeTemplate);

@@ -1,6 +1,6 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view
 
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeTreeNode
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode
 import com.canoo.ulc.graph.shared.ShapeTemplate
 
 /**

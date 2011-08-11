@@ -36,6 +36,7 @@ import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeNameFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GroovyUtils;
+import org.pillarone.riskanalytics.graph.formeditor.util.VisualSceneUtilities;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -124,6 +125,10 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         // this can be created only now - since now we know whether we have a Model or a ComposedComponent
         fULCGraphComponent.setComponentPopupMenu(createPopupMenu());
+
+        if (fMainView.isVisible()) {
+            updateULCGraph();
+        }
     }
 
     private void updateULCGraph() {
@@ -154,7 +159,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             }
         }
         fConnectionsToBeAdded = new ArrayList<Connection>();
-        fULCGraph.upload();
         fULCGraphComponent.layout();
     }
 
@@ -427,6 +431,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 fNodesMap.put(fCurrentVertex.getId(), node);
                 try {
                     fULCGraph.addVertex(fCurrentVertex);
+                    fULCGraphComponent.shrinkVertex(fCurrentVertex);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -612,9 +617,26 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         @Override
         public boolean importData(final ULCComponent inTargetComponent, final Transferable inTransferable) {
             final Object data = inTransferable.getTransferData(DataFlavor.DROP_FLAVOR);
-            if (((GraphTransferData) data).getTransferredVertex() instanceof Vertex) {
-                final Vertex vertex = ((GraphTransferData) data).getTransferredVertex();
-                fCurrentComponentDefinition = PaletteService.getInstance().getComponentDefinition(vertex.getTemplateId());
+            if (data instanceof GraphTransferData) {
+                final GraphTransferData transferData = (GraphTransferData) data;
+
+                String compDef = null;
+
+                Vertex vertex = (transferData).getTransferredVertex();
+                // try first whether the dragged object is already a vertex (then it comes from a palette)
+                if (vertex != null) {
+                    vertex.setId("internal" + new Date().getTime());
+                    compDef = vertex.getTemplateId();
+                } else {
+                // if not returned yet it has not been a vertex
+                // then it typically comes from a TypeTreeNode
+                // try to collect the information needed from there
+                    final Point mouseLocation = transferData.getMouseLocation();
+                    compDef = transferData.getTransferString();
+                    vertex = VisualSceneUtilities.createVertex(mouseLocation, compDef);
+                }
+
+                fCurrentComponentDefinition = PaletteService.getInstance().getComponentDefinition(compDef);
                 NodeNameDialog nodeNameDialog = new NodeNameDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), fGraphModel);
                 nodeNameDialog.setModal(true);
                 nodeNameDialog.setVisible(true);
