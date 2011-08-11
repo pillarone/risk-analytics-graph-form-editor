@@ -16,7 +16,7 @@ import com.canoo.ulc.graph.IGraphSelectionListener
 class HelpView implements IVertexHelpListener {
 
     ULCBoxPane content
-    ULCHtmlPane label
+    ResourceLinkHtmlPane label
 
     public HelpView() {
         init()
@@ -31,7 +31,7 @@ class HelpView implements IVertexHelpListener {
     private void initComponents() {
         content = new ULCBoxPane(1, 2)
         content.setBackground(Color.white)
-        label = new ULCHtmlPane()
+        label = new ResourceLinkHtmlPane()
     }
 
     private void layoutComponents() {
@@ -44,6 +44,7 @@ class HelpView implements IVertexHelpListener {
 
     public void updateView(String propertyKey) {
         String value = UIUtils.getPropertyValue(null, "COMPONENT_DEFINITION_HELP", "['$propertyKey']")
+        value = "<div style='100%'>$value</div>"
         label.setText(HTMLUtilities.convertToHtml(value ? value : ""))
     }
 
