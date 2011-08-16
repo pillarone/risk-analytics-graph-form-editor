@@ -1,7 +1,5 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
-import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
-
 /**
  * Created by IntelliJ IDEA.
  * User: martin.melchior
@@ -10,8 +8,6 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHand
  * To change this template use File | Settings | File Templates.
  */
 public interface GraphModelEditable {
-
-    public void setTransferHandler(TypeTransferHandler transferHandler);
 
     public void newNodeAction();
 
