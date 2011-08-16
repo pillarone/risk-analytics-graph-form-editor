@@ -5,9 +5,9 @@ import com.ulcjava.applicationframework.application.ResourceMap;
 import com.ulcjava.applicationframework.application.form.model.FormModel;
 import com.ulcjava.base.application.table.AbstractTableModel;
 import com.ulcjava.base.application.table.ITableModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
-import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener;
+import org.pillarone.riskanalytics.graph.core.graph.model.*;
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.GraphElementNode;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 import java.util.ArrayList;
@@ -31,6 +31,8 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
     private ApplicationContext fContext;
     private AbstractGraphModel fGraphModel;
     private String[] fColumnNames;
+    private List<Connection> fFilteredConnectionList;
+    IComponentNodeFilter fActiveFilter;
 
     /**
      * @param ctx   is used basically to access the presentation of the table headers.
@@ -41,6 +43,8 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
         fContext = ctx;
         fGraphModel = model;
         fColumnNames = getColumnNames();
+        final IGraphModelChangeListener graphListener = new GraphListener();
+        model.addGraphModelChangeListener(graphListener);
     }
 
     private String[] getColumnNames() {
@@ -52,11 +56,28 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
         return columnHeaders;
     }
 
+    public void applyFilter(IComponentNodeFilter filter) {
+        fFilteredConnectionList = new ArrayList<Connection>();
+        fFilteredConnectionList.addAll(fGraphModel.getAllConnections());
+        if (filter != null) {
+            fFilteredConnectionList = filter.filterConnectionsList(fFilteredConnectionList);
+        }
+        fActiveFilter = filter;
+        fireTableDataChanged();
+    }
+
+    private List<Connection> getFilteredConnectionList() {
+        if (fFilteredConnectionList==null) {
+            applyFilter(null);
+        }
+        return fFilteredConnectionList;
+    }
+
     /**
      * Returns just the number of connections found in the graph model.
      */
     public int getRowCount() {
-        return fGraphModel.getFilteredConnectionsList().size();
+        return getFilteredConnectionList().size();
     }
 
     /**
@@ -76,7 +97,7 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
      * In a prefix, the name of the components the ports are attached to is included.
      */
     public Object getValueAt(int row, int column) {
-        Connection c = fGraphModel.getFilteredConnectionsList().get(row);
+        Connection c = getFilteredConnectionList().get(row);
         switch (column) {
             case FROMID:
                 return GraphModelUtilities.getPortName(c.getFrom());
@@ -107,7 +128,7 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
     public List<Integer> getRows(Connection[] connections) {
         List<Integer> rowList = new ArrayList<Integer>();
         for (Connection c : connections) {
-            int row = fGraphModel.getFilteredConnectionsList().indexOf(c);
+            int row = getFilteredConnectionList().indexOf(c);
             if (row >= 0 && !rowList.contains(row)) {
                 rowList.add(row);
             }
@@ -117,6 +138,58 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
     }
 
     public Connection getConnection(int row) {
-        return fGraphModel.getFilteredConnectionsList().get(row);
+        return getFilteredConnectionList().get(row);
+    }
+
+    private class GraphListener implements IGraphModelChangeListener {
+
+        public void connectionAdded(Connection c) {
+            if (fActiveFilter == null || fActiveFilter.isSelected(c)) {
+                fFilteredConnectionList.add(c);
+                int position = fFilteredConnectionList.size()-1;
+                fireTableRowsInserted(position,position);
+            }
+        }
+
+        public void connectionRemoved(Connection c) {
+            if (fActiveFilter == null || fActiveFilter.isSelected(c)) {
+                int position = fFilteredConnectionList.indexOf(c);
+                fFilteredConnectionList.remove(position);
+                fireTableRowsDeleted(position, position);
+            }
+        }
+
+        public void nodeAdded(ComponentNode node) {
+            // nothing to do
+        }
+
+        public void nodeRemoved(ComponentNode node) {
+            // nothing to do
+        }
+
+        public void outerPortAdded(Port p) {
+            // nothing to do
+        }
+
+        public void outerPortRemoved(Port p) {
+            // nothing to do
+        }
+
+        public void nodesSelected(List<ComponentNode> nodes) {
+            // nothing to do here
+        }
+
+        public void connectionsSelected(List<Connection> connections) {
+        }
+
+        public void selectionCleared() {
+        }
+
+        public void filtersApplied() {
+        }
+
+        public void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
+            fireTableDataChanged(); // TODO could be optimized
+        }
     }
 }

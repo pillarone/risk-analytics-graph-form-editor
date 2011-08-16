@@ -10,6 +10,8 @@ import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
 import org.jetbrains.annotations.NotNull;
+import org.pillarone.riskanalytics.graph.core.graph.model.InPort;
+import org.pillarone.riskanalytics.graph.core.graph.model.OutPort;
 import org.pillarone.riskanalytics.graph.core.graph.util.*;
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
@@ -54,4 +56,15 @@ public class VisualSceneUtilities {
         }
         return vertex;
     }
+
+    public static boolean isConsistentPort(Port ulcPort, org.pillarone.riskanalytics.graph.core.graph.model.Port graphModelPort) {
+        boolean isConsistent = ulcPort.getTitle().equals(UIUtils.formatDisplayName(graphModelPort.getName()));
+        if (isConsistent) {
+            isConsistent = ulcPort.getType()==PortType.IN && graphModelPort instanceof InPort
+                                        || ulcPort.getType()==PortType.OUT && graphModelPort instanceof OutPort;
+        }
+        return isConsistent;
+    }
+
+
 }

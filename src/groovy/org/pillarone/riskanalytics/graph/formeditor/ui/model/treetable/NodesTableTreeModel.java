@@ -49,6 +49,10 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
         //addGraphModelListeners();
     }
 
+    public AbstractGraphModel getGraphModel() {
+        return fGraphModel;
+    }
+
     private String[] getColumnNames() {
         if (fContext != null) {
             ResourceMap resourceMap = fContext.getResourceMap(getClass());
@@ -114,13 +118,14 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
         return -1;
     }
 
-    public void addChild(GraphElementNode parent, GraphElement element) {
+    public GraphElementNode addChild(GraphElementNode parent, GraphElement element) {
         GraphElementNode child = fTreeBuilder.buildNode(element);
         if (child != null) {
             int numOfChildren = parent.getChildCount();
             parent.add(child);
             nodesWereInserted(getTreePath(fTreeBuilder.getRoot()), new int[]{numOfChildren});
         }
+        return child;
     }
 
     public void removeChild(GraphElementNode parent, GraphElementNode child) {

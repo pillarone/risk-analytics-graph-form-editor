@@ -109,8 +109,9 @@ public class SingleModelMultiEditView extends AbstractBean {
                 filterValue.setText("");
                 filterType.setSelectedItem(ComponentNodeFilterFactory.NONE);
                 IComponentNodeFilter filter = ComponentNodeFilterFactory.getFilter(ComponentNodeFilterFactory.NONE, null);
-                fGraphModel.clearNodeFilters();
-                fGraphModel.addNodeFilter(filter);
+                fFormEditorView.applyFilter(filter);
+                fVisualEditorView.applyFilter(filter);
+                fFormEditorView.applyFilter(filter);
             }
         });
         modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, clear);
@@ -121,8 +122,9 @@ public class SingleModelMultiEditView extends AbstractBean {
                 String filterModelName = (String) filterType.getSelectedItem();
                 IComponentNodeFilter filter = ComponentNodeFilterFactory.getFilter(filterModelName, expr);
                 if (filter != null) {
-                    fGraphModel.clearNodeFilters();
-                    fGraphModel.addNodeFilter(filter);
+                    fFormEditorView.applyFilter(filter);
+                    fVisualEditorView.applyFilter(filter);
+                    fFormEditorView.applyFilter(filter);
                 }
             }
         };
@@ -299,6 +301,9 @@ public class SingleModelMultiEditView extends AbstractBean {
         fVisualEditorView.injectGraphModel(model);
         fFormEditorView.injectGraphModel(model);
         fTextEditorView.injectGraphModel(model);
+
+        fFormEditorView.addSelectionListener(fVisualEditorView);
+        fVisualEditorView.addSelectionListener(fFormEditorView);
     }
 
     public ULCBoxPane getView() {

@@ -8,10 +8,15 @@ import com.ulcjava.base.application.ULCBoxPane;
 import com.ulcjava.base.application.ULCScrollPane;
 import com.ulcjava.base.application.ULCTextArea;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
-public class SingleModelTextView extends AbstractBean implements GraphModelViewable {
+import java.util.List;
+
+public class SingleModelTextView extends AbstractBean implements GraphModelViewable, ISelectionListener {
     private ApplicationContext fApplicationContext;
 
     private AbstractGraphModel fGraphModel;
@@ -56,5 +61,17 @@ public class SingleModelTextView extends AbstractBean implements GraphModelViewa
         fGraphModel = model;
         fIsModel = model instanceof ModelGraphModel;
         fTextArea.setText(getGroovyCode());
+    }
+
+    public void applyFilter(IComponentNodeFilter filter) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public void setSelectedComponents(List<ComponentNode> selection) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public void setSelectedConnections(List<Connection> selection) {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 }

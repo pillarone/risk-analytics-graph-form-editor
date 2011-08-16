@@ -9,6 +9,8 @@ import org.pillarone.riskanalytics.graph.core.graphexport.ModelGraphExport;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -151,13 +153,34 @@ public class GraphModelUtilities {
         ModelRegistry.getInstance().addModel(clazz);
     }
 
+    public static <S,T> Map<S, T> invertMap(Map<T, S> map) {
+        HashMap<S, T> inverse = new HashMap<S, T>();
+        for (Map.Entry<T, S> entry : map.entrySet()) {
+            inverse.put(entry.getValue(), entry.getKey());
+        }
+        return inverse;
+    }
+
+    public static HashMap<String, List<ComponentNode>> getComponentPaths(Map<String,ComponentNode> nodesMap) {
+        HashMap<String, List<ComponentNode>> paths = new HashMap<String, List<ComponentNode>>();
+        for (Map.Entry<String, ComponentNode> entry : nodesMap.entrySet()) {
+            List<ComponentNode> tmpList;
+            if ((tmpList = paths.get(entry.getValue().getName())) == null) {
+                tmpList = new ArrayList<ComponentNode>();
+                paths.put(entry.getValue().getName(), tmpList);
+            }
+            tmpList.add(entry.getValue());
+        }
+        return paths;
+    }
+
     /**
      * Create another textual representation of the given graph model.
      *
      * @param model
      * @return
      */
-    public static String toText(AbstractGraphModel model) {
+    /*public static String toText(AbstractGraphModel model) {
         boolean isModel = model instanceof ModelGraphModel;
         StringBuffer text = new StringBuffer();
         // graph model type
@@ -200,5 +223,5 @@ public class GraphModelUtilities {
         }
 
         return text.toString();
-    }
+    }*/
 }

@@ -2,6 +2,11 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 import com.ulcjava.base.application.ULCBoxPane;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.

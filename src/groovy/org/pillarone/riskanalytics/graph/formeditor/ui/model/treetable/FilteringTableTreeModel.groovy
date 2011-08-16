@@ -9,20 +9,25 @@ import com.ulcjava.base.application.tree.TreePath
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
 import org.pillarone.riskanalytics.graph.core.graph.model.GraphElement
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
+import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection
+import org.pillarone.riskanalytics.graph.core.graph.model.Port
 
 class FilteringTableTreeModel extends AbstractTableTreeModel implements ITableTreeModelListener {
 
-    ITableTreeModel model
+    NodesTableTreeModel model
     IComponentNodeFilter filter
     FilterTableTreeNode filteredRoot
     def nodeMapping = [:]
 
-    public FilteringTableTreeModel(ITableTreeModel model, IComponentNodeFilter filter) {
+    public FilteringTableTreeModel(NodesTableTreeModel model, IComponentNodeFilter filter) {
         this.@model = model
         this.@filter = filter
         filteredRoot = new FilterTableTreeNode(originalNode: (ITableTreeNode) model.root)
         applyFilter()
         this.@model.addTableTreeModelListener this
+        final IGraphModelChangeListener graphListener = new GraphListener()
+        model.getGraphModel().addGraphModelChangeListener(graphListener)
     }
 
     public void setFilter(IComponentNodeFilter newFilter) {
@@ -259,6 +264,59 @@ class FilteringTableTreeModel extends AbstractTableTreeModel implements ITableTr
 
     void propertyMissing(String name, Object args) {
         model.getMetaClass().setProperty(model, name, args)
+    }
+
+    private class GraphListener implements IGraphModelChangeListener {
+
+        public void connectionAdded(Connection c) {
+        }
+
+        public void connectionRemoved(Connection c) {
+        }
+
+        public void nodeAdded(ComponentNode node) {
+            GraphElementNode tableNode = model.addChild(getRoot(), node);
+            TreePath selectedPath = new TreePath([getRoot(), tableNode] as Object[]);
+            // expandPaths([selectedPath] as TreePath[], true)
+        }
+
+        public void nodeRemoved(ComponentNode node) {
+            GraphElementNode treeNode = model.findNode(node);
+            model.removeChild(getRoot(), treeNode);
+        }
+
+        public void outerPortAdded(Port p) {
+            model.addChild(getRoot(), p);
+        }
+
+        public void outerPortRemoved(Port p) {
+            GraphElementNode treeNode = model.findNode(p);
+            model.removeChild(getRoot(), treeNode);
+        }
+
+
+        public void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
+            GraphElementNode treeNode = model.findNode(node);
+            nodeChanged(model.getTreePath(treeNode));
+        }
+
+        public void filtersApplied() {
+            /*if (fGraphModel.nodeFilters && fGraphModel.nodeFilters.size()>0) {
+                IComponentNodeFilter filter = fGraphModel.nodeFilters[0]
+                fTableModel.setFilter(filter)
+                fTableModel.applyFilter();
+            }*/
+        }
+
+        public void nodesSelected(List<ComponentNode> nodes) {
+        }
+
+        public void connectionsSelected(List<Connection> connections) {
+            // nothing to do here
+        }
+
+        public void selectionCleared() {
+        }
     }
 
 

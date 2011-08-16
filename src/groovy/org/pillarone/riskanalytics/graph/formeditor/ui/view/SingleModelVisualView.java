@@ -30,6 +30,7 @@ import com.ulcjava.base.application.util.Rectangle;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.jetbrains.annotations.NotNull;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.layout.ComponentLayout;
 import org.pillarone.riskanalytics.graph.core.layout.GraphLayoutService;
@@ -38,37 +39,39 @@ import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeNameFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
+import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.GroovyUtils;
 import org.pillarone.riskanalytics.graph.formeditor.util.VisualSceneUtilities;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
-public class SingleModelVisualView extends AbstractBean implements GraphModelViewable {
-    private AbstractGraphModel fGraphModel;
+public class SingleModelVisualView extends AbstractBean implements GraphModelViewable, ISelectionListener {
+    private ApplicationContext fApplicationContext;
 
+    private AbstractGraphModel fGraphModel;
     Map<String, ComponentNode> fNodesMap;
     Map<Vertex, ComponentNode> fNodesToBeAdded;
     Map<String, Connection> fConnectionsMap;
     List<Connection> fConnectionsToBeAdded;
 
-    Point fCurrentPosition;
+    List<ISelectionListener> fSelectionListeners;
 
     private ULCGraph fULCGraph;
     private ULCGraphComponent fULCGraphComponent;
     Vertex fRootVertex;
+    Point fCurrentPosition;
 
     private ULCBoxPane fMainView;
 
     private GraphLayoutService fLayoutService;
-
-    private ApplicationContext fApplicationContext;
 
     public SingleModelVisualView(ApplicationContext ctx, boolean isModel) {
         super();
         fApplicationContext = ctx;
         createView(isModel);
         fULCGraphComponent.setTransferHandler(new VertexDropHandler(fULCGraphComponent));
+        fSelectionListeners = new ArrayList<ISelectionListener>();
     }
 
     protected void createView(boolean isModel) {
@@ -133,7 +136,9 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         // this can be created only now - since now we know whether we have a Model or a ComposedComponent
         fULCGraphComponent.setComponentPopupMenu(createPopupMenu());
 
-        fRootVertex.setTitle(fGraphModel.getName());
+        if (fRootVertex != null) {
+            fRootVertex.setTitle(fGraphModel.getName());
+        }
 
         if (fMainView.isVisible()) {
             updateULCGraph();
@@ -250,7 +255,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
         if (v != null) {
             for (Port port : v.getPorts()) {
-                if (isConsistentPort(port, p)) {
+                if (VisualSceneUtilities.isConsistentPort(port, p)) {
                     return port;
                 }
             }
@@ -258,13 +263,13 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         return null;
     }
 
-    private static boolean isConsistentPort(Port ulcPort, org.pillarone.riskanalytics.graph.core.graph.model.Port graphModelPort) {
-        boolean isConsistent = ulcPort.getTitle().equals(UIUtils.formatDisplayName(graphModelPort.getName()));
-        if (isConsistent) {
-            isConsistent = ulcPort.getType()==PortType.IN && graphModelPort instanceof InPort
-                                        || ulcPort.getType()==PortType.OUT && graphModelPort instanceof OutPort;
+    private GraphLayoutService getPersistenceService() {
+        if (fLayoutService == null) {
+            org.springframework.context.ApplicationContext ctx = ApplicationHolder.getApplication().getMainContext();
+            fLayoutService = ctx.getBean(GraphLayoutService.class);
         }
-        return isConsistent;
+
+        return fLayoutService;
     }
 
     private void saveLayout(long uid, String name) {
@@ -274,8 +279,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             return;
         }
         List<ComponentLayout> components = new ArrayList<ComponentLayout>();
-        Map<ComponentNode, String> inverse = invertMap(fNodesMap);
-        for (Map.Entry<String, List<ComponentNode>> entry : getComponentPaths().entrySet()) {
+        Map<ComponentNode, String> inverse = GraphModelUtilities.invertMap(fNodesMap);
+        for (Map.Entry<String, List<ComponentNode>> entry : GraphModelUtilities.getComponentPaths(fNodesMap).entrySet()) {
             for (ComponentNode n : entry.getValue()) {
                 Vertex v = fULCGraph.getVertex(inverse.get(n));
                 if (v != null) {
@@ -294,20 +299,10 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         getPersistenceService().saveLayout(uid, name, graphName, components);
     }
 
-    private GraphLayoutService getPersistenceService() {
-        if (fLayoutService == null) {
-            org.springframework.context.ApplicationContext ctx = ApplicationHolder.getApplication().getMainContext();
-            fLayoutService = ctx.getBean(GraphLayoutService.class);
-        }
-
-        return fLayoutService;
-    }
-
-
     private void loadLayout(long uid, String name) {
         String graphName = fGraphModel.getPackageName() + "." + fGraphModel.getName();
-        Map<ComponentNode, String> inverse = invertMap(fNodesMap);
-        Map<String, List<ComponentNode>> paths = getComponentPaths();
+        Map<ComponentNode, String> inverse = GraphModelUtilities.invertMap(fNodesMap);
+        Map<String, List<ComponentNode>> paths = GraphModelUtilities.getComponentPaths(fNodesMap);
         Set<ComponentLayout> components = getPersistenceService().loadLayout(uid, name, graphName);
         for (ComponentLayout cl : components) {
             List<ComponentNode> cList = paths.get(cl.getName());
@@ -331,27 +326,26 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
     }
 
-    //invert 1:1 map
-    private static Map<ComponentNode, String> invertMap(Map<String, ComponentNode> map) {
-        HashMap<ComponentNode, String> inverse = new HashMap<ComponentNode, String>();
-        for (Map.Entry<String, ComponentNode> entry : map.entrySet()) {
-            inverse.put(entry.getValue(), entry.getKey());
-        }
-        return inverse;
+    public void addSelectionListener(ISelectionListener selectionListener) {
+        fSelectionListeners.add(selectionListener);
     }
 
-
-    private HashMap<String, List<ComponentNode>> getComponentPaths() {
-        HashMap<String, List<ComponentNode>> paths = new HashMap<String, List<ComponentNode>>();
-        for (Map.Entry<String, ComponentNode> entry : fNodesMap.entrySet()) {
-            List<ComponentNode> tmpList;
-            if ((tmpList = paths.get(entry.getValue().getName())) == null) {
-                tmpList = new ArrayList<ComponentNode>();
-                paths.put(entry.getValue().getName(), tmpList);
-            }
-            tmpList.add(entry.getValue());
+    public void removeSelectionListener(ISelectionListener selectionListener) {
+        if (fSelectionListeners.contains(selectionListener)) {
+            fSelectionListeners.remove(selectionListener);
         }
-        return paths;
+    }
+
+    public void applyFilter(IComponentNodeFilter filter) {
+
+    }
+
+    public void setSelectedComponents(List<ComponentNode> selection) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public void setSelectedConnections(List<Connection> selection) {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     /**
@@ -479,7 +473,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             while (ulcPort==null && it.hasNext()) {
                 Port p0 = it.next();
                 String name = p0.getType().toString()+p0.getTitle();
-                name.replaceAll(" ","");
+                name = name.replaceAll(" ","");
                 if (p.getName().equalsIgnoreCase(name)) {
                     ulcPort = p0;
                 }
