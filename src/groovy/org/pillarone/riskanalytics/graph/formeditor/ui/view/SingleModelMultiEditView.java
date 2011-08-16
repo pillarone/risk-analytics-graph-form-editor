@@ -23,12 +23,9 @@ import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.ComponentNodeFilterFactory;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
-import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
 import org.pillarone.riskanalytics.graph.formeditor.util.ProbeSimulationService;
 import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,12 +45,9 @@ public class SingleModelMultiEditView extends AbstractBean {
     public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model) {
         super();
         fApplicationContext = ctx;
-        createView();
+        boolean isModel = model instanceof ModelGraphModel;
+        createView(isModel);
         injectGraphModel(model);
-    }
-
-    public void setTransferHandler(TypeTransferHandler transferHandler) {
-        fFormEditorView.setTransferHandler(transferHandler);
     }
 
     /*private ULCToolBar createToolBar() {
@@ -76,7 +70,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         return toolBar;
     }*/
 
-    public void createView() {
+    public void createView(boolean isModel) {
         fMainView = new ULCBoxPane(true, 1);
 
         ///////////////////
@@ -172,7 +166,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         fTextEditorView = new SingleModelTextView(fApplicationContext);
         final ULCComponent textView = fTextEditorView.getView();
         cardPane.addCard("Text", textView);
-        fVisualEditorView = new SingleModelVisualView(fApplicationContext);
+        fVisualEditorView = new SingleModelVisualView(fApplicationContext, isModel);
         final ULCComponent visualView = fVisualEditorView.getView();
         cardPane.addCard("Visual", visualView);
 
@@ -181,12 +175,17 @@ public class SingleModelMultiEditView extends AbstractBean {
                 //fFormEditorView.injectGraphModel(fGraphModel);
                 cardPane.setSelectedComponent(formView);
                 fFormEditorView.setVisible(true);
+                fVisualEditorView.setVisible(false);
+                fTextEditorView.setVisible(false);
+
             }
         });
         textSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 fTextEditorView.injectGraphModel(fGraphModel); // here the situation is different -> on each switch to the text view the code is generated
                 fTextEditorView.setVisible(true);
+                fVisualEditorView.setVisible(false);
+                fFormEditorView.setVisible(false);
                 cardPane.setSelectedComponent(textView);
             }
         });
@@ -195,10 +194,13 @@ public class SingleModelMultiEditView extends AbstractBean {
 //                fVisualEditorView.injectGraphModel(fGraphModel);
                 cardPane.setSelectedComponent(visualView);
                 fVisualEditorView.setVisible(true);
+                fFormEditorView.setVisible(false);
+                fTextEditorView.setVisible(false);
             }
         });
 
         cardPane.setSelectedComponent(visualView);
+        fVisualEditorView.setVisible(true);
 
         ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.VERTICAL_SPLIT);
         splitPane.setOneTouchExpandable(true);
