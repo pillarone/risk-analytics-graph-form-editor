@@ -25,7 +25,6 @@ import org.pillarone.riskanalytics.graph.core.graphimport.AbstractGraphImport;
 import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraphImport;
 import org.pillarone.riskanalytics.graph.core.graphimport.GraphImportService;
 import org.pillarone.riskanalytics.graph.core.graphimport.ModelGraphImport;
-import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
@@ -194,7 +193,6 @@ public class GraphModelEditor extends AbstractBean {
         SingleModelMultiEditView modelView = new SingleModelMultiEditView(fContext, model);
         fModelTabs.put(modelView.getView(), modelView);
         fEditorArea.addTab(typeDef.getName(), modelView.getView());
-        modelView.setTransferHandler(new TypeTransferHandler());
         fEditorArea.setSelectedIndex(fEditorArea.getComponentCount() - 1);
         fEditorArea.setToolTipTextAt(fEditorArea.getComponentCount() - 1, model.getPackageName() + "." + model.getName());
         fTypeDefinitions.add(typeDef);
