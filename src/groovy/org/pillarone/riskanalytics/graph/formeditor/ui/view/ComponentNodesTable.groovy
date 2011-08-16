@@ -187,9 +187,9 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         showConnectedItem.addActionListener(actionMap.get("showConnectedAction"))
         nodesMenu.add(showConnectedItem)
 
-        ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear selections")
+        /*ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear selections")
         clearSelectionsItem.addActionListener(actionMap.get("clearSelectionsAction"))
-        nodesMenu.add(clearSelectionsItem)
+        nodesMenu.add(clearSelectionsItem)*/
 
         this.setComponentPopupMenu(nodesMenu)
     }
@@ -346,9 +346,13 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     public void showConnectedAction() {
         List<ComponentNode> selectedNodes = getSelectedNodes()
         List<Connection> connections = fGraphModel.getEmergingConnections(selectedNodes)
-        fGraphModel.setSelectedConnections(connections, this)
         List<ComponentNode> connectedNodes = fGraphModel.getConnectedNodes(selectedNodes)
-        fGraphModel.setSelectedNodes(connectedNodes, this)
+        setSelectedConnections(connections)
+        setSelectedComponents(connectedNodes)
+        fSelectionListeners*.each { it ->
+            it.setSelectedConnections(connections)
+            it.setSelectedComponents(connectedNodes)
+        }
     }
 
 

@@ -111,9 +111,9 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
         showAttachedNodesItem.addActionListener(actionMap.get("showAttachedNodesAction"));
         connectionsMenu.add(showAttachedNodesItem);
 
-        ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear selections");
+        /*ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear selections");
         clearSelectionsItem.addActionListener(actionMap.get("clearSelectionsAction"));
-        connectionsMenu.add(clearSelectionsItem);
+        connectionsMenu.add(clearSelectionsItem);*/
 
         this.setComponentPopupMenu(connectionsMenu);
     }
@@ -137,7 +137,6 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
 
     @Action
     public void clearSelectionsAction() {
-        fGraphModel.clearSelections();
     }
 
     @Action
