@@ -6,14 +6,18 @@ import com.ulcjava.applicationframework.application.Action;
 import com.ulcjava.applicationframework.application.ApplicationActionMap;
 import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
+import com.ulcjava.base.application.dnd.DataFlavor;
+import com.ulcjava.base.application.dnd.DnDTreeData;
+import com.ulcjava.base.application.dnd.TransferHandler;
+import com.ulcjava.base.application.dnd.Transferable;
 import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.KeyStroke;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
-import org.pillarone.riskanalytics.graph.formeditor.ui.handlers.TypeTransferHandler;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ConnectionBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ReplicationBean;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.GraphElementNode;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
@@ -71,19 +75,12 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane);
     }
 
-    public void setTransferHandler(TypeTransferHandler transferHandler) {
-        transferHandler.setModelEditView(this);
-        fNodesTable.setTransferHandler(transferHandler);
-    }
-
     public ULCBoxPane getView() {
         return fMainView;
     }
 
     public void setVisible(boolean visible) {
-        if (fMainView != null) {
-            fMainView.setVisible(visible);
-        }
+        fMainView.setVisible(visible);
     }
 
     public void injectGraphModel(AbstractGraphModel model) {
@@ -99,6 +96,9 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
         fConnectionsTable = new ConnectionsTable(fApplicationContext, fGraphModel);
         fConnectionSelected = false;
         fConnectionsPane.setViewPortView(fConnectionsTable);
+
+        TransferHandler transferHandler = new TypeTransferHandler();
+        fNodesTable.setTransferHandler(transferHandler);
 
         addListeners();
         createNodesContextMenu();
@@ -480,12 +480,12 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
                     if (p instanceof InPort) {
                         InPort inPort = (InPort) p;
                         InPort outerInPort = ccGraphModel.createOuterInPort(packetType, p.getName());
-                        ccGraphModel.addOuterPort(outerInPort);
+                        // ccGraphModel.addOuterPort(outerInPort);
                         ccGraphModel.createConnection(outerInPort, inPort);
                     } else {
                         OutPort outPort = (OutPort) p;
                         OutPort outerOutPort = ccGraphModel.createOuterOutPort(packetType, p.getName());
-                        ccGraphModel.addOuterPort(outerOutPort);
+                        // ccGraphModel.addOuterPort(outerOutPort);
                         ccGraphModel.createConnection(outPort, outerOutPort);
                     }
                 }
@@ -651,5 +651,31 @@ public class SingleModelFormView extends AbstractBean implements GraphModelEdita
 
     public void removeVertexHelpListener(IVertexHelpListener listener) {
         vertexHelpListeners.remove(listener);
+    }
+
+    private class TypeTransferHandler extends TransferHandler {
+
+        @Override
+        public boolean importData(ULCComponent targetComponent, Transferable transferable) {
+            Object dragData0 = transferable.getTransferData(DataFlavor.DRAG_FLAVOR);
+            DnDTreeData dragData = (DnDTreeData) dragData0;
+            TreePath[] paths = dragData.getTreePaths();
+            Object selected = paths[0].getLastPathComponent();
+            if (selected instanceof TypeTreeNode) {
+                String componentType = ((TypeTreeNode) selected).getFullName();
+                if (componentType != null ) {
+                    newNodeAction(componentType);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+        * Do nothing on the export side
+        */
+        @Override
+        public void exportDone(ULCComponent src, Transferable t, int action) {
+        }
     }
 }
