@@ -6,6 +6,7 @@ import com.canoo.ulc.graph.shared.PortConstraint;
 import com.canoo.ulc.graph.shared.PortTemplate;
 import com.canoo.ulc.graph.shared.PortType;
 import com.canoo.ulc.graph.shared.ShapeTemplate;
+import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
 import org.jetbrains.annotations.NotNull;
@@ -28,10 +29,13 @@ import java.util.Map;
  */
 public class VisualSceneUtilities {
 
-    public static Vertex createVertex(final Point mouseLocation, String componentTypePath) {
-        Vertex vertex = new Vertex("internal" + new Date().getTime());
+    public static Vertex createVertex(Point mouseLocation, String componentTypePath) {
+        Vertex vertex = new Vertex("internal" + new Date().getTime() + "_" + Math.random());
         vertex.setStyle("swimlane");
-        vertex.setRectangle(new Rectangle(mouseLocation.getX(), mouseLocation.getY(), 200, 200));
+        if (mouseLocation==null) {
+            mouseLocation = new Point(0,0);
+        }
+        vertex.setRectangle(new Rectangle(mouseLocation, new Dimension(200, 200)));
         vertex.setTemplateId(componentTypePath);
 
         // add the ports
