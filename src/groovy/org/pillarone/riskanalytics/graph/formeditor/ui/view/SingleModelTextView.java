@@ -49,9 +49,7 @@ public class SingleModelTextView extends AbstractBean implements GraphModelViewa
     }
 
     public void setVisible(boolean visible) {
-        if (fMainView != null) {
-            fMainView.setVisible(visible);
-        }
+        fMainView.setVisible(visible);
     }
 
     public void injectGraphModel(AbstractGraphModel model) {
