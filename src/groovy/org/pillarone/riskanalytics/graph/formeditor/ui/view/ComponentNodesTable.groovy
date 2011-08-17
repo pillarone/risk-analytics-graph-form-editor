@@ -235,13 +235,13 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
                 ComponentNode node1 = nodes.get(0)
                 ComponentNode node2 = nodes.get(1)
                 if (node1 != null && node1.hasPorts() &&
-                    node2 != null && node2.hasPorts()) {
+                        node2 != null && node2.hasPorts()) {
                     ConnectNodesDialog dialog = new ConnectNodesDialog(UlcUtilities.getWindowAncestor(this), fGraphModel);
                     dialog.setNodes(nodes.get(0), nodes.get(1))
                     dialog.setVisible(true)
                 } else {
-                    ULCAlert alert = new ULCAlert("No connections possible.",
-                                "The components selected cannot be connected.", "ok")
+                    ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(this),"No connections possible.",
+                            "The components selected cannot be connected.", "ok")
                     alert.show()
                 }
             } else {
@@ -263,12 +263,12 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
                         Port to = from == p1 ? p2 : p1
                         fGraphModel.createConnection(from, to)
                     } else {
-                        ULCAlert alert = new ULCAlert("Ports not connected.",
+                        ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(this),"Ports not connected.",
                                 "Ports cannot be connected or already connected.", "ok")
                         alert.show()
                     }
                 } else {
-                    ULCAlert alert = new ULCAlert("No connection added.",
+                    ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(this),"No connection added.",
                             "Selected exactly two components or two ports.", "ok")
                     alert.show()
                 }
@@ -286,7 +286,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
                 Class packetType = p.getPacketType()
                 ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel
                 if (ccGraphModel.isReplicated(p)) {
-                    ULCAlert alert = new ULCAlert("Port already replicated.",
+                    ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(this),"Port already replicated.",
                             "Port is already replicated.", "ok")
                     alert.show()
                 } else if (p instanceof InPort) {
@@ -304,19 +304,41 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
 
     @Action
     public void removeAction() {
-        final List<ComponentNode> nodes = getSelectedNodes()
-        for (ComponentNode node : nodes) {
-            fGraphModel.removeComponentNode(node)
-        }
+        Closure remove = {List<ComponentNode> nodes ->
+            for (ComponentNode node: nodes) {
+                fGraphModel.removeComponentNode(node)
+            }
 
-        if (fGraphModel instanceof ComposedComponentGraphModel) {
-            final List<Port> ports = getSelectedOuterPorts()
-            if (ports != null && ports.size() > 0) {
-                ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel
-                for (Port p : ports) {
-                    ccGraphModel.removeOuterPort(p)
+            if (fGraphModel instanceof ComposedComponentGraphModel) {
+                final List<Port> ports = getSelectedOuterPorts()
+                if (ports != null && ports.size() > 0) {
+                    ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel
+                    for (Port p: ports) {
+                        ccGraphModel.removeOuterPort(p)
+                    }
                 }
             }
+        }
+
+        final List<ComponentNode> selectedNodes = getSelectedNodes()
+        boolean componentConnected = false
+        for (ComponentNode node: selectedNodes) {
+            if (fGraphModel.hasConnections(node)) {
+                componentConnected = true
+                break
+            }
+        }
+
+        if (componentConnected) {
+            final ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(this), "Delete Component and its connections", "At least one selected component has been connected, the component and its connections will be deleted", "Delete", "Cancel")
+            alert.addWindowListener([windowClosing: {WindowEvent windowEvent ->
+                if (alert.getValue().equals(alert.firstButtonLabel)) {
+                    remove.call(selectedNodes)
+                }
+            }] as IWindowListener)
+            alert.show()
+        } else {
+            remove.call(selectedNodes)
         }
     }
 
@@ -391,9 +413,9 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         TreePath[] selected = getSelectedPaths();
         if (selected && selected.length > 0) {
             List<ComponentNode> nodes = new ArrayList<ComponentNode>();
-            for (TreePath path : selected) {
+            for (TreePath path: selected) {
                 if (path.getPath().length == 2) {
-                    GraphElementNode node = (GraphElementNode)path.getPath()[1];
+                    GraphElementNode node = (GraphElementNode) path.getPath()[1];
                     if (node.getElement() instanceof ComponentNode) {
                         nodes.add((ComponentNode) node.getElement());
                     }
@@ -408,8 +430,8 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         TreePath[] selected = getSelectedPaths();
         if (selected && selected.length > 0) {
             List<Port> ports = new ArrayList<Port>();
-            for (TreePath path : selected) {
-                GraphElementNode node = (GraphElementNode)path.getLastPathComponent();
+            for (TreePath path: selected) {
+                GraphElementNode node = (GraphElementNode) path.getLastPathComponent();
                 if (node.getElement() instanceof Port) {
                     ports.add((Port) node.getElement());
                 }
@@ -423,7 +445,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         List<Port> ports = getSelectedPorts();
         if (ports != null && ports.size() > 0) {
             List<Port> outerPorts = new ArrayList<Port>();
-            for (Port p : ports) {
+            for (Port p: ports) {
                 if (p.isComposedComponentOuterPort()) {
                     outerPorts.add(p);
                 }
@@ -447,7 +469,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     public List<ComponentNode> getComponentNodes(TreePath[] treePaths) {
         List<ComponentNode> nodes = new ArrayList<ComponentNode>();
         if (treePaths != null) {
-            for (TreePath path : treePaths) {
+            for (TreePath path: treePaths) {
                 ComponentNode node = getComponentNode(path);
                 if (node != null) {
                     nodes.add(node);
@@ -467,7 +489,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
             Object selected = paths[0].getLastPathComponent();
             if (selected instanceof TypeTreeNode) {
                 String componentType = ((TypeTreeNode) selected).getFullName();
-                if (componentType != null ) {
+                if (componentType != null) {
                     newNodeAction(componentType);
                     return true;
                 }
@@ -476,8 +498,8 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         }
 
         /**
-        * Do nothing on the export side
-        */
+         * Do nothing on the export side
+         */
         @Override
         public void exportDone(ULCComponent src, Transferable t, int action) {
         }
