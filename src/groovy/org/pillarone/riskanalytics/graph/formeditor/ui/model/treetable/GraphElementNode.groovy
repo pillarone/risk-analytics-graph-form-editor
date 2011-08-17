@@ -38,7 +38,7 @@ class GraphElementNode extends SimpleTableTreeNode {
             case NodesTableTreeModel.TYPEID:
                 return this.type
             case NodesTableTreeModel.INFOID:
-                return this.info
+                return null
             default:
                 return null
         }
@@ -51,7 +51,7 @@ class GraphElementNode extends SimpleTableTreeNode {
         // type
         switch (element) {
             case AbstractGraphModel:
-                this.type = ((AbstractGraphModel)element).getDisplayName() + " (" + ((AbstractGraphModel)element).getPackageName() + ")"
+                this.type = ((AbstractGraphModel) element).getDisplayName() + " (" + ((AbstractGraphModel) element).getPackageName() + ")"
                 break
             case ComponentNode:
                 ComponentNode node = (ComponentNode) element
@@ -95,7 +95,7 @@ class GraphElementNode extends SimpleTableTreeNode {
                     }
                 }
                 break
-            
+
         }
     }
 }
