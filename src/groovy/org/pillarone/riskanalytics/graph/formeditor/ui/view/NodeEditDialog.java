@@ -57,18 +57,25 @@ public class NodeEditDialog extends ULCDialog {
         NodeForm form = new NodeForm(model, fGraphModel instanceof ModelGraphModel);
         fBeanForm = new BeanFormDialog<NodeFormModel>(form);
         add(fBeanForm.getContentPane());
+
+        // cancel
         fCancel = new ULCButton("Cancel");
-        fCancel.addActionListener(new IActionListener() {
+        IActionListener cancelAction = new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 fBeanForm.reset();
                 setVisible(false);
             }
-        });
+        };
+        fCancel.addActionListener(cancelAction);
         fBeanForm.addToButtons(fCancel);
+        KeyStroke esc = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
+        form.registerKeyboardAction(esc, cancelAction);
+
+        // ok
         IActionListener action = new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 if (fBeanForm.getModel().hasErrors()) return;
-                NodeBean bean = (NodeBean) fBeanForm.getModel().getBean();
+                NodeBean bean = fBeanForm.getModel().getBean();
                 if (fEditedNode != null) {
                     if (!fEditedNode.getName().equals(bean.getName())) {
                         fGraphModel.changeNodeProperty(fEditedNode, "name", fEditedNode.getName(), bean.getName());
@@ -103,6 +110,7 @@ public class NodeEditDialog extends ULCDialog {
         fBeanForm.addSaveActionListener(action);
         KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
         form.registerKeyboardAction(enter, action);
+
         form.addKeyListener();
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
