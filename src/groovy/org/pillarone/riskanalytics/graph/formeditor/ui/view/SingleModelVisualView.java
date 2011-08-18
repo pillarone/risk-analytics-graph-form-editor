@@ -680,6 +680,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 }
 
                 NodeEditDialog nodeEditDialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), fGraphModel);
+                nodeEditDialog.setLocation(transferData.getMouseLocation());
                 nodeEditDialog.setModal(true);
                 nodeEditDialog.setVisible(true);
                 NodeBean bean = nodeEditDialog.getBeanForm().getModel().getBean();
