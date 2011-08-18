@@ -32,8 +32,6 @@ class ResourceLinkHtmlPane extends ULCHtmlPane {
         htmlText = text
     }
 
-
-
     class OpenLinkListener implements IHyperlinkListener {
 
         void linkActivated(HyperlinkEvent hyperlinkEvent) {
@@ -67,6 +65,5 @@ class ResourceLinkHtmlPane extends ULCHtmlPane {
                 renderedResources << resource[RESOURCE_KEY]
             }
         }
-
     }
 }
