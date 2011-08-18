@@ -41,20 +41,20 @@ class NodesTableTreeModelTest extends GroovyTestCase {
         assertFalse freqNode.isLeaf()
         assert tableModel.getValueAt(freqNode, NodesTableTreeModel.NAMEID) == "freq"
         assert tableModel.getValueAt(freqNode, NodesTableTreeModel.TYPEID) == "SimpleFrequencyGenerator (org.pillarone.riskanalytics.graph.formeditor.examples)"
-        assert tableModel.getValueAt(freqNode, NodesTableTreeModel.INFOID) == EnumGraphElementInfo.C.getDisplayValue()
+        assert tableModel.getValueAt(freqNode, NodesTableTreeModel.INFOID) == null
         GraphElementNode freqOutNode = tableModel.findNode(model.getAllComponentNodes().get(0).outPorts.get(0))
         assertNotNull freqOutNode
         assertTrue freqOutNode.isLeaf()
         assert tableModel.getValueAt(freqOutNode, NodesTableTreeModel.NAMEID) == "frequency"
         assert tableModel.getValueAt(freqOutNode, NodesTableTreeModel.TYPEID) == "FrequencyPacket (org.pillarone.riskanalytics.graph.formeditor.examples)"
-        assert tableModel.getValueAt(freqOutNode, NodesTableTreeModel.INFOID) == EnumGraphElementInfo.OUT.getDisplayValue()
+        assert tableModel.getValueAt(freqOutNode, NodesTableTreeModel.INFOID) == null
 
         GraphElementNode xlNode = tableModel.getChild(root, 2)
         assertNotNull xlNode
         assertFalse xlNode.isLeaf()
         assert tableModel.getValueAt(xlNode, NodesTableTreeModel.NAMEID) == "xl"
         assert tableModel.getValueAt(xlNode, NodesTableTreeModel.TYPEID) == "ExcessOfLoss (org.pillarone.riskanalytics.graph.formeditor.examples)"
-        assert tableModel.getValueAt(xlNode, NodesTableTreeModel.INFOID) == EnumGraphElementInfo.C.getDisplayValue()
+        assert tableModel.getValueAt(xlNode, NodesTableTreeModel.INFOID) == null
 
         assert tableModel.getIndexOfChild(root, xlNode) == 2
 
