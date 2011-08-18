@@ -5,9 +5,7 @@ import com.canoo.ulc.detachabletabbedpane.server.ITabListener;
 import com.canoo.ulc.detachabletabbedpane.server.TabEvent;
 import com.canoo.ulc.detachabletabbedpane.server.ULCCloseableTabbedPane;
 import com.canoo.ulc.detachabletabbedpane.server.ULCDetachableTabbedPane;
-import com.canoo.ulc.graph.IGraphSelectionListener;
 import com.canoo.ulc.graph.ULCGraphOutline;
-import com.canoo.ulc.graph.model.Vertex;
 import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.Action;
 import com.ulcjava.applicationframework.application.ApplicationActionMap;
@@ -27,7 +25,6 @@ import org.pillarone.riskanalytics.graph.formeditor.util.ProbeSimulationService;
 import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
 import java.util.Map;
-import java.util.Set;
 
 public class SingleModelMultiEditView extends AbstractBean {
     private ApplicationContext fApplicationContext;
@@ -39,6 +36,8 @@ public class SingleModelMultiEditView extends AbstractBean {
     private SingleModelVisualView fVisualEditorView;
     private SingleModelFormView fFormEditorView;
     private SingleModelTextView fTextEditorView;
+    private HelpView fHelpView;
+    private CommentView fCommentView;
     private ULCCloseableTabbedPane fDataSetSheets;
     private ULCCloseableTabbedPane fResultSheets;
 
@@ -124,7 +123,7 @@ public class SingleModelMultiEditView extends AbstractBean {
                 if (filter != null) {
                     fFormEditorView.applyFilter(filter);
                     fVisualEditorView.applyFilter(filter);
-                    fFormEditorView.applyFilter(filter);
+                    fTextEditorView.applyFilter(filter);
                 }
             }
         };
@@ -216,8 +215,6 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         // lower pane - consisting of a property pane and a model filter pane
         ULCBoxPane lower = new ULCBoxPane(true, 1);
-        ULCSplitPane splitPane2 = new ULCSplitPane();
-        lower.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane2);
 
         // the property editing area --> comments, help, ...etc.
         ULCSplitPane propertiesAreaSplitPane = new ULCSplitPane();
@@ -229,23 +226,11 @@ public class SingleModelMultiEditView extends AbstractBean {
         ULCDetachableTabbedPane rightTabbedPane = new ULCDetachableTabbedPane();
 
         // help
-        final HelpView helpView = new HelpView();
-        IGraphSelectionListener selectionListener = new IGraphSelectionListener() {
-            public void selectionChanged() {
-                Set<Vertex> selectedVertices = fVisualEditorView.getULCGraph().getSelectionModel().getSelectedVertices();
-                if (selectedVertices.size() == 1) {
-                    String templateId = ((Vertex) selectedVertices.toArray()[0]).getTemplateId();
-                    helpView.updateView(templateId);
-                }
-            }
-        };
-        fVisualEditorView.getULCGraph().getSelectionModel().addGraphSelectionListener(selectionListener);
-        fFormEditorView.addVertexHelpListener(helpView);
+        fHelpView = new HelpView();
 
         // comments
-        ULCTextArea comments = new ULCTextArea();
-        comments.setEditable(true);
-        comments.setText("No comments available yet");
+        fCommentView = new CommentView();
+
         // parameters
         ULCBoxPane data = new ULCBoxPane();
         fDataSetSheets = new ULCCloseableTabbedPane();
@@ -259,6 +244,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         });
 
         data.add(ULCBoxPane.BOX_EXPAND_EXPAND, fDataSetSheets);
+
         // results
         ULCBoxPane results = new ULCBoxPane();
         fResultSheets = new ULCCloseableTabbedPane();
@@ -271,25 +257,22 @@ public class SingleModelMultiEditView extends AbstractBean {
             }
         });
         results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
-        leftTabbedPane.addTab("Help", new ULCScrollPane(helpView.getContent()));
+        leftTabbedPane.addTab("Help", new ULCScrollPane(fHelpView.getContent()));
         leftTabbedPane.addTab("Parameters", data);
+        rightTabbedPane.addTab("Comments", new ULCScrollPane(fCommentView.getContent()));
         rightTabbedPane.addTab("Results", results);
-        rightTabbedPane.addTab("Comments", comments);
         leftTabbedPane.setSelectedIndex(0);
         rightTabbedPane.setSelectedIndex(0);
+        // satellite view - this is a bit ugly that I need to get and inject the component wrapping the ulc graph here!
+        ULCGraphOutline satelliteView = new ULCGraphOutline(fVisualEditorView.getULCGraphComponent());
+        rightTabbedPane.addTab("Info", satelliteView);
 
         propertiesAreaSplitPane.setLeftComponent(leftTabbedPane);
         propertiesAreaSplitPane.setRightComponent(rightTabbedPane);
         ULCBoxPane propertyPane = new ULCBoxPane(1, 1);
         propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, propertiesAreaSplitPane);
-        splitPane2.setLeftComponent(propertyPane);
+        lower.add(ULCBoxPane.BOX_EXPAND_EXPAND, propertyPane);
 
-        // satellite view - this is a bit ugly that I need to get and inject the component wrapping the ulc graph here!
-        ULCGraphOutline satelliteView = new ULCGraphOutline(fVisualEditorView.getULCGraphComponent());
-        splitPane2.setRightComponent(satelliteView);
-        splitPane2.setDividerSize(10);
-        splitPane2.setOneTouchExpandable(true);
-        splitPane2.setDividerLocation(0.7);
 
         splitPane.setBottomComponent(lower);
         fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane);
@@ -304,6 +287,13 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         fFormEditorView.addSelectionListener(fVisualEditorView);
         fVisualEditorView.addSelectionListener(fFormEditorView);
+
+        fFormEditorView.addSelectionListener(fHelpView);
+        fVisualEditorView.addSelectionListener(fHelpView);
+        //fTextEditorView.addSelectionListener(fHelpView);
+
+        fFormEditorView.addSelectionListener(fCommentView);
+        fVisualEditorView.addSelectionListener(fCommentView);
     }
 
     public ULCBoxPane getView() {
