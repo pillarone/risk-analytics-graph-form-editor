@@ -3,31 +3,22 @@ package org.pillarone.riskanalytics.graph.formeditor.util;
 import com.canoo.ulc.graph.model.Port;
 import com.canoo.ulc.graph.model.Vertex;
 import com.canoo.ulc.graph.shared.PortConstraint;
-import com.canoo.ulc.graph.shared.PortTemplate;
 import com.canoo.ulc.graph.shared.PortType;
-import com.canoo.ulc.graph.shared.ShapeTemplate;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
-import org.jetbrains.annotations.NotNull;
 import org.pillarone.riskanalytics.graph.core.graph.model.InPort;
 import org.pillarone.riskanalytics.graph.core.graph.model.OutPort;
-import org.pillarone.riskanalytics.graph.core.graph.util.*;
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
- * User: martin.melchior
- * Date: 11.08.11
- * Time: 15:14
- * To change this template use File | Settings | File Templates.
+ * 
  */
 public class VisualSceneUtilities {
 
@@ -65,6 +56,5 @@ public class VisualSceneUtilities {
         }
         return isConsistent;
     }
-
 
 }
