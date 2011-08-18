@@ -5,6 +5,9 @@ import org.pillarone.riskanalytics.core.simulation.item.Parameterization
 import org.pillarone.riskanalytics.core.simulation.item.parameter.comment.Comment
 import org.pillarone.riskanalytics.core.simulation.item.parameter.ParameterHolder
 import org.pillarone.riskanalytics.core.simulation.item.parameter.ParameterHolderFactory
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
+import org.pillarone.riskanalytics.core.components.Component
+import java.lang.reflect.Field
 
 /**
  * 
@@ -68,5 +71,23 @@ class ParameterUtilities {
         }
         parametrization.periodCount = maxPeriod+1
         return parametrization
+    }
+
+    public static Map<String,Object> getParameterObjects(ComponentNode node) {
+        Map<String, Object> result = [:]
+        Class componentClass = node.getType().getTypeClass()
+        Component component = (Component) componentClass.newInstance()
+        Field[] fields = componentClass.declaredFields
+        for (Field field in fields) {
+            if (field.name.startsWith("parm")) {
+                field.accessible = true
+                Object value = field.get(component)
+                if (!field.type.isPrimitive() && !value) {
+                    value = field.type.newInstance()
+                }
+                result.put(field.name, value)
+            }
+        }
+        return result
     }
 }

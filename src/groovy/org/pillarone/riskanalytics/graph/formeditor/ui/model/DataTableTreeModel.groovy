@@ -12,6 +12,7 @@ import org.pillarone.riskanalytics.core.simulation.item.parameter.ParameterHolde
 import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraphImport
 import org.pillarone.riskanalytics.graph.core.graph.model.*
 import com.ulcjava.base.application.tabletree.IMutableTableTreeNode
+import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities
 
 /**
  *
@@ -155,30 +156,12 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         return children != null && children.size()>0
     }
 
-    private static Map<String,Object> getParameterObjects(ComponentNode node) {
-        Map<String, Object> result = [:]
-        Class componentClass = node.getType().getTypeClass()
-        Component component = (Component) componentClass.newInstance()
-        Field[] fields = componentClass.declaredFields
-        for (Field field in fields) {
-            if (field.name.startsWith("parm")) {
-                field.accessible = true
-                Object value = field.get(component)
-                if (!field.type.isPrimitive() && !value) {
-                    value = field.type.newInstance()
-                }
-                result.put(field.name, value)
-            }
-        }
-        return result
-    }
-
     private List<IDataTreeNode> getChildren(DataTreeComponentNode parent) {
         String parentPath = parent.path
         List<IDataTreeNode> children = []
         if (parent.graphElement instanceof ComponentNode) {
             ComponentNode node = (ComponentNode) parent.graphElement
-            Map<String,Object> parameterObjects = getParameterObjects(node)
+            Map<String,Object> parameterObjects = ParameterUtilities.getParameterObjects(node)
             parameterObjects.each { parameterName, parameterValue ->
                 DataTreeParameterNode paramNode = new DataTreeParameterNode(parentPath+PATHSEP+parameterName, parameterValue, parent)
                 children << paramNode
