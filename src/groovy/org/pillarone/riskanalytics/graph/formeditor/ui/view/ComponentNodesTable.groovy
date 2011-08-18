@@ -50,6 +50,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     FilteringTableTreeModel fTableModel;
     ApplicationContext fApplicationContext;
     List<ISelectionListener> fSelectionListeners;
+    boolean fExternalSelection;
 
     public ComponentNodesTable(ApplicationContext ctx, AbstractGraphModel model) {
         fApplicationContext = ctx;
@@ -70,16 +71,6 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         this.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight))
 
         fSelectionListeners = new ArrayList<ISelectionListener>();
-
-        /*this.getSelectionModel().addTreeSelectionListener(
-                new ITreeSelectionListener() {
-                    public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
-                        List<ComponentNode> selectedNodes = getComponentNodes(getSelectedPaths())
-                        fGraphModel.setSelectedNodes(selectedNodes, graphListener)
-                    }
-                }
-        )*/
-
         this.getSelectionModel().setSelectionMode(ULCTreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION)
         this.setSelectionBackground(Color.yellow)
 
@@ -88,9 +79,9 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         col.setCellRenderer(renderer)
         col.setMaxWidth(50)
 
-        createContextMenu()
-
         addListeners()
+
+        createContextMenu()
 
         TransferHandler transferHandler = new TypeTransferHandler();
         this.setTransferHandler(transferHandler);
@@ -108,20 +99,14 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         })
         getSelectionModel().addTreeSelectionListener(new ITreeSelectionListener() {
             public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
-                List<ComponentNode> selectedNodes = getSelectedNodes()
-                fSelectionListeners*.each {it -> it.setSelectedComponents(selectedNodes)}
-            }
-        })
-
-        /*fNodesTable.getSelectionModel().addTreeSelectionListener(new ITreeSelectionListener() {
-            public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
-                Object componentNode = fNodesTable.getLastSelectedPathComponent();
-                if(componentNode instanceof ComponentNode){
-                    String propertyKey = ((ComponentNode) componentNode).getType().getTypeClass().getName();
-                    selectionChanged(propertyKey);
+                if (!fExternalSelection) {
+                    List<ComponentNode> selectedNodes = getSelectedNodes()
+                    fSelectionListeners*.each {it -> it.setSelectedComponents(selectedNodes)}
+                } else {
+                    fExternalSelection = false;
                 }
             }
-        });*/
+        })
     }
 
     public void addSelectionListener(ISelectionListener selectionListener) {
@@ -187,9 +172,9 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         showConnectedItem.addActionListener(actionMap.get("showConnectedAction"))
         nodesMenu.add(showConnectedItem)
 
-        /*ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear selections")
-        clearSelectionsItem.addActionListener(actionMap.get("clearSelectionsAction"))
-        nodesMenu.add(clearSelectionsItem)*/
+        ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear all selections")
+        clearSelectionsItem.addActionListener(actionMap.get("clearSelectionAction"))
+        nodesMenu.add(clearSelectionsItem)
 
         this.setComponentPopupMenu(nodesMenu)
     }
@@ -199,6 +184,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         ComponentNode selectedNode = getSelectedNode();
         if (selectedNode != null) {
             NodeEditDialog dialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(this), fGraphModel)
+            dialog.setModal(true)
             dialog.setVisible(true)
             NodeBean bean = dialog.getBeanForm().getModel().getBean();
             bean.setName(selectedNode.getName());
@@ -215,11 +201,13 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     @Action
     public void newNodeAction() {
         NodeEditDialog dialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(this), fGraphModel)
+        dialog.setModal(true)
         dialog.setVisible(true)
     }
 
     public void newNodeAction(String componentType) {
         NodeEditDialog dialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(this), fGraphModel)
+        dialog.setModal(true);
         dialog.setVisible(true)
         NodeBean bean = dialog.getBeanForm().getModel().getBean();
         bean.setComponentType(componentType);
@@ -355,22 +343,48 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         }
     }
 
+    @Action
+    public void clearSelectionAction() {
+        clearSelection();
+        for (ISelectionListener listener : fSelectionListeners) {
+            listener.clearSelection();
+        }
+    }
+
+    /////////////////////////////////////////
+    // Implementation of ISelectionListener
+    /////////////////////////////////////////
 
     public void applyFilter(IComponentNodeFilter filter) {
         fTableModel.setFilter(filter)
-        fTableModel.applyFilter()
     }
 
     public void setSelectedComponents(List<ComponentNode> selection) {
-        TreePath[] selectedPaths = getTreePaths(selection)
-        setPathSelection(selectedPaths)
+        TreePath[] selectedPaths = fTableModel.getTreePaths(selection.toArray(new ComponentNode[0]))
+        if (selectedPaths != null) {
+            fExternalSelection = true
+            if (selectedPaths.length==0) {
+                this.clearSelection()
+            } else {
+                setPathSelection(selectedPaths)
+            }
+        }
     }
 
     public void setSelectedConnections(List<Connection> selection) {
         // Nothing to do here
     }
 
-    protected ComponentNode getSelectedNode() {
+    public void clearSelection() {
+        super.clearSelection();
+    }
+
+
+    /////////////////////////////////////////
+    // Custom methods
+    /////////////////////////////////////////
+
+    private ComponentNode getSelectedNode() {
         TreePath[] selected = getSelectedPaths();
         if (selected.length > 0) {
             TreePath selected0 = selected[0];
@@ -387,10 +401,10 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     /**
      * @return the selected nodes or <code>null</code> if no row is selected
      */
-    protected List<ComponentNode> getSelectedNodes() {
+    private List<ComponentNode> getSelectedNodes() {
         TreePath[] selected = getSelectedPaths();
+        List<ComponentNode> nodes = new ArrayList<ComponentNode>();
         if (selected && selected.length > 0) {
-            List<ComponentNode> nodes = new ArrayList<ComponentNode>();
             for (TreePath path : selected) {
                 if (path.getPath().length == 2) {
                     GraphElementNode node = (GraphElementNode)path.getPath()[1];
@@ -399,52 +413,45 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
                     }
                 }
             }
-            return nodes;
         }
-        return null;
+        return nodes;
     }
 
-    protected List<Port> getSelectedPorts() {
+    private List<Port> getSelectedPorts() {
         TreePath[] selected = getSelectedPaths();
+        List<Port> ports = new ArrayList<Port>();
         if (selected && selected.length > 0) {
-            List<Port> ports = new ArrayList<Port>();
             for (TreePath path : selected) {
                 GraphElementNode node = (GraphElementNode)path.getLastPathComponent();
                 if (node.getElement() instanceof Port) {
                     ports.add((Port) node.getElement());
                 }
             }
-            return ports;
         }
-        return null;
+        return ports;
     }
 
-    protected List<Port> getSelectedOuterPorts() {
+    private List<Port> getSelectedOuterPorts() {
         List<Port> ports = getSelectedPorts();
+        List<Port> outerPorts = new ArrayList<Port>();
         if (ports != null && ports.size() > 0) {
-            List<Port> outerPorts = new ArrayList<Port>();
             for (Port p : ports) {
                 if (p.isComposedComponentOuterPort()) {
                     outerPorts.add(p);
                 }
             }
-            return outerPorts;
         }
-        return null;
+        return outerPorts;
     }
 
-    public TreePath[] getTreePaths(List<ComponentNode> nodes) {
-        return fTableModel.getTreePaths(nodes.toArray(new ComponentNode[0]));
-    }
-
-    public ComponentNode getComponentNode(TreePath treePath) {
+    private ComponentNode getComponentNode(TreePath treePath) {
         if (treePath != null && treePath.getPathCount() == 2 && treePath.getPath()[1] instanceof ComponentNode) {
             return (ComponentNode) treePath.getPath()[1];
         }
         return null;
     }
 
-    public List<ComponentNode> getComponentNodes(TreePath[] treePaths) {
+    private List<ComponentNode> getComponentNodes(TreePath[] treePaths) {
         List<ComponentNode> nodes = new ArrayList<ComponentNode>();
         if (treePaths != null) {
             for (TreePath path : treePaths) {

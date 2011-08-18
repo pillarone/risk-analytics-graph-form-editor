@@ -44,18 +44,8 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
         int preferredHeight = preferredWidth * height * 10 / (width * 11 * 2);
         this.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight));
 
-        /*this.getSelectionModel().addListSelectionListener(
-            new IListSelectionListener() {
-                public void valueChanged(ListSelectionEvent listSelectionEvent) {
-                    int[] rows = getSelectedRows();
-                    List<Connection> connections = getConnections(rows);
-                    fGraphModel.setSelectedConnections(connections, graphListener);
-                }
-            }
-        );*/
-        this.setSelectionBackground(Color.yellow);
-
         fSelectionListeners = new ArrayList<ISelectionListener>();
+        this.setSelectionBackground(Color.yellow);
 
         addListeners();
 
@@ -111,9 +101,9 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
         showAttachedNodesItem.addActionListener(actionMap.get("showAttachedNodesAction"));
         connectionsMenu.add(showAttachedNodesItem);
 
-        /*ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear selections");
-        clearSelectionsItem.addActionListener(actionMap.get("clearSelectionsAction"));
-        connectionsMenu.add(clearSelectionsItem);*/
+        ULCMenuItem clearSelectionItem = new ULCMenuItem("clear all selections");
+        clearSelectionItem.addActionListener(actionMap.get("clearSelectionAction"));
+        connectionsMenu.add(clearSelectionItem);
 
         this.setComponentPopupMenu(connectionsMenu);
     }
@@ -136,7 +126,11 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
     }
 
     @Action
-    public void clearSelectionsAction() {
+    public void clearSelectionAction() {
+        clearSelection();
+        for (ISelectionListener listener : fSelectionListeners) {
+            listener.clearSelection();
+        }
     }
 
     @Action
@@ -166,18 +160,9 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
         }
     }
 
-    protected List<Connection> getSelectedConnections() {
-        int[] selectedRows = getSelectedRows();
-        List<Connection> selectedConnection = new ArrayList<Connection>();
-        if (selectedRows != null && selectedRows.length > 0) {
-            List<Connection> allConnections = fGraphModel.getAllConnections();
-            for (int i : selectedRows) {
-                int index = convertRowIndexToModel(i);
-                selectedConnection.add(allConnections.get(index));
-            }
-        }
-        return selectedConnection;
-    }
+    /////////////////////////////////////////
+    // Implementation of ISelectionListener
+    /////////////////////////////////////////
 
     public void applyFilter(IComponentNodeFilter filter) {
         fTableModel.applyFilter(filter);
@@ -191,35 +176,60 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
         setSelectedRows(getRowIndices(selection));
     }
 
-    public List<Integer> getRowIndices(List<Connection> connections) {
+    public void clearSelection() {
+        super.clearSelection();
+    }
+
+    /////////////////////////////////////////
+    // Custom methods
+    /////////////////////////////////////////
+
+    private List<Connection> getSelectedConnections() {
+        int[] selectedRows = getSelectedRows();
+        List<Connection> selectedConnection = new ArrayList<Connection>();
+        if (selectedRows != null && selectedRows.length > 0) {
+            List<Connection> allConnections = fGraphModel.getAllConnections();
+            for (int i : selectedRows) {
+                int index = convertRowIndexToModel(i);
+                selectedConnection.add(allConnections.get(index));
+            }
+        }
+        return selectedConnection;
+    }
+
+    private List<Integer> getRowIndices(List<Connection> connections) {
         return fTableModel.getRows(connections.toArray(new Connection[0]));
     }
 
-    public List<Connection> getConnections(int[] rows) {
+    private List<Connection> getConnections(int[] rowIndices) {
         List<Connection> connections = new ArrayList<Connection>();
-        if (rows != null) {
-            for (int row : rows) {
+        if (rowIndices != null) {
+            for (int row : rowIndices) {
                 connections.add(fTableModel.getConnection(row));
             }
         }
         return connections;
     }
 
-    public void setSelectedRows(List<Integer> rowIndices) {
-        if (rowIndices.size()>0) {
-            int lower = rowIndices.get(0);
-            int upper = lower;
-            for (int i = 1; i < rowIndices.size(); i++) {
-                int row = rowIndices.get(i);
-                if (row > upper+1) {
-                    this.addRowSelectionInterval(lower, upper);
-                    lower = row;
-                    upper = lower;
-                } else {
-                    upper = row;
+    private void setSelectedRows(List<Integer> rowIndices) {
+        if (rowIndices != null) {
+            if (rowIndices.size() == 0) {
+                this.clearSelection();
+            } else {
+                int lower = rowIndices.get(0);
+                int upper = lower;
+                for (int i = 1; i < rowIndices.size(); i++) {
+                    int row = rowIndices.get(i);
+                    if (row > upper+1) {
+                        this.addRowSelectionInterval(lower, upper);
+                        lower = row;
+                        upper = lower;
+                    } else {
+                        upper = row;
+                    }
                 }
-            }
-            this.addRowSelectionInterval(lower, upper);
+                this.addRowSelectionInterval(lower, upper);
+             }
         }
     }
 }

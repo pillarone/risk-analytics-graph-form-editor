@@ -16,4 +16,6 @@ public interface ISelectionListener {
     public void setSelectedComponents(List<ComponentNode> selection);
 
     public void setSelectedConnections(List<Connection> selection);
+
+    public void clearSelection();
 }
