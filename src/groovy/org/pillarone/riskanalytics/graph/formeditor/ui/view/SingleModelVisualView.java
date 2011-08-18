@@ -1,8 +1,10 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 
+import com.canoo.ulc.graph.IGraphSelectionListener;
 import com.canoo.ulc.graph.ULCGraph;
 import com.canoo.ulc.graph.ULCGraphComponent;
+import com.canoo.ulc.graph.ULCGraphOutline;
 import com.canoo.ulc.graph.dnd.GraphTransferData;
 import com.canoo.ulc.graph.dnd.GraphTransferHandler;
 import com.canoo.ulc.graph.event.DuplicateIdException;
@@ -11,20 +13,16 @@ import com.canoo.ulc.graph.model.Edge;
 import com.canoo.ulc.graph.model.Port;
 import com.canoo.ulc.graph.model.Vertex;
 import com.canoo.ulc.graph.shared.PortConstraint;
-import com.canoo.ulc.graph.shared.PortTemplate;
 import com.canoo.ulc.graph.shared.PortType;
-import com.canoo.ulc.graph.shared.ShapeTemplate;
+import com.canoo.ulc.graph.shared.StyleType;
 import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.Action;
 import com.ulcjava.applicationframework.application.ApplicationActionMap;
 import com.ulcjava.applicationframework.application.ApplicationContext;
-import com.ulcjava.applicationframework.application.form.BeanFormDialog;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.dnd.DataFlavor;
 import com.ulcjava.base.application.dnd.Transferable;
-import com.ulcjava.base.application.event.*;
-import com.ulcjava.base.application.util.Dimension;
-import com.ulcjava.base.application.util.KeyStroke;
+import com.ulcjava.base.application.util.Color;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
@@ -34,16 +32,10 @@ import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.layout.ComponentLayout;
 import org.pillarone.riskanalytics.graph.core.layout.GraphLayoutService;
-import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
-import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeNameFormModel;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
-import org.pillarone.riskanalytics.graph.formeditor.util.GroovyUtils;
 import org.pillarone.riskanalytics.graph.formeditor.util.VisualSceneUtilities;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 public class SingleModelVisualView extends AbstractBean implements GraphModelViewable, ISelectionListener {
@@ -75,9 +67,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     }
 
     protected void createView(boolean isModel) {
-        fMainView = new ULCBoxPane(1, 1, 2, 2);
-        ULCBoxPane content = new ULCBoxPane(2, 1);
-        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, content);
         if (isModel) {
             fULCGraph = new ULCGraph();
         } else {
@@ -90,8 +79,55 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             }
         }
         fULCGraph.addGraphListener(new ULCGraphListener());
+
+        fULCGraph.getSelectionModel().addGraphSelectionListener(new IGraphSelectionListener() {
+            public void selectionChanged() {
+                Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
+                List<ComponentNode> selectedNodes = new ArrayList<ComponentNode>();
+                for (Vertex v : selectedVertices) {
+                    selectedNodes.add(fNodesMap.get(v.getId()));
+                }
+                Set<Edge> selectedEdges = fULCGraph.getSelectionModel().getSelectedEdges();
+                List<Connection> selectedConnections = new ArrayList<Connection>();
+                for (Edge e : selectedEdges) {
+                    selectedConnections.add(fConnectionsMap.get(e.getId()));
+                }
+                for (ISelectionListener listener : fSelectionListeners) {
+                    listener.setSelectedComponents(selectedNodes);
+                    listener.setSelectedConnections(selectedConnections);
+                }
+            }
+        });
         fULCGraphComponent = new ULCGraphComponent(fULCGraph);
-        content.add(ULCBoxPane.BOX_EXPAND_EXPAND, fULCGraphComponent);
+
+        // ULCBoxPane content = new ULCBoxPane(2, 1);
+        // content.add(ULCBoxPane.BOX_EXPAND_EXPAND, fULCGraphComponent);
+
+        ULCDesktopPane content = new ULCDesktopPane();
+        ULCInternalFrame graphFrame = new ULCInternalFrame();
+        graphFrame.add(fULCGraphComponent);
+        graphFrame.setMaximum(true);
+        graphFrame.setWindowDecorationStyle(ULCRootPane.NONE);
+        graphFrame.setBorder(BorderFactory.createEmptyBorder());
+        graphFrame.setVisible(true);
+
+        ULCGraphOutline satelliteView = new ULCGraphOutline(fULCGraphComponent);
+        ULCInternalFrame satelliteFrame = new ULCInternalFrame();
+        satelliteFrame.add(satelliteView);
+        satelliteFrame.setResizable(true);
+        satelliteFrame.setBounds(1000, 5, 200, 120);
+        satelliteFrame.setWindowDecorationStyle(ULCRootPane.NONE);
+        //satelliteFrame.setBorder(BorderFactory.createEmptyBorder());
+        satelliteFrame.setVisible(true);
+
+        content.add(graphFrame);
+        content.setLayer(graphFrame, 0);
+        content.add(satelliteFrame);
+        content.setLayer(satelliteFrame, 1);
+
+        fMainView = new ULCBoxPane(1, 1, 2, 2);
+        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, content);
+
         fULCGraph.upload();
         fULCGraphComponent.upload();
     }
@@ -336,16 +372,88 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
     }
 
-    public void applyFilter(IComponentNodeFilter filter) {
+    /////////////////////////////////////////
+    // Implementation of ISelectionListener
+    /////////////////////////////////////////
 
+    public void applyFilter(IComponentNodeFilter filter) {
+        for (Map.Entry<String,ComponentNode> entry : fNodesMap.entrySet()) {
+            Vertex v = fULCGraph.getVertex(entry.getKey());
+            if (filter.isSelected(entry.getValue())) {
+                v.setStyle(StyleType.fillColor, Color.yellow.toString());
+            } else {
+                v.setStyle(StyleType.fillColor, Color.white.toString());
+            }
+            fULCGraph.updateElement(v);
+        }
     }
 
     public void setSelectedComponents(List<ComponentNode> selection) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        clearVertexSelection();
+        List<Vertex> verticesToSelect = getVertices(selection);
+        fULCGraph.getSelectionModel().selectElements(verticesToSelect);
     }
 
     public void setSelectedConnections(List<Connection> selection) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        clearEdgeSelection();
+        List<Edge> edgesToSelect = getEdges(selection);
+        fULCGraph.getSelectionModel().selectElements(edgesToSelect);
+    }
+
+    public void clearSelection() {
+        clearVertexSelection();
+        clearEdgeSelection();
+        clearPortSelection();
+    }
+
+    private void clearVertexSelection() {
+        List<Vertex> selectedV = new ArrayList<Vertex>();
+        selectedV.addAll(fULCGraph.getSelectionModel().getSelectedVertices());
+        for (Vertex v : selectedV) {
+            fULCGraph.selectionRemoved(v);
+        }
+    }
+
+    private void clearEdgeSelection() {
+        List<Port> selectedP = new ArrayList<Port>();
+        selectedP.addAll(fULCGraph.getSelectionModel().getSelectedPorts());
+        for (Port p : selectedP) {
+            fULCGraph.selectionRemoved(p);
+        }
+    }
+
+    private void clearPortSelection() {
+        List<Edge> selectedE = new ArrayList<Edge>();
+        selectedE.addAll(fULCGraph.getSelectionModel().getSelectedEdges());
+        for (Edge e : selectedE) {
+            fULCGraph.selectionRemoved(e);
+        }        
+    }
+    
+    private List<Vertex> getVertices(List<ComponentNode> nodes) {
+        List<Vertex> vertices = new ArrayList<Vertex>();
+        if (nodes != null) {
+            for (Map.Entry<String,ComponentNode> entry : fNodesMap.entrySet()) {
+                if (nodes.contains(entry.getValue())) {
+                    Vertex v = fULCGraph.getVertex(entry.getKey());
+                    vertices.add(v);
+                }
+            }
+        }
+        return vertices;
+    }
+
+    private List<Edge> getEdges(List<Connection> connections) {
+        List<Edge> edges = new ArrayList<Edge>();
+        if (connections != null) {
+            for (Map.Entry<String,Connection> entry : fConnectionsMap.entrySet()) {
+                if (connections.contains(entry.getValue())) {
+                    Edge v = fULCGraph.getEdge(entry.getKey());
+                    edges.add(v);
+                }
+            }
+        }
+        return edges;
     }
 
     /**

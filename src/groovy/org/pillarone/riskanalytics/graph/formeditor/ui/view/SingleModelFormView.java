@@ -12,7 +12,6 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SingleModelFormView extends AbstractBean implements GraphModelViewable, ISelectionListener {
@@ -75,6 +74,9 @@ public class SingleModelFormView extends AbstractBean implements GraphModelViewa
         fConnectionsTable = new ConnectionsTable(fApplicationContext, fGraphModel);
         fConnectionsTable.addSelectionListener(fNodesTable);
         fConnectionsPane.setViewPortView(fConnectionsTable);
+
+        fConnectionsTable.addSelectionListener(fNodesTable);
+        fNodesTable.addSelectionListener(fConnectionsTable);
     }
 
     public void addSelectionListener(ISelectionListener selectionListener) {
@@ -91,21 +93,9 @@ public class SingleModelFormView extends AbstractBean implements GraphModelViewa
         fNodesTable.newNodeAction(componentType);
     }
 
-    List<IVertexHelpListener> vertexHelpListeners = new ArrayList<IVertexHelpListener>();
-
-    public void selectionChanged(String propertyKey) {
-        for (IVertexHelpListener helpListener : vertexHelpListeners) {
-            helpListener.updateView(propertyKey);
-        }
-    }
-
-    public void addVertexHelpListener(IVertexHelpListener listener) {
-        vertexHelpListeners.add(listener);
-    }
-
-    public void removeVertexHelpListener(IVertexHelpListener listener) {
-        vertexHelpListeners.remove(listener);
-    }
+    /////////////////////////////////////////
+    // Implementation of ISelectionListener
+    /////////////////////////////////////////
 
     public void applyFilter(IComponentNodeFilter filter) {
         fNodesTable.applyFilter(filter);
@@ -118,5 +108,10 @@ public class SingleModelFormView extends AbstractBean implements GraphModelViewa
 
     public void setSelectedConnections(List<Connection> selection) {
         fConnectionsTable.setSelectedConnections(selection);
+    }
+
+    public void clearSelection() {
+        fNodesTable.clearSelection();
+        fConnectionsTable.clearSelection();
     }
 }

@@ -63,6 +63,10 @@ public class SingleModelTextView extends AbstractBean implements GraphModelViewa
         fTextArea.setText(getGroovyCode());
     }
 
+    /////////////////////////////////////////
+    // Implementation of ISelectionListener
+    /////////////////////////////////////////
+
     public void applyFilter(IComponentNodeFilter filter) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
@@ -72,6 +76,10 @@ public class SingleModelTextView extends AbstractBean implements GraphModelViewa
     }
 
     public void setSelectedConnections(List<Connection> selection) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public void clearSelection() {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 }
