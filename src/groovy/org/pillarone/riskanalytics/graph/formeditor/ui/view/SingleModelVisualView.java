@@ -70,11 +70,11 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         if (isModel) {
             fULCGraph = new ULCGraph();
         } else {
-            fRootVertex = new Vertex("root" + System.currentTimeMillis()+Math.random());
+            fRootVertex = new Vertex("root" + System.currentTimeMillis() + Math.random());
             fRootVertex.setRectangle(new Rectangle(5, 5, 800, 500));
             try {
                 fULCGraph = new ULCGraph(fRootVertex);
-            } catch(DuplicateIdException ex) {
+            } catch (DuplicateIdException ex) {
 
             }
         }
@@ -146,7 +146,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
     public void setVisible(boolean visible) {
         fMainView.setVisible(visible);
-        if (visible && fGraphModel!=null) {
+        if (visible && fGraphModel != null) {
             updateULCGraph();
         }
     }
@@ -182,7 +182,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     }
 
     private void updateULCGraph() {
-        boolean newLayout = fNodesToBeAdded.size()>0;
+        boolean newLayout = fNodesToBeAdded.size() > 0;
         for (Vertex v : fNodesToBeAdded.keySet()) {
             try {
                 fULCGraph.addVertex(v);
@@ -377,7 +377,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     /////////////////////////////////////////
 
     public void applyFilter(IComponentNodeFilter filter) {
-        for (Map.Entry<String,ComponentNode> entry : fNodesMap.entrySet()) {
+        for (Map.Entry<String, ComponentNode> entry : fNodesMap.entrySet()) {
             Vertex v = fULCGraph.getVertex(entry.getKey());
             if (filter.isSelected(entry.getValue())) {
                 v.setStyle(StyleType.fillColor, Color.yellow.toString());
@@ -427,13 +427,13 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         selectedE.addAll(fULCGraph.getSelectionModel().getSelectedEdges());
         for (Edge e : selectedE) {
             fULCGraph.selectionRemoved(e);
-        }        
+        }
     }
-    
+
     private List<Vertex> getVertices(List<ComponentNode> nodes) {
         List<Vertex> vertices = new ArrayList<Vertex>();
         if (nodes != null) {
-            for (Map.Entry<String,ComponentNode> entry : fNodesMap.entrySet()) {
+            for (Map.Entry<String, ComponentNode> entry : fNodesMap.entrySet()) {
                 if (nodes.contains(entry.getValue())) {
                     Vertex v = fULCGraph.getVertex(entry.getKey());
                     vertices.add(v);
@@ -446,7 +446,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     private List<Edge> getEdges(List<Connection> connections) {
         List<Edge> edges = new ArrayList<Edge>();
         if (connections != null) {
-            for (Map.Entry<String,Connection> entry : fConnectionsMap.entrySet()) {
+            for (Map.Entry<String, Connection> entry : fConnectionsMap.entrySet()) {
                 if (connections.contains(entry.getValue())) {
                     Edge v = fULCGraph.getEdge(entry.getKey());
                     edges.add(v);
@@ -491,7 +491,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
 
         public void edgeAdded(@NotNull Edge edge) {
-            if (edge.getId()==null) {
+            if (edge.getId() == null) {
                 edge.setId("conn_" + System.currentTimeMillis() + "_" + Math.random());
             }
             org.pillarone.riskanalytics.graph.core.graph.model.Port outPort = getGraphPort(fULCGraph.getPort(edge.getSourceId()));
@@ -563,7 +563,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
 
         public void outerPortAdded(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
-            String id = "in_port_" + new Date().getTime() + "_"+Math.random();
+            String id = "in_port_" + new Date().getTime() + "_" + Math.random();
             Port port;
             if (p instanceof org.pillarone.riskanalytics.graph.core.graph.model.InPort) {
                 port = new Port(id, PortType.IN, p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
@@ -578,16 +578,16 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         public void outerPortRemoved(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
             Port ulcPort = null;
             Iterator<Port> it = fRootVertex.getPorts().iterator();
-            while (ulcPort==null && it.hasNext()) {
+            while (ulcPort == null && it.hasNext()) {
                 Port p0 = it.next();
-                String name = p0.getType().toString()+p0.getTitle();
-                name = name.replaceAll(" ","");
+                String name = p0.getType().toString() + p0.getTitle();
+                name = name.replaceAll(" ", "");
                 if (p.getName().equalsIgnoreCase(name)) {
                     ulcPort = p0;
                 }
             }
             if (ulcPort != null) {
-                
+
             }
         }
 
@@ -671,16 +671,18 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                     compDef = vertex.getTemplateId();
                     fCurrentPosition = vertex.getRectangle().getLocation();
                 } else {
-                // if not returned yet it has not been a vertex
-                // then it typically comes from a TypeTreeNode
-                // try to collect the information needed from there
+                    // if not returned yet it has not been a vertex
+                    // then it typically comes from a TypeTreeNode
+                    // try to collect the information needed from there
                     final Point mouseLocation = transferData.getMouseLocation();
                     compDef = transferData.getTransferString();
                     fCurrentPosition = mouseLocation;
                 }
 
                 NodeEditDialog nodeEditDialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), fGraphModel);
-                nodeEditDialog.setLocation(transferData.getMouseLocation());
+                //todo works only if the window expanded
+//                Point p = transferData.getMouseLocation();
+//                nodeEditDialog.setLocation(p.getX(), p.getY());
                 nodeEditDialog.setModal(true);
                 nodeEditDialog.setVisible(true);
                 NodeBean bean = nodeEditDialog.getBeanForm().getModel().getBean();

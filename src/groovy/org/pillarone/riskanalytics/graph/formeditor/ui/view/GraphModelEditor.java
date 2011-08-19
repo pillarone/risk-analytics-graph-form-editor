@@ -153,10 +153,9 @@ public class GraphModelEditor extends AbstractBean {
         filterView.addSearchListener(packagePalette);
         views.addCard("packagePalette", packagePalette);
 
-        final ULCGraphPalette alphabeticalPalette = new ComponentWidgetsView();
-        filterView.addSearchListener((ComponentWidgetsView) alphabeticalPalette);
+        final SortedComponentDefinitionsTree alphabeticalPalette = new SortedComponentDefinitionsTree(this);
+        filterView.addSearchListener(alphabeticalPalette);
         views.addCard("alphabeticalPalette", alphabeticalPalette);
-
 
         categoryTreeSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {

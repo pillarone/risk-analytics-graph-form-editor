@@ -1,9 +1,6 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
-import com.ulcjava.base.application.ULCAlert;
-import com.ulcjava.base.application.ULCBoxPane;
-import com.ulcjava.base.application.ULCScrollPane;
-import com.ulcjava.base.application.ULCTree;
+import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.tree.ITreeModel;
@@ -51,12 +48,12 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
             TreePath treePath = fTree.getSelectionModel().getSelectionPath();
             Object selectedNode = treePath.getLastPathComponent();
             if (selectedNode instanceof TypeTreeNode) {
-                String clazzName = ((TypeTreeNode)selectedNode).getFullName();
+                String clazzName = ((TypeTreeNode) selectedNode).getFullName();
                 try {
                     boolean success = fParent.importComponentType(clazzName);
                     if (!success) {
                         ULCAlert alert = new ULCAlert("No class loaded",
-                            "No class with name " + clazzName + " could be loaded as graph model.", "ok");
+                                "No class with name " + clazzName + " could be loaded as graph model.", "ok");
                         alert.show();
                     }
                 } catch (ClassNotFoundException ex1) {
