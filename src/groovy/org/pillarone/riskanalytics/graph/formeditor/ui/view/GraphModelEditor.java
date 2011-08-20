@@ -50,7 +50,7 @@ public class GraphModelEditor extends AbstractBean {
     /* The editor view.*/
     private ULCCloseableTabbedPane fEditorArea;
     /* Set of currently opened type defs - check that type defs does not already exist. */
-    private Set<TypeDefinitionBean> fTypeDefinitions;
+    private Set<TypeDefinitionBean> fEditedTypeDefinitions;
     /* Is used for remembering what types have already been declared */
     private Map<ULCComponent, SingleModelMultiEditView> fModelTabs;
     /* A dialog for new models or composed components to be created.*/
@@ -69,7 +69,7 @@ public class GraphModelEditor extends AbstractBean {
      */
     public GraphModelEditor(ApplicationContext context) {
         fContext = context;
-        fTypeDefinitions = new HashSet<TypeDefinitionBean>();
+        fEditedTypeDefinitions = new HashSet<TypeDefinitionBean>();
         fModelTabs = new HashMap<ULCComponent, SingleModelMultiEditView>();
     }
 
@@ -195,7 +195,7 @@ public class GraphModelEditor extends AbstractBean {
         fEditorArea.addTab(typeDef.getName(), modelView.getView());
         fEditorArea.setSelectedIndex(fEditorArea.getComponentCount() - 1);
         fEditorArea.setToolTipTextAt(fEditorArea.getComponentCount() - 1, model.getPackageName() + "." + model.getName());
-        fTypeDefinitions.add(typeDef);
+        fEditedTypeDefinitions.add(typeDef);
         //fModelRepositoryTree.getTreeModel().addNode(model);
     }
 
@@ -215,7 +215,7 @@ public class GraphModelEditor extends AbstractBean {
      */
     private void showTypeDefinitionDialog() {
         if (fTypeDefView == null) {
-            fTypeDefView = new TypeDefinitionDialog(UlcUtilities.getWindowAncestor(fEditorArea), fTypeDefinitions);
+            fTypeDefView = new TypeDefinitionDialog(UlcUtilities.getWindowAncestor(fEditorArea), fEditedTypeDefinitions);
             IActionListener newModelListener = new IActionListener() {
 
                 public void actionPerformed(ActionEvent event) {
@@ -378,7 +378,7 @@ public class GraphModelEditor extends AbstractBean {
     public void simulateAction() {
         ULCComponent comp = fEditorArea.getSelectedComponent();
         if (comp != null) {
-            fModelTabs.get(comp).simulateAction();
+            fModelTabs.get(comp).simulateAction(false);
         }
     }
 
