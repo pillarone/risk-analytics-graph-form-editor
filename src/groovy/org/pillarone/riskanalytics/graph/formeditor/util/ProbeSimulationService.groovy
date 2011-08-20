@@ -44,7 +44,7 @@ class ProbeSimulationService extends SimulationRunner {
         simulation.id = "$time"
         simulation.numberOfIterations = 1
         simulation.beginOfFirstPeriod = new DateTime(time)
-        simulation.randomSeed = time
+        simulation.randomSeed = Math.abs(new Long(time).intValue())
         simulation.modelClass = model.class
         simulation.periodCount = 1
         simulation.parameterization = parametrization
@@ -198,7 +198,7 @@ class ProbeSimulationService extends SimulationRunner {
                 DateTime date = packet?.date != null ? packet.date : collector.simulationScope.iterationScope.periodScope.currentPeriodStartDate
                 int iteration = collector.simulationScope.iterationScope.currentIteration
                 PathMapping path = new PathMapping(pathName: collector.path)
-                for (Entry<String, Number> entry : packet.getValuesToSave().entrySet()){
+                for (Map.Entry<String, Number> entry : packet.getValuesToSave().entrySet()){
                     SingleValueResultPOJO singleValue = new SingleValueResultPOJO()
                     singleValue.setIteration(iteration)
                     singleValue.setPeriod(period)
