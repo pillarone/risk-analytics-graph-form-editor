@@ -68,8 +68,8 @@ public class NodeEditDialog extends ULCDialog {
         };
         fCancel.addActionListener(cancelAction);
         fBeanForm.addToButtons(fCancel);
-        KeyStroke esc = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
-        form.registerKeyboardAction(esc, cancelAction);
+        /*KeyStroke esc = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
+        form.registerKeyboardAction(esc, cancelAction);*/
 
         // ok
         IActionListener action = new IActionListener() {
