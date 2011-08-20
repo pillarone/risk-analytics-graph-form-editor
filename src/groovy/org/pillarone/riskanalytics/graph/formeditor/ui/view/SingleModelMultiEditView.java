@@ -16,7 +16,9 @@ import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.event.KeyEvent;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.KeyStroke;
+import org.pillarone.riskanalytics.core.simulation.engine.SimulationRunner;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
+import org.pillarone.riskanalytics.core.util.MathUtils;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.ComponentNodeFilterFactory;
@@ -41,6 +43,8 @@ public class SingleModelMultiEditView extends AbstractBean {
     private ULCCloseableTabbedPane fDataSetSheets;
     private ULCCloseableTabbedPane fResultSheets;
 
+    private IActionListener f9_pressed;
+
     public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model) {
         super();
         fApplicationContext = ctx;
@@ -48,26 +52,6 @@ public class SingleModelMultiEditView extends AbstractBean {
         createView(isModel);
         injectGraphModel(model);
     }
-
-    /*private ULCToolBar createToolBar() {
-        String[] actionNames = new String[]{"saveAction", "exportToApplication"};
-        ULCToolBar toolBar = new ULCToolBar(ULCToolBar.HORIZONTAL);
-        toolBar.setFloatable(false);
-        ApplicationActionMap actionMap = fApplicationContext.getActionMap(this);
-        for (String actionName : actionNames) {
-            IAction action = actionMap.get(actionName);
-            ULCButton button = new ULCButton();
-            button.setAction(action);
-            button.setName(actionName + ".ToolBarButton");
-            button.setVerticalTextPosition(ULCButton.BOTTOM);
-            button.setHorizontalTextPosition(ULCButton.CENTER);
-            button.setFocusable(false);
-            button.setMargin(new Insets(0, 15, 0, 15));
-            button.setBorderPainted(false);
-            toolBar.add(button);
-        }
-        return toolBar;
-    }*/
 
     public void createView(boolean isModel) {
         fMainView = new ULCBoxPane(true, 1);
@@ -276,6 +260,13 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         splitPane.setBottomComponent(lower);
         fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane);
+
+        f9_pressed = new IActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                simulateAction(false);
+            }
+        };
+        results.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_FOCUSED);
     }
 
     public void injectGraphModel(AbstractGraphModel model) {
@@ -313,16 +304,23 @@ public class SingleModelMultiEditView extends AbstractBean {
                 dataTable = new DataTable((ModelGraphModel) fGraphModel, p);
             }
             fDataSetSheets.addTab(name, dataTable);
+            fDataSetSheets.setSelectedIndex(fDataSetSheets.getTabCount()-1);
         }
     }
 
-    public void addSimulationResult(Map output, String name) {
+    public void addSimulationResult(Map output, String name, boolean inNewTab) {
         SimulationResultTable resultTable = new SimulationResultTable(output);
         ULCScrollPane resultScrollPane = new ULCScrollPane(resultTable);
         ULCBoxPane resultTablePane = new ULCBoxPane(true);
         resultTablePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, resultScrollPane);
         resultTablePane.setBorder(BorderFactory.createEmptyBorder());
-        fResultSheets.addTab(name, resultTablePane);
+        if (inNewTab || fResultSheets.getTabCount()==0) {
+            fResultSheets.addTab(name, resultTablePane);
+        } else {
+            int index = fResultSheets.getSelectedIndex();
+            fResultSheets.setComponentAt(index, resultTablePane);
+        }
+        resultTablePane.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_FOCUSED);
     }
 
     public Parameterization getSelectedParametrization() {
@@ -345,16 +343,17 @@ public class SingleModelMultiEditView extends AbstractBean {
     }
 
     @Action
-    public void simulateAction() {
+    public void simulateAction(boolean newTab) {
         if (fGraphModel instanceof ModelGraphModel) {
             ModelGraphModel model = (ModelGraphModel) fGraphModel;
             Parameterization parametrization = this.getSelectedParametrization();
             if (parametrization != null) {
                 ProbeSimulationService simulationService = new ProbeSimulationService();
                 try {
-                    simulationService.getSimulationRunner(model, parametrization).start();
+                    SimulationRunner runner = simulationService.getSimulationRunner(model, parametrization);
+                    runner.start();
                     Map output = simulationService.getOutput();
-                    this.addSimulationResult(output, "results");
+                    this.addSimulationResult(output, "results", newTab);
                 } catch (Exception ex) {
                     ULCAlert alert = new ULCAlert("Simulation failed",
                             "Reason: " + ex.getMessage(), "ok");
