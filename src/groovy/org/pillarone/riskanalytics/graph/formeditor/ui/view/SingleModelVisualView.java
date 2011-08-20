@@ -77,7 +77,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             fRootVertex.setRectangle(new Rectangle(5, 5, 1200, 500));
             try {
                 fULCGraph = new ULCGraph(fRootVertex);
-            } catch(DuplicateIdException ex) {
+            } catch (DuplicateIdException ex) {
 
             }
         }
@@ -163,7 +163,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
     public void setVisible(boolean visible) {
         fMainView.setVisible(visible);
-        if (visible && fGraphModel!=null) {
+        if (visible && fGraphModel != null) {
             updateULCGraph();
         }
     }
@@ -856,9 +856,9 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                     compDef = vertex.getTemplateId();
                     fCurrentPosition = vertex.getRectangle().getLocation();
                 } else {
-                // if not returned yet it has not been a vertex
-                // then it typically comes from a TypeTreeNode
-                // try to collect the information needed from there
+                    // if not returned yet it has not been a vertex
+                    // then it typically comes from a TypeTreeNode
+                    // try to collect the information needed from there
                     final Point mouseLocation = transferData.getMouseLocation();
                     compDef = transferData.getTransferString();
                     fCurrentPosition = mouseLocation;

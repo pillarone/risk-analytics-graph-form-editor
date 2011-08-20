@@ -16,7 +16,7 @@ public class ComponentTypeTreeModelFactory {
     public static DefaultTreeModel getCategoryTree() {
         PaletteService service = PaletteService.getInstance();
         List<ComponentDefinition> componentDefinitions = service.getAllComponentDefinitions();
-        Map<String,List<ComponentDefinition>> categoryMap = new HashMap<String,List<ComponentDefinition>>();
+        Map<String, List<ComponentDefinition>> categoryMap = new HashMap<String, List<ComponentDefinition>>();
         for (ComponentDefinition cd : componentDefinitions) {
             List<String> categories = service.getCategoriesFromDefinition(cd);
             for (String c : categories) {
@@ -26,9 +26,9 @@ public class ComponentTypeTreeModelFactory {
                 categoryMap.get(c).add(cd);
             }
         }
-        TypeTreeNode root = new TypeTreeNode("","Categories");
+        TypeTreeNode root = new TypeTreeNode("", "Categories");
         root.setLeaf(false);
-        for (Map.Entry<String,List<ComponentDefinition>> category : categoryMap.entrySet()) {
+        for (Map.Entry<String, List<ComponentDefinition>> category : categoryMap.entrySet()) {
             TypeTreeNode categoryNode = new TypeTreeNode("", category.getKey());
             categoryNode.setLeaf(false);
             root.add(categoryNode);
@@ -61,6 +61,22 @@ public class ComponentTypeTreeModelFactory {
             addNode(root, "", componentDef);
         }
         return new DefaultTreeModel(root);
+    }
+
+    public static DefaultTreeModel getSortedComponentDefinitionsTreeModel() {
+        List<ComponentDefinition> componentDefinitions = PaletteService.getInstance().getAllComponentDefinitions();
+        TypeTreeNode root = new TypeTreeNode("", "root");
+        root.setLeaf(false);
+        for (ComponentDefinition componentDef : componentDefinitions) {
+            addNode(root,  componentDef);
+        }
+        return new DefaultTreeModel(root);
+    }
+
+    private static void addNode(TypeTreeNode parent, ComponentDefinition cd) {
+        TypeTreeNode node = new TypeTreeNode(cd);
+        node.setLeaf(true);
+        parent.add(node);
     }
 
     private static void addNode(TypeTreeNode parent, String parentPath, ComponentDefinition cd) {

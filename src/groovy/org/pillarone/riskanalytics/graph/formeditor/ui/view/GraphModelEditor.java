@@ -13,6 +13,8 @@ import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.event.KeyEvent;
 import com.ulcjava.base.application.util.*;
 import com.ulcjava.base.shared.FileChooserConfig;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.model.Model;
@@ -45,6 +47,9 @@ import java.util.Set;
  * @author martin.melchior
  */
 public class GraphModelEditor extends AbstractBean {
+
+    private static Log LOG = LogFactory.getLog(GraphModelEditor.class);
+
     /* Context is needed to load resources (such as icons, etc).*/
     private ApplicationContext fContext;
     /* The editor view.*/
@@ -153,10 +158,9 @@ public class GraphModelEditor extends AbstractBean {
         filterView.addSearchListener(packagePalette);
         views.addCard("packagePalette", packagePalette);
 
-        final ULCGraphPalette alphabeticalPalette = new ComponentWidgetsView();
-        filterView.addSearchListener((ComponentWidgetsView) alphabeticalPalette);
+        final SortedComponentDefinitionsTree alphabeticalPalette = new SortedComponentDefinitionsTree(this);
+        filterView.addSearchListener(alphabeticalPalette);
         views.addCard("alphabeticalPalette", alphabeticalPalette);
-
 
         categoryTreeSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
@@ -459,17 +463,14 @@ public class GraphModelEditor extends AbstractBean {
     @Action
     public void exportModelToApplicationAction() {
         AbstractGraphModel model = getSelectedModel();
-        if (model instanceof ModelGraphModel) {
-            try {
-                GraphModelUtilities.exportToApplication((ModelGraphModel) model);
-            } catch (Exception ex) {
-                ULCAlert alert = new ULCAlert("Model not deployed.", "Model could not be deployed. Reason: " + ex.getMessage(), "ok");
-                alert.show();
-            }
-        } else {
-            ULCAlert alert = new ULCAlert("Graph Model cannot be deployed.", "Graph model is a ComposedComponent - these cannot be deployed and run.", "ok");
+        try {
+            GraphModelUtilities.exportToApplication(model);
+        } catch (Exception ex) {
+            ULCAlert alert = new ULCAlert("Model not deployed.", "Model could not be deployed. Reason: " + ex.getMessage(), "ok");
             alert.show();
+            LOG.error("Model could not be deployed", ex);
         }
+
     }
 
     protected ApplicationActionMap getActionMap() {

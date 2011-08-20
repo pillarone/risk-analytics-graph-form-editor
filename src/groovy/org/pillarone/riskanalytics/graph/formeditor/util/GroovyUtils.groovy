@@ -9,14 +9,15 @@ import org.pillarone.riskanalytics.core.packets.PacketList
 import org.pillarone.riskanalytics.graph.core.loader.ClassRepository
 import org.pillarone.riskanalytics.graph.core.loader.DatabaseClassLoader
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
+import org.pillarone.riskanalytics.graph.core.loader.ClassType
 
 class GroovyUtils {
 
-    public static Class persistClass(byte[] data, String name) {
+    public static Class persistClass(ClassType classType, byte[] data, String name) {
         DatabaseClassLoader classLoader = Thread.currentThread().contextClassLoader
         synchronized (classLoader) {
             ClassRepository.withTransaction {
-                new ClassRepository(name: name, data: data).save()
+                new ClassRepository(name: name, data: data, classType: classType).save()
             }
             classLoader.refresh()
         }

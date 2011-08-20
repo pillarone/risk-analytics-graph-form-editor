@@ -1,11 +1,13 @@
 package org.pillarone.riskanalytics.graph.formeditor.util;
 
+import org.apache.tools.ant.taskdefs.optional.PropertyFile;
 import org.pillarone.riskanalytics.core.model.registry.ModelRegistry;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.graphexport.AbstractGraphExport;
 import org.pillarone.riskanalytics.graph.core.graphexport.ComposedComponentGraphExport;
 import org.pillarone.riskanalytics.graph.core.graphexport.GraphExportService;
 import org.pillarone.riskanalytics.graph.core.graphexport.ModelGraphExport;
+import org.pillarone.riskanalytics.graph.core.loader.ClassType;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 
@@ -140,20 +142,33 @@ public class GraphModelUtilities {
         return modelText;
     }
 
-    public static void exportToApplication(ModelGraphModel model) {
+    public static void exportToApplication(AbstractGraphModel model) {
         GraphExportService graphExportService = new GraphExportService();
         Map<String, byte[]> stringMap = graphExportService.exportGraphToBinary(model);
-        String name = null;
-        byte[] data = null;
+
+        String className = model.getPackageName() + "." + model.getName();
+        Class modelClass = null;
+
         for (Map.Entry<String, byte[]> entry : stringMap.entrySet()) {
-            name = entry.getKey();
-            data = entry.getValue();
+            String name = entry.getKey();
+            byte[] data = entry.getValue();
+
+            if (entry.getKey().equals(className)) {
+                modelClass = GroovyUtils.persistClass((model instanceof ModelGraphModel ? ClassType.MODEL : ClassType.COMPONENT), data, name);
+            } else {
+                GroovyUtils.persistClass(ClassType.DEPENDENCY, data, name);
+            }
         }
-        Class clazz = GroovyUtils.persistClass(data, name);
-        ModelRegistry.getInstance().addModel(clazz);
+        if (model instanceof ModelGraphModel) {
+            ModelRegistry.getInstance().addModel(modelClass);
+        } else {
+            final ComponentDefinition componentDefinition = new ComponentDefinition();
+            componentDefinition.setTypeClass(modelClass);
+            PaletteService.getInstance().addComponentDefinition(componentDefinition);
+        }
     }
 
-    public static <S,T> Map<S, T> invertMap(Map<T, S> map) {
+    public static <S, T> Map<S, T> invertMap(Map<T, S> map) {
         HashMap<S, T> inverse = new HashMap<S, T>();
         for (Map.Entry<T, S> entry : map.entrySet()) {
             inverse.put(entry.getValue(), entry.getKey());
@@ -161,7 +176,7 @@ public class GraphModelUtilities {
         return inverse;
     }
 
-    public static HashMap<String, List<ComponentNode>> getComponentPaths(Map<String,ComponentNode> nodesMap) {
+    public static HashMap<String, List<ComponentNode>> getComponentPaths(Map<String, ComponentNode> nodesMap) {
         HashMap<String, List<ComponentNode>> paths = new HashMap<String, List<ComponentNode>>();
         for (Map.Entry<String, ComponentNode> entry : nodesMap.entrySet()) {
             List<ComponentNode> tmpList;

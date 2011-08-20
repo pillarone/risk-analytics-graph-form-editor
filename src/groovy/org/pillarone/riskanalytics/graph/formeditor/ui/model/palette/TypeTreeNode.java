@@ -69,6 +69,6 @@ public class TypeTreeNode extends DefaultMutableTreeNode implements Comparable<T
         if (index==0) {
             index = this.fParentPath.compareTo(o.getParentPath());
         }
-        return index;  
+        return index;
     }
 }
