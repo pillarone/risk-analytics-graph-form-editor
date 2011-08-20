@@ -51,8 +51,13 @@ public class VisualSceneUtilities {
     public static boolean isConsistentPort(Port ulcPort, org.pillarone.riskanalytics.graph.core.graph.model.Port graphModelPort) {
         boolean isConsistent = ulcPort.getTitle().equals(UIUtils.formatDisplayName(graphModelPort.getName()));
         if (isConsistent) {
-            isConsistent = ulcPort.getType()==PortType.IN && graphModelPort instanceof InPort
+            if (graphModelPort.isComposedComponentOuterPort()) {
+                isConsistent = ulcPort.getType()==PortType.REPLICATE_IN && graphModelPort instanceof InPort
+                                        || ulcPort.getType()==PortType.REPLICATE_OUT && graphModelPort instanceof OutPort;
+            } else {
+                isConsistent = ulcPort.getType()==PortType.IN && graphModelPort instanceof InPort
                                         || ulcPort.getType()==PortType.OUT && graphModelPort instanceof OutPort;
+            }
         }
         return isConsistent;
     }
