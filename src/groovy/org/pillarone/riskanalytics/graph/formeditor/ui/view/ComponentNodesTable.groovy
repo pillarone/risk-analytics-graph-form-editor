@@ -40,6 +40,7 @@ import com.ulcjava.base.application.dnd.Transferable
 import com.ulcjava.base.application.dnd.DataFlavor
 import com.ulcjava.base.application.dnd.DnDTreeData
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean
 
 /**
  *
@@ -271,20 +272,17 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
             List<Port> ports = getSelectedPorts()
             if (ports != null && ports.size() == 1) {
                 Port p = ports.get(0);
-                Class packetType = p.getPacketType()
                 ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel
                 if (ccGraphModel.isReplicated(p)) {
                     ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(this),"Port already replicated.",
                             "Port is already replicated.", "ok")
                     alert.show()
-                } else if (p instanceof InPort) {
-                    InPort inPort = (InPort) p
-                    InPort outerInPort = ccGraphModel.createOuterInPort(packetType, p.getName())
-                    ccGraphModel.createConnection(outerInPort, inPort)
                 } else {
-                    OutPort outPort = (OutPort) p
-                    OutPort outerOutPort = ccGraphModel.createOuterOutPort(packetType, p.getName())
-                    ccGraphModel.createConnection(outPort, outerOutPort)
+                    PortNameDialog dialog = new PortNameDialog(UlcUtilities.getWindowAncestor(this), ccGraphModel, p)
+                    dialog.setModal(true);
+                    NameBean bean = dialog.getBeanForm().getModel().getBean();
+                    bean.setName(p.getName());
+                    dialog.setVisible(true)
                 }
             }
         }
@@ -388,6 +386,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
             if (selectedPaths.length==0) {
                 this.clearSelection()
             } else {
+                //getSelectionModel().set
                 setPathSelection(selectedPaths)
             }
         }
