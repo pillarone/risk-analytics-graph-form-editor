@@ -1,8 +1,6 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
-import com.ulcjava.applicationframework.application.form.AbstractFormBuilder;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataNameFormModel;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeNameFormModel;
 
 public class DataNameForm extends AbstractRegistryFormBuilder<DataNameFormModel> {
 
