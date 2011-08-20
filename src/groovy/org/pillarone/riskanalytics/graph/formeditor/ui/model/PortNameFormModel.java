@@ -3,20 +3,19 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.model;
 import com.ulcjava.applicationframework.application.form.model.FormModel;
 import com.ulcjava.applicationframework.application.form.model.IValidator;
 import com.ulcjava.applicationframework.application.form.model.PropertyValidator;
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
+import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.checkers.PropertySpellChecker;
 
 /**
  * @author martin.melchior
  */
-public class NodeNameFormModel extends FormModel<NameBean> {
+public class PortNameFormModel extends FormModel<NameBean> {
 
-    private AbstractGraphModel fGraphModel;
+    private ComposedComponentGraphModel fGraphModel;
     private String fNodeName;
 
-    public NodeNameFormModel(NameBean bean, AbstractGraphModel graphModel) {
+    public PortNameFormModel(NameBean bean, ComposedComponentGraphModel graphModel) {
         super(bean);
         fGraphModel = graphModel;
     }
@@ -48,8 +47,13 @@ public class NodeNameFormModel extends FormModel<NameBean> {
         /**
          */
         public String validateValue(String value) {
-            for (ComponentNode n : fGraphModel.getAllComponentNodes()) {
-                if (n.getName().equals(value)) {
+            for (InPort p : fGraphModel.getOuterInPorts()) {
+                if (p.getName().equals(value)) {
+                    return "Name already " + value + " already exists.";
+                }
+            }
+            for (OutPort p : fGraphModel.getOuterOutPorts()) {
+                if (p.getName().equals(value)) {
                     return "Name already " + value + " already exists.";
                 }
             }
