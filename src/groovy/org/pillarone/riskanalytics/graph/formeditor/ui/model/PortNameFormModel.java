@@ -47,6 +47,7 @@ public class PortNameFormModel extends FormModel<NameBean> {
         /**
          */
         public String validateValue(String value) {
+            if (value == null || "".equals(value)) return "Not valid name";
             for (InPort p : fGraphModel.getOuterInPorts()) {
                 if (p.getName().equals(value)) {
                     return "Name already " + value + " already exists.";
