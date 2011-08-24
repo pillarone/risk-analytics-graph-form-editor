@@ -227,7 +227,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         try {
             fULCGraph.addVertex(vertices);
             for (Vertex v : vertices) {
-                fULCGraphComponent.shrinkVertex(v);
+                fULCGraphComponent.autoAdjustVertexSize(v);
             }
         } catch (Exception ex) {
             System.out.println("Problem occurred while adding a vertex to ULC graph: \n" + ex.getMessage());
@@ -675,7 +675,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 vertex.setId("noname_" + System.currentTimeMillis() + Math.random());
                 fULCGraph.removeVertex(vertex);
             } else {
-                fULCGraphComponent.shrinkVertex(vertex);
+                fULCGraphComponent.autoAdjustVertexSize(vertex);
             }
         }
 
@@ -719,7 +719,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 fNodesMap.put(vertex.getId(), node);
                 try {
                     fULCGraph.addVertex(vertex);
-                    fULCGraphComponent.shrinkVertex(vertex);
+                    fULCGraphComponent.autoAdjustVertexSize(vertex);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
