@@ -235,9 +235,9 @@ class FilteringTableTreeModel extends AbstractTableTreeModel implements ITableTr
     protected boolean isAcceptedNode(ITableTreeNode node) {
         boolean nodeAccepted = false
         if (node instanceof GraphElementNode) {
-            GraphElement element = ((GraphElementNode)node).element
-            if (element instanceof ComponentNode) {
-                nodeAccepted = filter.isSelected((ComponentNode) element)
+            GraphElement element = ((GraphElementNode) node).element
+            if ((element instanceof ComponentNode) || (element instanceof Port)) {
+                nodeAccepted = filter.isSelected(element)
             } else {
                 if (node.parent && isAcceptedNode(node.parent)) {
                     nodeAccepted = true
