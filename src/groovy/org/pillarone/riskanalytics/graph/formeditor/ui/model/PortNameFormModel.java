@@ -13,11 +13,16 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.checkers.PropertySp
 public class PortNameFormModel extends FormModel<NameBean> {
 
     private ComposedComponentGraphModel fGraphModel;
-    private String fNodeName;
+    private String portType;
 
     public PortNameFormModel(NameBean bean, ComposedComponentGraphModel graphModel) {
         super(bean);
         fGraphModel = graphModel;
+    }
+
+    public PortNameFormModel(NameBean bean, ComposedComponentGraphModel graphModel, String portType) {
+        this(bean, graphModel);
+        this.portType = portType;
     }
 
     /**
@@ -30,7 +35,7 @@ public class PortNameFormModel extends FormModel<NameBean> {
      */
     @Override
     protected IValidator[] createValidators() {
-        return new IValidator[]{new PropertySpellChecker("name"), new AvailabilityChecker()};
+        return new IValidator[]{new PropertySpellChecker("name"), new AvailabilityChecker(), new PortTypeChecker()};
     }
 
     /**
@@ -47,7 +52,6 @@ public class PortNameFormModel extends FormModel<NameBean> {
         /**
          */
         public String validateValue(String value) {
-            if (value == null || "".equals(value)) return "Not valid name";
             for (InPort p : fGraphModel.getOuterInPorts()) {
                 if (p.getName().equals(value)) {
                     return "Name already " + value + " already exists.";
@@ -58,6 +62,21 @@ public class PortNameFormModel extends FormModel<NameBean> {
                     return "Name already " + value + " already exists.";
                 }
             }
+            return null;
+        }
+    }
+
+    private class PortTypeChecker extends PropertyValidator<String> {
+
+        public PortTypeChecker() {
+            super("name");
+        }
+
+        @Override
+        public String validateValue(String value) {
+            if (portType == null) return null;
+            if (!(value != null && value.startsWith(portType) && value.length() > portType.length()))
+                return "Not valid Name";
             return null;
         }
     }

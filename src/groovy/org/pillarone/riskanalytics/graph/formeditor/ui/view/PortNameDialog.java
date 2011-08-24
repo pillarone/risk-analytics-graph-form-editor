@@ -23,6 +23,7 @@ public class PortNameDialog extends ULCDialog {
 
     public PortNameDialog(ULCWindow parent, ComposedComponentGraphModel graphModel, Port port) {
         super(parent);
+        fPort = port;
         boolean metalLookAndFeel = "Metal".equals(ClientContext.getLookAndFeelName());
         if (!metalLookAndFeel && ClientContext.getLookAndFeelSupportsWindowDecorations()) {
             setUndecorated(true);
@@ -33,12 +34,12 @@ public class PortNameDialog extends ULCDialog {
         createBeanView();
         setTitle("Port Name");
         setLocationRelativeTo(parent);
-        fPort = port;
+
     }
 
     @SuppressWarnings("serial")
     private void createBeanView() {
-        PortNameFormModel formModel = new PortNameFormModel(new NameBean(), fGraphModel);
+        PortNameFormModel formModel = new PortNameFormModel(new NameBean(), fGraphModel, fPort.getPrefix());
         PortNameForm form = new PortNameForm(formModel);
         fBeanForm = new BeanFormDialog<PortNameFormModel>(form);
         add(fBeanForm.getContentPane());
@@ -53,7 +54,7 @@ public class PortNameDialog extends ULCDialog {
 
         IActionListener saveActionListener = new IActionListener() {
             public void actionPerformed(ActionEvent event) {
-                if (fBeanForm.getModel().hasErrors()) return;
+                if (!validate()) return;
                 NameBean bean = (NameBean) fBeanForm.getModel().getBean();
                 boolean isInPort = fPort instanceof InPort;
                 Class packetType = fPort.getPacketType();
@@ -68,6 +69,13 @@ public class PortNameDialog extends ULCDialog {
                     fGraphModel.createConnection(fPort, replicate);
                 }
                 setVisible(false);
+            }
+
+            private boolean validate() {
+                if (fBeanForm.getModel().hasErrors()) return false;
+                if (Port.IN_PORT_PREFIX.equals(fBeanForm.getModel().getBean().getName())) return false;
+                if (Port.OUT_PORT_PREFIX.equals(fBeanForm.getModel().getBean().getName())) return false;
+                return true;
             }
         };
         fBeanForm.addSaveActionListener(saveActionListener);

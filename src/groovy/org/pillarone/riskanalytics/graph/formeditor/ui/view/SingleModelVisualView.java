@@ -309,7 +309,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 PortNameDialog dialog = new PortNameDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), ccGraphModel, graphPort);
                 dialog.setModal(true);
                 NameBean bean = dialog.getBeanForm().getModel().getBean();
-                bean.setName(graphPort.getName());
+                bean.setName(graphPort.getPrefix());
                 dialog.setVisible(true);
             }
         }
