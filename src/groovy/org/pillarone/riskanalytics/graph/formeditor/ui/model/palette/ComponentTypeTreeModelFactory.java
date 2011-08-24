@@ -2,12 +2,10 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.model.palette;
 
 import com.ulcjava.base.application.tree.DefaultTreeModel;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
+import org.pillarone.riskanalytics.graph.core.palette.service.IPaletteServiceListener;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ComponentTypeTreeModelFactory {
 
@@ -65,10 +63,11 @@ public class ComponentTypeTreeModelFactory {
 
     public static DefaultTreeModel getSortedComponentDefinitionsTreeModel() {
         List<ComponentDefinition> componentDefinitions = PaletteService.getInstance().getAllComponentDefinitions();
-        TypeTreeNode root = new TypeTreeNode("", "root");
+        Collections.sort(componentDefinitions, new ComponentDefinitionComparator());
+        final TypeTreeNode root = new TypeTreeNode("", "root");
         root.setLeaf(false);
         for (ComponentDefinition componentDef : componentDefinitions) {
-            addNode(root,  componentDef);
+            addNode(root, componentDef);
         }
         return new DefaultTreeModel(root);
     }
@@ -110,5 +109,11 @@ public class ComponentTypeTreeModelFactory {
         TypeTreeNode node = new TypeTreeNode(parentPath, name);
         parent.add(node);
         return node;
+    }
+
+    public static class ComponentDefinitionComparator implements Comparator<ComponentDefinition> {
+        public int compare(ComponentDefinition o1, ComponentDefinition o2) {
+            return o1.getTypeClass().getName().compareTo(o2.getTypeClass().getName());
+        }
     }
 }
