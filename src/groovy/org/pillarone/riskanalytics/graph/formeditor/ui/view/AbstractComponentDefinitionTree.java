@@ -3,18 +3,24 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
+import com.ulcjava.base.application.table.ITableModel;
+import com.ulcjava.base.application.tabletree.DefaultTableTreeModel;
+import com.ulcjava.base.application.tree.DefaultTreeModel;
 import com.ulcjava.base.application.tree.ITreeModel;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.tree.ULCTreeSelectionModel;
 import com.ulcjava.base.application.util.Dimension;
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
+import org.pillarone.riskanalytics.graph.core.palette.service.IPaletteServiceListener;
+import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.FilteringTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 
 public abstract class AbstractComponentDefinitionTree extends ULCBoxPane implements  ISearchListener{
 
-    private ITreeModel fTreeModel;
-    private ULCTree fTree;
-    private GraphModelEditor fParent; // TODO: this is somewhat ugly
+    protected ITreeModel fTreeModel;
+    protected ULCTree fTree;
+    protected GraphModelEditor fParent; // TODO: this is somewhat ugly
 
     public AbstractComponentDefinitionTree(GraphModelEditor parent) {
         super();
@@ -23,7 +29,22 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
         createView();
     }
 
-    protected abstract ITreeModel getTreeModel();
+    protected ITreeModel getTreeModel() {
+        final FilteringTreeModel treeModel = new FilteringTreeModel(createTreeModel());
+        PaletteService.getInstance().addPaletteServiceListener(new IPaletteServiceListener() {
+
+            public void componentDefinitionAdded(ComponentDefinition definition) {
+                insertNodeForComponentDefinition(definition);
+                treeModel.applyFilter();
+            }
+
+        });
+        return treeModel;
+    }
+
+    protected abstract DefaultTreeModel createTreeModel();
+
+    protected abstract void insertNodeForComponentDefinition(ComponentDefinition definition);
 
     private void createView() {
         // create tree

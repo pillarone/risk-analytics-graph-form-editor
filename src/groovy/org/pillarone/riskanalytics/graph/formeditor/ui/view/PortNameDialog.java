@@ -5,10 +5,8 @@ import com.ulcjava.base.application.ClientContext;
 import com.ulcjava.base.application.ULCButton;
 import com.ulcjava.base.application.ULCDialog;
 import com.ulcjava.base.application.ULCWindow;
-import com.ulcjava.base.application.event.ActionEvent;
-import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.event.IWindowListener;
-import com.ulcjava.base.application.event.WindowEvent;
+import com.ulcjava.base.application.event.*;
+import com.ulcjava.base.application.util.KeyStroke;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ConnectionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.PortNameFormModel;
@@ -25,6 +23,7 @@ public class PortNameDialog extends ULCDialog {
 
     public PortNameDialog(ULCWindow parent, ComposedComponentGraphModel graphModel, Port port) {
         super(parent);
+        fPort = port;
         boolean metalLookAndFeel = "Metal".equals(ClientContext.getLookAndFeelName());
         if (!metalLookAndFeel && ClientContext.getLookAndFeelSupportsWindowDecorations()) {
             setUndecorated(true);
@@ -35,12 +34,12 @@ public class PortNameDialog extends ULCDialog {
         createBeanView();
         setTitle("Port Name");
         setLocationRelativeTo(parent);
-        fPort = port;
+
     }
 
     @SuppressWarnings("serial")
     private void createBeanView() {
-        PortNameFormModel formModel = new PortNameFormModel(new NameBean(), fGraphModel);
+        PortNameFormModel formModel = new PortNameFormModel(new NameBean(), fGraphModel, fPort.getPrefix());
         PortNameForm form = new PortNameForm(formModel);
         fBeanForm = new BeanFormDialog<PortNameFormModel>(form);
         add(fBeanForm.getContentPane());
@@ -53,8 +52,9 @@ public class PortNameDialog extends ULCDialog {
         });
         fBeanForm.addToButtons(fCancel);
 
-        fBeanForm.addSaveActionListener(new IActionListener() {
+        IActionListener saveActionListener = new IActionListener() {
             public void actionPerformed(ActionEvent event) {
+                if (!validate()) return;
                 NameBean bean = (NameBean) fBeanForm.getModel().getBean();
                 boolean isInPort = fPort instanceof InPort;
                 Class packetType = fPort.getPacketType();
@@ -70,8 +70,18 @@ public class PortNameDialog extends ULCDialog {
                 }
                 setVisible(false);
             }
-        });
 
+            private boolean validate() {
+                if (fBeanForm.getModel().hasErrors()) return false;
+                if (Port.IN_PORT_PREFIX.equals(fBeanForm.getModel().getBean().getName())) return false;
+                if (Port.OUT_PORT_PREFIX.equals(fBeanForm.getModel().getBean().getName())) return false;
+                return true;
+            }
+        };
+        fBeanForm.addSaveActionListener(saveActionListener);
+        KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+        form.registerKeyboardAction(enter, saveActionListener);
+        form.addKeyListener();
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new IWindowListener() {
             public void windowClosing(WindowEvent event) {
