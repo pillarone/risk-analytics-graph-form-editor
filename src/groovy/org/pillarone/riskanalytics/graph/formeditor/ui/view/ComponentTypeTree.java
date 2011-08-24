@@ -1,8 +1,15 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
+import com.ulcjava.base.application.tree.DefaultMutableTreeNode;
+import com.ulcjava.base.application.tree.DefaultTreeModel;
 import com.ulcjava.base.application.tree.ITreeModel;
+import com.ulcjava.base.application.tree.ITreeNode;
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
+import org.pillarone.riskanalytics.graph.core.palette.service.IPaletteServiceListener;
+import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.ComponentTypeTreeModelFactory;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.FilteringTreeModel;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 
 public class ComponentTypeTree extends AbstractComponentDefinitionTree {
 
@@ -10,7 +17,13 @@ public class ComponentTypeTree extends AbstractComponentDefinitionTree {
         super(parent);
     }
 
-    public ITreeModel getTreeModel() {
-        return new FilteringTreeModel(ComponentTypeTreeModelFactory.getPackageTree());
+    @Override
+    protected DefaultTreeModel createTreeModel() {
+        return ComponentTypeTreeModelFactory.getPackageTree();
+    }
+
+    @Override
+    protected void insertNodeForComponentDefinition(ComponentDefinition definition) {
+        //TODO
     }
 }

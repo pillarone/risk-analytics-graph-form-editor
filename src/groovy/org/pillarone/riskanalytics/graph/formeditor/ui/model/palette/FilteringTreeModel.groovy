@@ -51,7 +51,7 @@ class FilteringTreeModel extends DefaultTreeModel {
                 if (!filteredChildNode) {
                     filteredChildNode = new FilterTreeNode(parent: filteredNode, originalChildIndex: childIndex, originalNode: childNode)
 
-                    filteredNode.childNodes << filteredChildNode
+                    filteredNode.childNodes.add(model.getIndexOfChild(node, childNode), filteredChildNode)
                     filteredNode.activeIndices << filteredNode.childNodes.indexOf(filteredChildNode)
                     nodeMapping[childNode] = filteredChildNode
                     nodesWereInserted(new TreePath(getPathToRoot(node) as Object[]), [getIndexOfChild(node, childNode)] as int[])
