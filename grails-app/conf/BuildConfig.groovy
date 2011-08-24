@@ -83,7 +83,7 @@ grails.project.dependency.distribution = {
 }
 
 coverage {
-    enabledByDefault = false
+    enabledByDefault = true
     xml = true
     exclusions = [
             'models/**',
