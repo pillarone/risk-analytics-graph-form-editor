@@ -266,7 +266,7 @@ public class SingleModelMultiEditView extends AbstractBean {
                 simulateAction(false);
             }
         };
-        results.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_FOCUSED);
+        results.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
     public void injectGraphModel(AbstractGraphModel model) {
@@ -320,7 +320,7 @@ public class SingleModelMultiEditView extends AbstractBean {
             int index = fResultSheets.getSelectedIndex();
             fResultSheets.setComponentAt(index, resultTablePane);
         }
-        resultTablePane.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_FOCUSED);
+        resultTablePane.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
     public Parameterization getSelectedParametrization() {
