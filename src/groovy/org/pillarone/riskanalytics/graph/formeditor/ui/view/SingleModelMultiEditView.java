@@ -20,6 +20,7 @@ import org.pillarone.riskanalytics.core.simulation.engine.SimulationRunner;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
 import org.pillarone.riskanalytics.core.util.MathUtils;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.ComponentNodeFilterFactory;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
@@ -38,6 +39,8 @@ public class SingleModelMultiEditView extends AbstractBean {
     private SingleModelVisualView fVisualEditorView;
     private SingleModelFormView fFormEditorView;
     private SingleModelTextView fTextEditorView;
+    private ULCDetachableTabbedPane fLeftTabbedPane;
+    private ULCDetachableTabbedPane fRightTabbedPane;
     private HelpView fHelpView;
     private CommentView fCommentView;
     private ULCCloseableTabbedPane fDataSetSheets;
@@ -206,8 +209,8 @@ public class SingleModelMultiEditView extends AbstractBean {
         propertiesAreaSplitPane.setOneTouchExpandable(true);
         propertiesAreaSplitPane.setDividerLocation(0.5);
 
-        ULCDetachableTabbedPane leftTabbedPane = new ULCDetachableTabbedPane();
-        ULCDetachableTabbedPane rightTabbedPane = new ULCDetachableTabbedPane();
+        fLeftTabbedPane = new ULCDetachableTabbedPane();
+        fRightTabbedPane = new ULCDetachableTabbedPane();
 
         // help
         fHelpView = new HelpView();
@@ -215,58 +218,26 @@ public class SingleModelMultiEditView extends AbstractBean {
         // comments
         fCommentView = new CommentView();
 
-        // parameters
-        ULCBoxPane data = new ULCBoxPane();
-        fDataSetSheets = new ULCCloseableTabbedPane();
-        fDataSetSheets.addTabListener(new ITabListener() {
-            public void tabClosing(TabEvent event) {
-                event.getClosableTabbedPane().closeCloseableTab(event.getTabClosingIndex());
-                if (fDataSetSheets.getTabCount() > 0) {
-                    event.getClosableTabbedPane().setSelectedIndex(0);
-                }
-            }
-        });
+        // parameters --> will be added on demand
 
-        data.add(ULCBoxPane.BOX_EXPAND_EXPAND, fDataSetSheets);
+        // results --> will be added on demand
 
-        // results
-        ULCBoxPane results = new ULCBoxPane();
-        fResultSheets = new ULCCloseableTabbedPane();
-        fResultSheets.addTabListener(new ITabListener() {
-            public void tabClosing(TabEvent event) {
-                event.getClosableTabbedPane().closeCloseableTab(event.getTabClosingIndex());
-                if (fResultSheets.getTabCount() > 0) {
-                    event.getClosableTabbedPane().setSelectedIndex(0);
-                }
-            }
-        });
-        results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
-        leftTabbedPane.addTab("Help", new ULCScrollPane(fHelpView.getContent()));
-        leftTabbedPane.addTab("Parameters", data);
-        rightTabbedPane.addTab("Comments", new ULCScrollPane(fCommentView.getContent()));
-        rightTabbedPane.addTab("Results", results);
-        leftTabbedPane.setSelectedIndex(0);
-        rightTabbedPane.setSelectedIndex(0);
+        fLeftTabbedPane.addTab("Help", new ULCScrollPane(fHelpView.getContent()));
+        fRightTabbedPane.addTab("Comments", new ULCScrollPane(fCommentView.getContent()));
+        fLeftTabbedPane.setSelectedIndex(0);
+        fRightTabbedPane.setSelectedIndex(0);
         // satellite view - this is a bit ugly that I need to get and inject the component wrapping the ulc graph here!
-        ULCGraphOutline satelliteView = new ULCGraphOutline(fVisualEditorView.getULCGraphComponent());
-        rightTabbedPane.addTab("Info", satelliteView);
+        //ULCGraphOutline satelliteView = new ULCGraphOutline(fVisualEditorView.getULCGraphComponent());
+        //fRightTabbedPane.addTab("Info", satelliteView);
 
-        propertiesAreaSplitPane.setLeftComponent(leftTabbedPane);
-        propertiesAreaSplitPane.setRightComponent(rightTabbedPane);
+        propertiesAreaSplitPane.setLeftComponent(fLeftTabbedPane);
+        propertiesAreaSplitPane.setRightComponent(fRightTabbedPane);
         ULCBoxPane propertyPane = new ULCBoxPane(1, 1);
         propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, propertiesAreaSplitPane);
         lower.add(ULCBoxPane.BOX_EXPAND_EXPAND, propertyPane);
 
-
         splitPane.setBottomComponent(lower);
         fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane);
-
-        f9_pressed = new IActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                simulateAction(false);
-            }
-        };
-        results.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_FOCUSED);
     }
 
     public void injectGraphModel(AbstractGraphModel model) {
@@ -296,19 +267,50 @@ public class SingleModelMultiEditView extends AbstractBean {
     }
 
     public void addParameterSet(Parameterization p, String name) {
-        if (fGraphModel instanceof ModelGraphModel) {
-            DataTable dataTable;
-            if (p == null) {
-                dataTable = new DataTable((ModelGraphModel) fGraphModel, 1, name);
-            } else {
-                dataTable = new DataTable((ModelGraphModel) fGraphModel, p);
-            }
-            fDataSetSheets.addTab(name, dataTable);
-            fDataSetSheets.setSelectedIndex(fDataSetSheets.getTabCount()-1);
+        if (fGraphModel instanceof ComposedComponentGraphModel) {
+            return;
         }
+        if (!fLeftTabbedPane.anyTabContains("Parameters")) {
+            ULCBoxPane data = new ULCBoxPane();
+            fDataSetSheets = new ULCCloseableTabbedPane();
+            fDataSetSheets.addTabListener(new ITabListener() {
+                public void tabClosing(TabEvent event) {
+                    event.getClosableTabbedPane().closeCloseableTab(event.getTabClosingIndex());
+                    if (fDataSetSheets.getTabCount() > 0) {
+                        event.getClosableTabbedPane().setSelectedIndex(0);
+                    }
+                }
+            });
+            data.add(ULCBoxPane.BOX_EXPAND_EXPAND, fDataSetSheets);
+            fLeftTabbedPane.addTab("Parameters", data);
+        }
+
+        DataTable dataTable;
+        if (p == null) {
+            dataTable = new DataTable((ModelGraphModel) fGraphModel, 1, name);
+        } else {
+            dataTable = new DataTable((ModelGraphModel) fGraphModel, p);
+        }
+        fDataSetSheets.addTab(name, dataTable);
+        fDataSetSheets.setSelectedIndex(fDataSetSheets.getTabCount()-1);
+        fLeftTabbedPane.setSelectedIndex(fLeftTabbedPane.indexOfTab("Parameters"));
     }
 
     public void addSimulationResult(Map output, String name, boolean inNewTab) {
+        if (!fRightTabbedPane.anyTabContains("Results")) {
+            ULCBoxPane results = new ULCBoxPane();
+            fResultSheets = new ULCCloseableTabbedPane();
+            fResultSheets.addTabListener(new ITabListener() {
+                public void tabClosing(TabEvent event) {
+                    event.getClosableTabbedPane().closeCloseableTab(event.getTabClosingIndex());
+                    if (fResultSheets.getTabCount() > 0) {
+                        event.getClosableTabbedPane().setSelectedIndex(0);
+                    }
+                }
+            });
+            results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
+            fRightTabbedPane.addTab("Results", results);
+        }
         SimulationResultTable resultTable = new SimulationResultTable(output);
         ULCScrollPane resultScrollPane = new ULCScrollPane(resultTable);
         ULCBoxPane resultTablePane = new ULCBoxPane(true);
@@ -320,7 +322,7 @@ public class SingleModelMultiEditView extends AbstractBean {
             int index = fResultSheets.getSelectedIndex();
             fResultSheets.setComponentAt(index, resultTablePane);
         }
-        resultTablePane.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_FOCUSED);
+        fRightTabbedPane.setSelectedIndex(fRightTabbedPane.indexOfTab("Results"));
     }
 
     public Parameterization getSelectedParametrization() {
@@ -346,6 +348,7 @@ public class SingleModelMultiEditView extends AbstractBean {
     public void simulateAction(boolean newTab) {
         if (fGraphModel instanceof ModelGraphModel) {
             ModelGraphModel model = (ModelGraphModel) fGraphModel;
+            model.resolveStartComponents();
             Parameterization parametrization = this.getSelectedParametrization();
             if (parametrization != null) {
                 ProbeSimulationService simulationService = new ProbeSimulationService();

@@ -77,7 +77,8 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         Object getValueAt(int column) { return column==0 ? name : parameters.get(column-1).getBusinessObject() }
         void setValueAt(Object value, int column) {
             if (column>0) {
-                parameters.get(column-1).setValue(value)
+                ParameterHolder holder = parameters.get(column-1)
+                holder.setValue(value)
             }
         }
         boolean isLeaf() { return true }
@@ -130,7 +131,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
             throw new RuntimeException("Value of a non-leaf node cannot be changed.")
         }
         boolean isCellEditable(int i) {
-            return false  //To change body of implemented methods use File | Settings | File Templates.
+            return false  
         }
         boolean isLeaf() { return false }
     }
@@ -277,7 +278,12 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
 
     protected void linkLeafParametrization(DataTreeParameterNode leaf, Parameterization parametrization) {
         Map<Integer,ParameterHolder> existingHoldersInNode = [:]
+
+        // remember first the parameter holders that are linked to the tree node already
+        // these will be replaced by the holders from teh parametrization
         leaf.parameters.each { holder -> existingHoldersInNode[holder.periodIndex] = holder }
+
+        // then get all the parameter holders included in the parametrization given the model path
         List<ParameterHolder> parameterHolders = parametrization.getParameters( leaf.path )
         for (int periodIndex = 0; periodIndex < parametrization.periodCount; periodIndex++) {
             def matchingPeriodHolders = parameterHolders.findAll { holder -> holder.periodIndex==periodIndex }
@@ -303,10 +309,11 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         DataTreeComponentNode treeNode = new DataTreeComponentNode(node, fRoot, "")
         boolean hasDataNodes = addChildren(treeNode)
         if (hasDataNodes) {
+            int index = fRoot.childCount
             fRoot.addChild treeNode
             List<DataTreeParameterNode> leaves = getAllLeaves(treeNode)
             leaves.each { leaf -> linkLeafParametrization(leaf, fParametrization) }
-            structureChanged()
+            nodesWereInserted(new TreePath(fRoot), [index] as int[])
         }
     }
 

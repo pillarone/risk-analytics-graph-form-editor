@@ -3,6 +3,7 @@ package org.pillarone.riskanalytics.graph.formeditor.util
 import org.joda.time.DateTime
 import org.pillarone.riskanalytics.core.fileimport.FileImportService
 import org.pillarone.riskanalytics.core.model.Model
+import org.pillarone.riskanalytics.core.packets.Packet
 import org.pillarone.riskanalytics.core.packets.PacketList
 import org.pillarone.riskanalytics.core.parameterization.StructureInformation
 import org.pillarone.riskanalytics.core.simulation.engine.MappingCache
@@ -19,8 +20,6 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.core.output.*
-import org.pillarone.riskanalytics.core.packets.Packet
-import java.util.HashMap.Entry
 
 /**
  * 
@@ -48,7 +47,7 @@ class ProbeSimulationService extends SimulationRunner {
         simulation.modelClass = model.class
         simulation.periodCount = 1
         simulation.parameterization = parametrization
-        simulation.parameterization.parameterHolders = parametrization.parameterHolders.collect { it.clone() }
+        // simulation.parameterization.parameterHolders = parametrization.parameterHolders.collect { it.clone() }
         simulation.structure = new ProbeModelStructure(name)
 
         // now create the runner and configure it
