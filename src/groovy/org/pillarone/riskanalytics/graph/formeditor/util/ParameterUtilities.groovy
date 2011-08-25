@@ -14,10 +14,10 @@ import java.lang.reflect.Field
  */
 class ParameterUtilities {
 
-    public static Parameterization loadParametrization(String content) {
+    public static Parameterization loadParametrization(String content, String name) {
         ConfigObject data = new ConfigSlurper().parse(content);
         spreadRanges(data)
-        Parameterization params = createParameterizationFromConfigObject(data, "params1");
+        Parameterization params = createParameterizationFromConfigObject(data, name);
         return params
     }
 
