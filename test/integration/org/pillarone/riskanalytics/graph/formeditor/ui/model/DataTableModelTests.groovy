@@ -141,7 +141,7 @@ components {
     }
 }
 """
-        Parameterization params = ParameterUtilities.loadParametrization(dataFileContent);
+        Parameterization params = ParameterUtilities.loadParametrization(dataFileContent, "MyParam");
 
         tableModel = new DataTableTreeModel(model, params)
 
