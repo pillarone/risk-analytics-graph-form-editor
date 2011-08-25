@@ -58,8 +58,6 @@ public class GraphModelEditor extends AbstractBean {
     private Set<TypeDefinitionBean> fEditedTypeDefinitions;
     /* Is used for remembering what types have already been declared */
     private Map<ULCComponent, SingleModelMultiEditView> fModelTabs;
-    /* A dialog for new models or composed components to be created.*/
-    private TypeDefinitionDialog fTypeDefView;
     /* A dialog for models or composed components to be imported.*/
     private TypeImportDialog fTypeImportView;
     /* Palette views.*/
@@ -218,31 +216,24 @@ public class GraphModelEditor extends AbstractBean {
      * Show the type definition dialog - create the dialog if not yet instantiated
      */
     private void showTypeDefinitionDialog() {
-        if (fTypeDefView == null) {
-            fTypeDefView = new TypeDefinitionDialog(UlcUtilities.getWindowAncestor(fEditorArea), fEditedTypeDefinitions);
-            IActionListener newModelListener = new IActionListener() {
+        final TypeDefinitionDialog fTypeDefView = new TypeDefinitionDialog(UlcUtilities.getWindowAncestor(fEditorArea), fEditedTypeDefinitions);
+        IActionListener newModelListener = new IActionListener() {
 
-                public void actionPerformed(ActionEvent event) {
-                    TypeDefinitionFormModel typeDefinitionFormModel = fTypeDefView.getBeanForm().getModel();
-                    if (typeDefinitionFormModel.hasErrors()) return;
-                    TypeDefinitionBean typeDef = typeDefinitionFormModel.getBean();
-                    AbstractGraphModel model = typeDef.getBaseType().equals("Model") ? new ModelGraphModel() : new ComposedComponentGraphModel();
-                    model.setPackageName(typeDef.getPackageName());
-                    model.setName(typeDef.getName());
-                    addModelToView(model, typeDef, true);
-                    fTypeDefView.setVisible(false);
-                }
-            };
-            fTypeDefView.getBeanForm().addSaveActionListener(newModelListener);
-            KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
-            fTypeDefView.getTypeDefinitionForm().registerKeyboardAction(enter, newModelListener);
-            fTypeDefView.getTypeDefinitionForm().addKeyListener();
-        } else {
-            TypeDefinitionBean newBean = new TypeDefinitionBean();
-            newBean.setBaseType("Model");
-            newBean.setPackageName("models");
-            fTypeDefView.getBeanForm().setModel(new TypeDefinitionFormModel(newBean));
-        }
+            public void actionPerformed(ActionEvent event) {
+                TypeDefinitionFormModel typeDefinitionFormModel = fTypeDefView.getBeanForm().getModel();
+                if (typeDefinitionFormModel.hasErrors()) return;
+                TypeDefinitionBean typeDef = typeDefinitionFormModel.getBean();
+                AbstractGraphModel model = typeDef.getBaseType().equals("Model") ? new ModelGraphModel() : new ComposedComponentGraphModel();
+                model.setPackageName(typeDef.getPackageName());
+                model.setName(typeDef.getName());
+                addModelToView(model, typeDef, true);
+                fTypeDefView.setVisible(false);
+            }
+        };
+        fTypeDefView.getBeanForm().addSaveActionListener(newModelListener);
+        KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+        fTypeDefView.getTypeDefinitionForm().registerKeyboardAction(enter, newModelListener);
+        fTypeDefView.getTypeDefinitionForm().addKeyListener();
         fTypeDefView.setVisible(true);
         ULCComponent nameTextField = fTypeDefView.getTypeDefinitionForm().getComponent("name");
         if (nameTextField != null)
@@ -284,9 +275,7 @@ public class GraphModelEditor extends AbstractBean {
      */
     @Action
     public void newModelAction() {
-        if (fTypeDefView == null || !fTypeDefView.isVisible()) {
-            showTypeDefinitionDialog();
-        }
+        showTypeDefinitionDialog();
     }
 
     /**
@@ -496,7 +485,7 @@ public class GraphModelEditor extends AbstractBean {
                     InputStream in = inputStreams[0];
                     String name = fileNames[0];
                     int suffixPos = name.indexOf(".groovy");
-                    name = name.substring(0,suffixPos);
+                    name = name.substring(0, suffixPos);
                     Writer writer = new StringWriter();
                     char[] buffer = new char[1024];
                     try {
