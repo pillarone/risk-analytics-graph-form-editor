@@ -3,8 +3,6 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.table.ITableModel;
-import com.ulcjava.base.application.tabletree.DefaultTableTreeModel;
 import com.ulcjava.base.application.tree.DefaultTreeModel;
 import com.ulcjava.base.application.tree.ITreeModel;
 import com.ulcjava.base.application.tree.TreePath;
@@ -45,6 +43,20 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
     protected abstract DefaultTreeModel createTreeModel();
 
     protected abstract void insertNodeForComponentDefinition(ComponentDefinition definition);
+
+    protected int findInsertIndex(TypeTreeNode node, String newNodeName) {
+        if(node.getChildCount() == 0) {
+            return 0;
+        }
+
+        int index = 0;
+        TypeTreeNode current = (TypeTreeNode) node.getChildAt(index);
+        while (node.getChildCount() > index && (newNodeName.compareTo(current.getFullName()) > 0)) {
+            current = (TypeTreeNode) node.getChildAt(++index);
+        }
+
+        return index;
+    }
 
     private void createView() {
         // create tree
