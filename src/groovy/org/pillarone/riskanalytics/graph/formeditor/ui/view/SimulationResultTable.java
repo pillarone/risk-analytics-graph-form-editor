@@ -13,6 +13,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.SimulationResultDataTreeModel;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,13 +23,13 @@ public class SimulationResultTable extends ULCTableTree {
 
     SimulationResultDataTreeModel fTableModel;
 
-    public SimulationResultTable(Map simulationOutput) {
+    public SimulationResultTable(Map simulationOutput, List<String> periodLabels) {
         createView();
-        setData(simulationOutput);
+        setData(simulationOutput, periodLabels);
     }
 
-    public void setData(Map simulationOutput) {
-        fTableModel = new SimulationResultDataTreeModel(simulationOutput);
+    public void setData(Map simulationOutput, List<String> periodLabels) {
+        fTableModel = new SimulationResultDataTreeModel(simulationOutput, periodLabels);
         this.setModel(fTableModel);
         this.expandAll();
     }
