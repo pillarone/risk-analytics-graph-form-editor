@@ -127,6 +127,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         graphFrame.setMaximum(true);
         graphFrame.setWindowDecorationStyle(ULCRootPane.NONE);
         graphFrame.setBorder(BorderFactory.createEmptyBorder());
+        graphFrame.putClientProperty("JInternalFrame.isPalette", Boolean.TRUE);
         graphFrame.setVisible(true);
 
         ULCGraphOutline satelliteView = new ULCGraphOutline(fULCGraphComponent);
@@ -135,6 +136,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         satelliteFrame.setResizable(true);
         satelliteFrame.setBounds(1205, 375, 200, 120);
         satelliteFrame.setWindowDecorationStyle(ULCRootPane.NONE);
+        satelliteFrame.putClientProperty("JInternalFrame.isPalette", Boolean.TRUE);
         //satelliteFrame.setBorder(BorderFactory.createEmptyBorder());
         satelliteFrame.setVisible(true);
 
