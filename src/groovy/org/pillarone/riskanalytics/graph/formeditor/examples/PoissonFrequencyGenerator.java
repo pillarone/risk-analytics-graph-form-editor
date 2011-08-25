@@ -11,7 +11,7 @@ import umontreal.iro.lecuyer.randvar.RandomVariateGenInt;
  *
  */
 @ComponentCategory(categories={"Generators","Risk"})
-public class SimpleFrequencyGenerator extends Component {
+public class PoissonFrequencyGenerator extends Component {
 
     private double parmMean = 1.0;
     private PacketList<FrequencyPacket> outFrequency = new PacketList<FrequencyPacket>(FrequencyPacket.class);
