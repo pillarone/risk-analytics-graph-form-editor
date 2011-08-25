@@ -4,8 +4,12 @@ import com.ulcjava.base.application.ClientContext;
 import com.ulcjava.base.application.ULCMenuItem;
 import com.ulcjava.base.application.ULCPopupMenu;
 import com.ulcjava.base.application.ULCTableTree;
+import com.ulcjava.base.application.datatype.IDataType;
+import com.ulcjava.base.application.datatype.ULCNumberDataType;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
+import com.ulcjava.base.application.tabletree.DefaultTableTreeCellRenderer;
+import com.ulcjava.base.application.tabletree.ULCTableTreeColumn;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.Dimension;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
@@ -17,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 
+ *
  */
 public class SimulationResultTable extends ULCTableTree {
 
@@ -26,6 +30,7 @@ public class SimulationResultTable extends ULCTableTree {
     public SimulationResultTable(Map simulationOutput, List<String> periodLabels) {
         createView();
         setData(simulationOutput, periodLabels);
+        setRenderers();
     }
 
     public void setData(Map simulationOutput, List<String> periodLabels) {
@@ -79,7 +84,22 @@ public class SimulationResultTable extends ULCTableTree {
         });
         menu.add(collapseAllItem);
 
+
         this.setComponentPopupMenu(menu);
+    }
+
+    private void setRenderers() {
+        DefaultTableTreeCellRenderer defaultTableTreeCellRenderer = new DefaultTableTreeCellRenderer();
+        for (int i = 0; i < getColumnModel().getColumnCount(); i++) {
+            ULCTableTreeColumn column = getColumnModel().getColumn(i);
+            column.setMaxWidth(200);
+            if (i == 0) {
+                column.setCellRenderer(defaultTableTreeCellRenderer);
+            } else {
+                IDataType dataType = new ULCNumberDataType<Double>(ClientContext.getLocale());
+                column.setCellRenderer(new BasicCellRenderer(i, dataType));
+            }
+        }
     }
 
 }
