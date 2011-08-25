@@ -13,9 +13,11 @@ class SimulationResultDataTreeModel extends AbstractTableTreeModel  implements I
 
     private static final String PATHSEP = ':'
     private ParentNode fRoot
+    private String[] fPeriodLabels
 
-    public SimulationResultDataTreeModel(Map simulationResults) {
+    public SimulationResultDataTreeModel(Map simulationResults, List<String> periodLabels) {
         super()
+        fPeriodLabels = periodLabels
         createTree(simulationResults)
     }
 
@@ -91,22 +93,18 @@ class SimulationResultDataTreeModel extends AbstractTableTreeModel  implements I
     private void createDataSubTree(ParentNode fieldNode, Map data) {
         // determine for each iteration the number of cells to reserve
         int numOfPeriods = data.size()
-        int numOfIterations = ((Map)data[0]).size()
-        for (int iteration = 1; iteration <= numOfIterations; iteration++) {
-            int n = 0
-            for (int period = 0; period < numOfPeriods; period++) {
-                n = Math.max(n, ((List)data[period][iteration]).size())
-            }
-            ParentNode iterationNode = getNode(fieldNode, iteration)
-            for (int i = 0; i < n; i++) {
-                DataNode dataNode = new DataNode(i, iterationNode)
-                iterationNode.addChild(i, dataNode)
-            }
-            for (int period = 0; period < numOfPeriods; period++) {
-                List singleValues = (List) data[period][iteration]
-                for (int i = 0; i < singleValues.size(); i++) {
-                    ((DataNode)iterationNode.getChildAt(i)).values.put(period, singleValues[i])
-                }
+        int n = 0
+        for (int period = 0; period < numOfPeriods; period++) {
+            n = Math.max(n, ((List)data[period][1]).size())
+        }
+        for (int i = 0; i < n; i++) {
+            DataNode dataNode = new DataNode(i, fieldNode)
+            fieldNode.addChild(i, dataNode)
+        }
+        for (int period = 0; period < numOfPeriods; period++) {
+            List singleValues = (List) data[period][1]
+            for (int i = 0; i < singleValues.size(); i++) {
+                ((DataNode)fieldNode.getChildAt(i)).values.put(period, singleValues[i])
             }
         }
     }
@@ -131,7 +129,7 @@ class SimulationResultDataTreeModel extends AbstractTableTreeModel  implements I
     // Methods overwriting ITableTreeModel
 
     public int getColumnCount() {
-        return 2; // TODO --> get the correct number of periods!
+        return fPeriodLabels.size()+1
     }
 
     public Object getValueAt(Object node, int column) {
@@ -151,26 +149,26 @@ class SimulationResultDataTreeModel extends AbstractTableTreeModel  implements I
     }
 
     public Object getRoot() {
-        return fRoot;
+        return fRoot
     }
 
     public Object getChild(Object parent, int i) {
-        return ((ITableTreeNode)parent).getChildAt(i);
+        return ((ITableTreeNode)parent).getChildAt(i)
     }
 
     public int getChildCount(Object parent) {
-        return ((ITableTreeNode)parent).getChildCount();
+        return ((ITableTreeNode)parent).getChildCount()
     }
 
     public boolean isLeaf(Object node) {
-        return ((ITableTreeNode)node).leaf;
+        return ((ITableTreeNode)node).leaf
     }
 
     public int getIndexOfChild(Object parent, Object child) {
-        return ((ITableTreeNode)parent).getIndex((ITableTreeNode) child);
+        return ((ITableTreeNode)parent).getIndex((ITableTreeNode) child)
     }
 
     public String getColumnName(int column) {
-        return column==0 ? "Name" : column-1;
+        return column==0 ? "Name" : fPeriodLabels[column-1]
     }
 }
