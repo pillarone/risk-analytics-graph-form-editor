@@ -10,7 +10,7 @@ public enum EnumGraphElementInfo {
 
     M {
         public String getDisplayValue() {
-            return "M"
+            return "Model"
         }
 
         public String getIcon() {
@@ -19,7 +19,7 @@ public enum EnumGraphElementInfo {
     },
     C {
         public String getDisplayValue() {
-            return "C"
+            return "Component"
         }
 
         public String getIcon() {
@@ -28,7 +28,7 @@ public enum EnumGraphElementInfo {
     },
     CC {
         public String getDisplayValue() {
-            return "CC"
+            return "Composed Component"
         }
 
         public String getIcon() {
@@ -37,7 +37,7 @@ public enum EnumGraphElementInfo {
     },
     IN {
         public String getDisplayValue() {
-            return "IN"
+            return "In -Port - complete"
         }
 
         public String getIcon() {
@@ -46,7 +46,7 @@ public enum EnumGraphElementInfo {
     },
     IN_MORE_POSSIBLE {
         public String getDisplayValue() {
-            return "IN (+)"
+            return "In-Port - more connections possible"
         }
 
         public String getIcon() {
@@ -55,7 +55,7 @@ public enum EnumGraphElementInfo {
     },
     IN_MORE_NEEDED {
         public String getDisplayValue() {
-            return "IN +!"
+            return "In-Port - more connections needed"
         }
 
         public String getIcon() {
@@ -64,7 +64,7 @@ public enum EnumGraphElementInfo {
     },
     IN_LESS_NEEDED {
         public String getDisplayValue() {
-            return "IN -!"
+            return "In-Port - too many connections"
         }
 
         public String getIcon() {
@@ -73,7 +73,7 @@ public enum EnumGraphElementInfo {
     },
     OUT {
         public String getDisplayValue() {
-            return "OUT"
+            return "Out-Port"
         }
 
         public String getIcon() {
