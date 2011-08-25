@@ -5,8 +5,8 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.graph.formeditor.examples.Aggregator
 import org.pillarone.riskanalytics.graph.formeditor.examples.ExcessOfLoss
-import org.pillarone.riskanalytics.graph.formeditor.examples.SimpleFrequencyGenerator
-import org.pillarone.riskanalytics.graph.formeditor.examples.SingleClaimsGenerator
+import org.pillarone.riskanalytics.graph.formeditor.examples.PoissonFrequencyGenerator
+import org.pillarone.riskanalytics.graph.formeditor.examples.SingleNormalClaimsGenerator
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.GraphElementTreeBuilder
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.GraphElementNode
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
@@ -21,8 +21,8 @@ class GraphElementTreeBuilderTest extends GroovyTestCase {
 
     ModelGraphModel getModel() {
         ModelGraphModel model = new ModelGraphModel()
-        ComponentNode freq = model.createComponentNode(new ComponentDefinition(typeClass: SimpleFrequencyGenerator.class), "freq")
-        ComponentNode claims = model.createComponentNode(new ComponentDefinition(typeClass: SingleClaimsGenerator.class), "claims")
+        ComponentNode freq = model.createComponentNode(new ComponentDefinition(typeClass: PoissonFrequencyGenerator.class), "freq")
+        ComponentNode claims = model.createComponentNode(new ComponentDefinition(typeClass: SingleNormalClaimsGenerator.class), "claims")
         ComponentNode xl = model.createComponentNode(new ComponentDefinition(typeClass: ExcessOfLoss.class), "xl")
         ComponentNode aggregator = model.createComponentNode(new ComponentDefinition(typeClass: Aggregator.class), "aggregator")
         model.createConnection(freq.getPort("outFrequency"), claims.getPort("inFrequency"))
@@ -36,8 +36,8 @@ class GraphElementTreeBuilderTest extends GroovyTestCase {
 
     ComposedComponentGraphModel getComposedComponent() {
         ComposedComponentGraphModel cc = new ComposedComponentGraphModel()
-        ComponentNode freq = cc.createComponentNode(new ComponentDefinition(typeClass: SimpleFrequencyGenerator.class), "freq")
-        ComponentNode claims = cc.createComponentNode(new ComponentDefinition(typeClass: SingleClaimsGenerator.class), "claims")
+        ComponentNode freq = cc.createComponentNode(new ComponentDefinition(typeClass: PoissonFrequencyGenerator.class), "freq")
+        ComponentNode claims = cc.createComponentNode(new ComponentDefinition(typeClass: SingleNormalClaimsGenerator.class), "claims")
         ComponentNode xl = cc.createComponentNode(new ComponentDefinition(typeClass: ExcessOfLoss.class), "xl")
         ComponentNode aggregator = cc.createComponentNode(new ComponentDefinition(typeClass: Aggregator.class), "aggregator")
         cc.createConnection(freq.getPort("outFrequency"), claims.getPort("inFrequency"))

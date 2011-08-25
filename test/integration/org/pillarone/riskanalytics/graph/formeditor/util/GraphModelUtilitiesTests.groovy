@@ -10,7 +10,7 @@ import org.pillarone.riskanalytics.graph.core.loader.DatabaseClassLoader
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
 import org.pillarone.riskanalytics.graph.formeditor.examples.ClaimPacket
 import org.pillarone.riskanalytics.graph.formeditor.examples.FrequencyPacket
-import org.pillarone.riskanalytics.graph.formeditor.examples.SingleClaimsGenerator
+import org.pillarone.riskanalytics.graph.formeditor.examples.SingleNormalClaimsGenerator
 
 class GraphModelUtilitiesTests extends GroovyTestCase {
 
@@ -21,7 +21,7 @@ class GraphModelUtilitiesTests extends GroovyTestCase {
 
     void testExportToApplication() {
         ComposedComponentGraphModel model = new ComposedComponentGraphModel("MyComposedComponent", "my.packag3")
-        ComponentNode node = model.createComponentNode(PaletteService.instance.getComponentDefinition(SingleClaimsGenerator), "claimsGenerator")
+        ComponentNode node = model.createComponentNode(PaletteService.instance.getComponentDefinition(SingleNormalClaimsGenerator), "claimsGenerator")
         InPort inPort = model.createOuterInPort(FrequencyPacket, "inFrequency")
         OutPort outPort = model.createOuterOutPort(ClaimPacket, "outClaims")
 

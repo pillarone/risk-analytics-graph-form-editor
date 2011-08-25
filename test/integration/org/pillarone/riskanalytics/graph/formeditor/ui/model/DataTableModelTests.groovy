@@ -6,8 +6,8 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.graph.formeditor.examples.Aggregator
 import org.pillarone.riskanalytics.graph.formeditor.examples.ExcessOfLoss
-import org.pillarone.riskanalytics.graph.formeditor.examples.SimpleFrequencyGenerator
-import org.pillarone.riskanalytics.graph.formeditor.examples.SingleClaimsGenerator
+import org.pillarone.riskanalytics.graph.formeditor.examples.PoissonFrequencyGenerator
+import org.pillarone.riskanalytics.graph.formeditor.examples.SingleNormalClaimsGenerator
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel.DataTreeComponentNode
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel.DataTreeParameterNode
 import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities
@@ -17,8 +17,8 @@ class DataTableModelTests extends GroovyTestCase {
 
     ModelGraphModel getModel() {
         ModelGraphModel model = new ModelGraphModel()
-        ComponentNode freq = model.createComponentNode(new ComponentDefinition(typeClass: SimpleFrequencyGenerator.class), "freq")
-        ComponentNode claims = model.createComponentNode(new ComponentDefinition(typeClass: SingleClaimsGenerator.class), "claims")
+        ComponentNode freq = model.createComponentNode(new ComponentDefinition(typeClass: PoissonFrequencyGenerator.class), "freq")
+        ComponentNode claims = model.createComponentNode(new ComponentDefinition(typeClass: SingleNormalClaimsGenerator.class), "claims")
         ComponentNode xl = model.createComponentNode(new ComponentDefinition(typeClass: ExcessOfLoss.class), "xl")
         ComponentNode aggregator = model.createComponentNode(new ComponentDefinition(typeClass: Aggregator.class), "aggregator")
         model.createConnection(freq.getPort("outFrequency"), claims.getPort("inFrequency"))
@@ -78,8 +78,8 @@ class DataTableModelTests extends GroovyTestCase {
         assertTrue(xlNode.childCount==2)
         assertTrue(tableModel.getAllLeaves(tableModel.root).size()==5)
 
-        ComponentNode freq2 = model.createComponentNode(new ComponentDefinition(typeClass: SimpleFrequencyGenerator.class), "freq2")
-        ComponentNode claims2 = model.createComponentNode(new ComponentDefinition(typeClass: SingleClaimsGenerator.class), "claims2")
+        ComponentNode freq2 = model.createComponentNode(new ComponentDefinition(typeClass: PoissonFrequencyGenerator.class), "freq2")
+        ComponentNode claims2 = model.createComponentNode(new ComponentDefinition(typeClass: SingleNormalClaimsGenerator.class), "claims2")
         ComponentNode xl2 = model.createComponentNode(new ComponentDefinition(typeClass: ExcessOfLoss.class), "xl2")
 
         assertTrue(tableModel.getRoot().children.size()==6)

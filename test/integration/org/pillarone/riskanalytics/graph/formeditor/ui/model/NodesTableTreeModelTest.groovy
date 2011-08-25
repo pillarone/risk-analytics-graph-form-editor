@@ -13,8 +13,8 @@ class NodesTableTreeModelTest extends GroovyTestCase {
 
     ModelGraphModel getModel() {
         ModelGraphModel model = new ModelGraphModel()
-        ComponentNode freq = model.createComponentNode(new ComponentDefinition(typeClass: SimpleFrequencyGenerator.class), "freq")
-        ComponentNode claims = model.createComponentNode(new ComponentDefinition(typeClass: SingleClaimsGenerator.class), "claims")
+        ComponentNode freq = model.createComponentNode(new ComponentDefinition(typeClass: PoissonFrequencyGenerator.class), "freq")
+        ComponentNode claims = model.createComponentNode(new ComponentDefinition(typeClass: SingleNormalClaimsGenerator.class), "claims")
         ComponentNode xl = model.createComponentNode(new ComponentDefinition(typeClass: ExcessOfLoss.class), "xl")
         ComponentNode aggregator = model.createComponentNode(new ComponentDefinition(typeClass: Aggregator.class), "aggregator")
         model.createConnection(freq.getPort("outFrequency"), claims.getPort("inFrequency"))
@@ -40,7 +40,7 @@ class NodesTableTreeModelTest extends GroovyTestCase {
         assertNotNull freqNode
         assertFalse freqNode.isLeaf()
         assert tableModel.getValueAt(freqNode, NodesTableTreeModel.NAMEID) == "freq"
-        assert tableModel.getValueAt(freqNode, NodesTableTreeModel.TYPEID) == "SimpleFrequencyGenerator (org.pillarone.riskanalytics.graph.formeditor.examples)"
+        assert tableModel.getValueAt(freqNode, NodesTableTreeModel.TYPEID) == "PoissonFrequencyGenerator (org.pillarone.riskanalytics.graph.formeditor.examples)"
         assert tableModel.getValueAt(freqNode, NodesTableTreeModel.INFOID) == null
         GraphElementNode freqOutNode = tableModel.findNode(model.getAllComponentNodes().get(0).outPorts.get(0))
         assertNotNull freqOutNode
