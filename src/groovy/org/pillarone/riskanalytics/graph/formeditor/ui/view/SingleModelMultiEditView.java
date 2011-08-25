@@ -10,10 +10,9 @@ import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.Action;
 import com.ulcjava.applicationframework.application.ApplicationActionMap;
 import com.ulcjava.applicationframework.application.ApplicationContext;
+import com.ulcjava.applicationframework.application.form.BeanFormDialog;
 import com.ulcjava.base.application.*;
-import com.ulcjava.base.application.event.ActionEvent;
-import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.event.KeyEvent;
+import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.KeyStroke;
 import org.pillarone.riskanalytics.core.simulation.engine.SimulationRunner;
@@ -22,11 +21,16 @@ import org.pillarone.riskanalytics.core.util.MathUtils;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.Port;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.ComponentNodeFilterFactory;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataNameFormModel;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.ProbeSimulationService;
 import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class SingleModelMultiEditView extends AbstractBean {
@@ -54,6 +58,11 @@ public class SingleModelMultiEditView extends AbstractBean {
         boolean isModel = model instanceof ModelGraphModel;
         createView(isModel);
         injectGraphModel(model);
+        f9_pressed = new IActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                simulateAction(false);
+            }
+        };
     }
 
     public void createView(boolean isModel) {
@@ -266,6 +275,12 @@ public class SingleModelMultiEditView extends AbstractBean {
         return fGraphModel;
     }
 
+    public void addParameterSet(Parameterization p) {
+        DataNameDialog dialog = new DataNameDialog(UlcUtilities.getWindowAncestor(fMainView), p);
+        dialog.setModal(true);
+        dialog.setVisible(true);
+    }
+
     public void addParameterSet(Parameterization p, String name) {
         if (fGraphModel instanceof ComposedComponentGraphModel) {
             return;
@@ -289,6 +304,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         if (p == null) {
             dataTable = new DataTable((ModelGraphModel) fGraphModel, 1, name);
         } else {
+            p.setName(name);
             dataTable = new DataTable((ModelGraphModel) fGraphModel, p);
         }
         fDataSetSheets.addTab(name, dataTable);
@@ -296,7 +312,7 @@ public class SingleModelMultiEditView extends AbstractBean {
         fLeftTabbedPane.setSelectedIndex(fLeftTabbedPane.indexOfTab("Parameters"));
     }
 
-    public void addSimulationResult(Map output, String name, boolean inNewTab) {
+    public void addSimulationResult(Map output, String name, boolean inNewTab, List<String> periodLabels) {
         if (!fRightTabbedPane.anyTabContains("Results")) {
             ULCBoxPane results = new ULCBoxPane();
             fResultSheets = new ULCCloseableTabbedPane();
@@ -309,18 +325,20 @@ public class SingleModelMultiEditView extends AbstractBean {
                 }
             });
             results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
+            results.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
             fRightTabbedPane.addTab("Results", results);
         }
-        SimulationResultTable resultTable = new SimulationResultTable(output);
+        SimulationResultTable resultTable = new SimulationResultTable(output, periodLabels);
         ULCScrollPane resultScrollPane = new ULCScrollPane(resultTable);
         ULCBoxPane resultTablePane = new ULCBoxPane(true);
         resultTablePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, resultScrollPane);
         resultTablePane.setBorder(BorderFactory.createEmptyBorder());
-        if (inNewTab || fResultSheets.getTabCount()==0) {
+        int index = fResultSheets.indexOfTab(name);
+        if (index<0 || inNewTab) {
             fResultSheets.addTab(name, resultTablePane);
         } else {
-            int index = fResultSheets.getSelectedIndex();
             fResultSheets.setComponentAt(index, resultTablePane);
+            fResultSheets.setSelectedIndex(index);
         }
         fRightTabbedPane.setSelectedIndex(fRightTabbedPane.indexOfTab("Results"));
     }
@@ -356,7 +374,15 @@ public class SingleModelMultiEditView extends AbstractBean {
                     SimulationRunner runner = simulationService.getSimulationRunner(model, parametrization);
                     runner.start();
                     Map output = simulationService.getOutput();
-                    this.addSimulationResult(output, "results", newTab);
+                    List<String> periodLabels = parametrization.getPeriodLabels();
+                    if (periodLabels==null) {
+                        periodLabels = new ArrayList<String>();
+                        for (int i = 0; i < parametrization.getPeriodCount(); i++) {
+                            periodLabels.add(Integer.toString(i));
+                        }
+                        parametrization.setPeriodLabels(periodLabels);
+                    }
+                    this.addSimulationResult(output, "results_"+parametrization.getName(), newTab, parametrization.getPeriodLabels());
                 } catch (Exception ex) {
                     ULCAlert alert = new ULCAlert("Simulation failed",
                             "Reason: " + ex.getMessage(), "ok");
@@ -366,72 +392,63 @@ public class SingleModelMultiEditView extends AbstractBean {
         }
     }
 
+    private class DataNameDialog extends ULCDialog {
+        private BeanFormDialog<DataNameFormModel> fBeanForm;
+        private ULCButton fCancel;
+        private Parameterization fParameterization;
 
-    /*@Action
-    public void saveAction() {
-        String text = GraphModelUtilities.getGroovyModelCode(fGraphModel);
-        saveOutput(fGraphModel.getName() + ".groovy", text, UlcUtilities.getWindowAncestor(fMainView));
+        public DataNameDialog(ULCWindow parent, Parameterization parameterization) {
+            super(parent);
+            fParameterization = parameterization;
+            boolean metalLookAndFeel = "Metal".equals(ClientContext.getLookAndFeelName());
+            if (!metalLookAndFeel && ClientContext.getLookAndFeelSupportsWindowDecorations()) {
+                setUndecorated(true);
+                setWindowDecorationStyle(ULCDialog.PLAIN_DIALOG);
+            }
+
+            createBeanView();
+            setTitle("Dataset Name");
+            setLocationRelativeTo(parent);
+        }
+
+        @SuppressWarnings("serial")
+        private void createBeanView() {
+            DataNameFormModel formModel = new DataNameFormModel(new NameBean());
+            DataNameForm form = new DataNameForm(formModel);
+            fBeanForm = new BeanFormDialog<DataNameFormModel>(form);
+            add(fBeanForm.getContentPane());
+            fCancel = new ULCButton("Cancel");
+            fCancel.addActionListener(new IActionListener() {
+                public void actionPerformed(ActionEvent event) {
+                    fBeanForm.reset();
+                    setVisible(false);
+                }
+            });
+            fBeanForm.addToButtons(fCancel);
+
+            IActionListener saveActionListener = new IActionListener() {
+                public void actionPerformed(ActionEvent event) {
+                    NameBean bean = (NameBean) fBeanForm.getModel().getBean();
+                    SingleModelMultiEditView.this.addParameterSet(fParameterization, bean.getName());
+                    setVisible(false);
+                }
+            };
+            fBeanForm.addSaveActionListener(saveActionListener);
+            KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+            form.registerKeyboardAction(enter, saveActionListener);
+            form.addKeyListener();
+            setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+            addWindowListener(new IWindowListener() {
+                public void windowClosing(WindowEvent event) {
+                    fBeanForm.interceptIfDirty(new Runnable() {
+                        public void run() {
+                            setVisible(false);
+                        }
+                    });
+                }
+            });
+            pack();
+        }
     }
 
-    private void saveOutput(String name, final String text, final ULCWindow ancestor) {
-        FileChooserConfig config = new FileChooserConfig();
-        config.setDialogTitle("Save file as");
-        config.setDialogType(FileChooserConfig.SAVE_DIALOG);
-        config.setSelectedFile(name);
-
-        IFileChooseHandler chooser = new IFileChooseHandler() {
-            public void onSuccess(String[] filePaths, String[] fileNames) {
-                String selectedFile = filePaths[0];
-                IFileStoreHandler fileStoreHandler =
-                        new IFileStoreHandler() {
-                            public void prepareFile(java.io.OutputStream stream) throws Exception {
-                                try {
-                                    stream.write(text.getBytes());
-                                } catch (UnsupportedOperationException t) {
-                                    new ULCAlert(ancestor, "Export failed", t.getMessage(), "Ok").show();
-                                } catch (Throwable t) {
-                                    new ULCAlert(ancestor, "Export failed", t.getMessage(), "Ok").show();
-                                } finally {
-                                    stream.close();
-                                }
-                            }
-
-                            public void onSuccess(String filePath, String fileName) {
-                            }
-
-                            public void onFailure(int reason, String description) {
-//	        			new ULCAlert(ancestor, "Export failed", description, "Ok").show();
-                            }
-                        };
-                try {
-                    ClientContext.storeFile(fileStoreHandler, selectedFile);
-                } catch (Exception ex) {
-
-                }
-            }
-
-            public void onFailure(int reason, String description) {
-                new ULCAlert(ancestor, "Export failed", description, "Ok").show();
-            }
-        };
-        ClientContext.chooseFile(chooser, config, ancestor);
-    }*/
-
-    /**
-     * Deploys the model in RA application.
-     */
-    /*@Action
-    public void exportToApplication() {
-        if (fIsModel) {
-            try {
-                GraphModelUtilities.exportToApplication((ModelGraphModel) fGraphModel);
-            } catch (Exception ex) {
-                ULCAlert alert = new ULCAlert("Model not deployed.", "Model could not be deployed. Reason: " + ex.getMessage(), "ok");
-                alert.show();
-            }
-        } else {
-            ULCAlert alert = new ULCAlert("Graph Model cannot be deployed.", "Graph model is a ComposedComponent - these cannot be deployed and run.", "ok");
-            alert.show();
-        }
-    }*/
 }
