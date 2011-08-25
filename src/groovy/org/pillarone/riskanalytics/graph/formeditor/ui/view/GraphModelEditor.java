@@ -374,7 +374,7 @@ public class GraphModelEditor extends AbstractBean {
     public void createParametersAction() {
         ULCComponent comp = fEditorArea.getSelectedComponent();
         if (comp != null) {
-            fModelTabs.get(comp).addParameterSet(null, "dataset");
+            fModelTabs.get(comp).addParameterSet(null);
         }
     }
 
@@ -495,6 +495,8 @@ public class GraphModelEditor extends AbstractBean {
                 try {
                     InputStream in = inputStreams[0];
                     String name = fileNames[0];
+                    int suffixPos = name.indexOf(".groovy");
+                    name = name.substring(0,suffixPos);
                     Writer writer = new StringWriter();
                     char[] buffer = new char[1024];
                     try {
@@ -507,7 +509,7 @@ public class GraphModelEditor extends AbstractBean {
                         in.close();
                     }
                     String content = writer.toString();
-                    Parameterization params = ParameterUtilities.loadParametrization(content);
+                    Parameterization params = ParameterUtilities.loadParametrization(content, name);
                     addParameterSet(params, name);
                 } catch (Exception ex) {
                     new ULCAlert(UlcUtilities.getWindowAncestor(fEditorArea), "Import failed", "The specified file could not be imported. Reason: " + ex.getMessage(), "Ok").show();
