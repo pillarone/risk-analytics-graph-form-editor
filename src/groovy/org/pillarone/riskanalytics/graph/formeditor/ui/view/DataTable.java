@@ -128,11 +128,11 @@ public class DataTable extends ULCBoxPane {
         }
 
         public IEditorComponent getTableTreeCellEditorComponent(ULCTableTree ulcTableTree, Object value,
-                                                            boolean selected, boolean expanded,
-                                                            boolean leaf, Object node) {
+                                                                boolean selected, boolean expanded,
+                                                                boolean leaf, Object node) {
             ITableTreeCellEditor editor = null;
             if (node instanceof DataTableTreeModel.IDataTreeNode) {
-                editor = editors.get(((DataTableTreeModel.IDataTreeNode)node).getType());
+                editor = editors.get(((DataTableTreeModel.IDataTreeNode) node).getType());
             }
             if (editor != null) {
                 return editor.getTableTreeCellEditorComponent(ulcTableTree, value, selected, expanded, leaf, node);
@@ -150,6 +150,7 @@ public class DataTable extends ULCBoxPane {
             public IEditorComponent getTableTreeCellEditorComponent(ULCTableTree tableTree, Object value, boolean selected, boolean expanded, boolean leaf, Object node) {
                 ULCTextField editor = (ULCTextField) super.getTableTreeCellEditorComponent(tableTree, value, selected, expanded, leaf, node);
                 editor.setDataType(this.dataType);
+                editor.setHorizontalAlignment(ULCTextField.RIGHT);
                 return editor;
             }
         };
@@ -161,6 +162,7 @@ public class DataTable extends ULCBoxPane {
             public IEditorComponent getTableTreeCellEditorComponent(ULCTableTree tableTree, Object value, boolean selected, boolean expanded, boolean leaf, Object node) {
                 ULCTextField editor = (ULCTextField) super.getTableTreeCellEditorComponent(tableTree, value, selected, expanded, leaf, node);
                 editor.setDataType(this.dataType);
+                editor.setHorizontalAlignment(ULCTextField.RIGHT);
                 return editor;
             }
         };
@@ -175,6 +177,7 @@ public class DataTable extends ULCBoxPane {
 
     private class BaseCellEditor extends DefaultCellEditor {
         protected IDataType dataType;
+
         BaseCellEditor(Class type) {
             super(new ULCTextField());
             if (type.equals(Double.class)) {
@@ -214,17 +217,17 @@ public class DataTable extends ULCBoxPane {
 
 
         public IRendererComponent getTableTreeCellRendererComponent(ULCTableTree ulcTableTree, Object value,
-                                                                boolean selected, boolean hasFocus, boolean expanded,
-                                                                boolean leaf, Object node) {
+                                                                    boolean selected, boolean hasFocus, boolean expanded,
+                                                                    boolean leaf, Object node) {
             if (!selected) {
                 if (value != null || ((IMutableTableTreeNode) node).isCellEditable(columnIndex)) {
                     setBackground(Color.white);
-                    setHorizontalAlignment(ULCLabel.RIGHT);
                     // setComponentPopupMenu(menu);
                 } else {
                     setBackground(Color.lightGray);
                     setComponentPopupMenu(null);
                 }
+                setHorizontalAlignment(ULCLabel.RIGHT);
             }
             setDataType(dataType);
             return super.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
@@ -241,8 +244,8 @@ public class DataTable extends ULCBoxPane {
 
         @Override
         public IRendererComponent getTableTreeCellRendererComponent(ULCTableTree ulcTableTree, Object value,
-                                                                boolean selected, boolean hasFocus, boolean expanded,
-                                                                boolean leaf, Object node) {
+                                                                    boolean selected, boolean hasFocus, boolean expanded,
+                                                                    boolean leaf, Object node) {
             ITableTreeCellRenderer renderer = renderers.get(node.getClass());
             if (renderer != null) {
                 return renderer.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
