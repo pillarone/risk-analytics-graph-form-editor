@@ -5,7 +5,9 @@ import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.datatype.IDataType;
 import com.ulcjava.base.application.datatype.ULCNumberDataType;
 import com.ulcjava.base.application.event.ActionEvent;
+import com.ulcjava.base.application.event.FocusEvent;
 import com.ulcjava.base.application.event.IActionListener;
+import com.ulcjava.base.application.event.IFocusListener;
 import com.ulcjava.base.application.tabletree.*;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.Color;
@@ -15,6 +17,7 @@ import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.IDataTreeNode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -64,6 +67,7 @@ public class DataTable extends ULCBoxPane {
         this.setBorder(BorderFactory.createEmptyBorder());
 
         createContextMenu();
+        new SelectionTracker(fTableTree);
     }
 
     public DataTableTreeModel getModel() {
@@ -131,8 +135,8 @@ public class DataTable extends ULCBoxPane {
                                                                 boolean selected, boolean expanded,
                                                                 boolean leaf, Object node) {
             ITableTreeCellEditor editor = null;
-            if (node instanceof DataTableTreeModel.IDataTreeNode) {
-                editor = editors.get(((DataTableTreeModel.IDataTreeNode) node).getType());
+            if (node instanceof IDataTreeNode) {
+                editor = editors.get(((IDataTreeNode) node).getType());
             }
             if (editor != null) {
                 return editor.getTableTreeCellEditorComponent(ulcTableTree, value, selected, expanded, leaf, node);

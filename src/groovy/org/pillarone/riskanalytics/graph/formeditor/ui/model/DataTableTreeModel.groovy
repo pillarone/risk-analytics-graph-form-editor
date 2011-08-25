@@ -34,11 +34,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         injectParametrizationToTree(fParametrization)
     }
 
-    public interface IDataTreeNode extends IMutableTableTreeNode  {
-        String getPath()
-        String getName()
-        Class getType()
-    }
+
 
     class DataTreeParameterNode implements IDataTreeNode {
         String path
@@ -381,3 +377,9 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
     }
 
 }
+
+public interface IDataTreeNode extends IMutableTableTreeNode  {
+        String getPath()
+        String getName()
+        Class getType()
+    }
