@@ -52,11 +52,11 @@ class FilteringTreeModel extends DefaultTreeModel {
                     filteredChildNode = new FilterTreeNode(parent: filteredNode, originalChildIndex: childIndex, originalNode: childNode)
 
                     filteredNode.childNodes.add(model.getIndexOfChild(node, childNode), filteredChildNode)
-                    filteredNode.activeIndices << filteredNode.childNodes.indexOf(filteredChildNode)
+                    addActiveIndex(filteredNode, filteredNode.childNodes.indexOf(filteredChildNode))
                     nodeMapping[childNode] = filteredChildNode
                     nodesWereInserted(new TreePath(getPathToRoot(node) as Object[]), [getIndexOfChild(node, childNode)] as int[])
                 } else if (!nodeCurrentlyActive) {
-                    filteredNode.activeIndices << filteredNode.childNodes.indexOf(filteredChildNode)
+                    addActiveIndex(filteredNode, filteredNode.childNodes.indexOf(filteredChildNode))
                     filteredNode.activeIndices = filteredNode.activeIndices.sort()
                     nodesWereInserted(new TreePath(getPathToRoot(node) as Object[]), [getIndexOfChild(node, childNode)] as int[])
                 }
@@ -77,12 +77,18 @@ class FilteringTreeModel extends DefaultTreeModel {
         }
     }
 
+    protected void addActiveIndex(FilterTreeNode filterTreeNode, int index) {
+        if(!filterTreeNode.activeIndices.contains(index)) {
+            filterTreeNode.activeIndices << index
+        }
+    }
+
     private def removeFilteredChildNodeIndex(FilterTreeNode filteredChildNode) {
         def filteredNode = filteredChildNode.parent
         int removedIndex = filteredNode.childNodes.indexOf(filteredChildNode)
         def activeIndicesIndex = filteredNode.activeIndices.indexOf(removedIndex)
 
-        filteredNode.activeIndices.remove(activeIndicesIndex)
+        filteredNode.activeIndices.remove(activeIndicesIndex as int)
         nodesWereRemoved(new TreePath(getPathToRoot(filteredNode.originalNode) as Object[]), [activeIndicesIndex] as int[], [filteredChildNode.originalNode] as Object[])
     }
 
@@ -105,7 +111,7 @@ class FilteringTreeModel extends DefaultTreeModel {
             }
         }
         for (int i in newIndices) {
-            filteredNode.activeIndices << i
+            addActiveIndex(filteredNode, i)
         }
         filteredNode.activeIndices = filteredNode.activeIndices.sort()
 

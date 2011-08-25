@@ -56,9 +56,7 @@ class SortedComponentDefinitionsTreeTests extends AbstractSimpleStandaloneTestCa
         })
 
         assertEquals ATestComponent.name, model.getChild(root, 0).getValueAt(0)
-        //TODO: does not work due to a bug in the FilteringTreeModel
-//        assertEquals BTestComponent.name, model.getChild(root, 1).getValueAt(0)
-
+        assertEquals BTestComponent.name, model.getChild(root, 1).getValueAt(0)
     }
 
 
