@@ -30,6 +30,7 @@ import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.jetbrains.annotations.NotNull;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange;
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.layout.ComponentLayout;
 import org.pillarone.riskanalytics.graph.core.layout.GraphLayoutService;
@@ -629,10 +630,12 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         Port port;
         if (p instanceof org.pillarone.riskanalytics.graph.core.graph.model.InPort) {
             port = new Port(id, PortType.REPLICATE_IN, p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
+            IntegerRange range = p.getConnectionCardinality();
+            port.addConstraint(new PortConstraint(p.getPacketType().getName(), range.getFrom(), range.getTo()));
         } else {
             port = new Port(id, PortType.REPLICATE_OUT, p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
+            port.addConstraint(new PortConstraint(p.getPacketType().getName(), 0, Integer.MAX_VALUE));
         }
-        port.addConstraint(new PortConstraint(p.getPacketType().getName(), 0, 100)); // TODO - set the correct constraint here
         fRootVertex.addPort(port);
     }
 

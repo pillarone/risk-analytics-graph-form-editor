@@ -9,7 +9,9 @@ import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
 import org.pillarone.riskanalytics.graph.core.graph.model.InPort;
 import org.pillarone.riskanalytics.graph.core.graph.model.OutPort;
+import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange;
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
+import org.pillarone.riskanalytics.graph.core.graph.wiringvalidation.WiringValidationUtil;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 
@@ -35,13 +37,16 @@ public class VisualSceneUtilities {
         ComponentDefinition definition = PaletteService.getInstance().getComponentDefinition(componentTypePath);
         for (Map.Entry<Field, Class> entry : GroovyUtils.obtainPorts(definition, "in").entrySet()) {
             String id = "in_port_" + new Date().getTime() + "_"+Math.random();
+
             Port port = new Port(id, PortType.IN, entry.getValue().getName(), UIUtils.formatDisplayName(entry.getKey().getName()));
-            port.addConstraint(new PortConstraint(entry.getValue().getName(), 0, 100)); // TODO - set the correct constraint here
+            IntegerRange range = WiringValidationUtil.getConnectionCardinality(entry.getKey());
+            port.addConstraint(new PortConstraint(entry.getValue().getName(), range.getFrom(), range.getTo()));
             vertex.addPort(port);
         }
         for (Map.Entry<Field, Class> entry : GroovyUtils.obtainPorts(definition, "out").entrySet()) {
             String id = "out_port_" + new Date().getTime() + "_"+Math.random();
             Port port = new Port(id, PortType.OUT, entry.getValue().getName(), UIUtils.formatDisplayName(entry.getKey().getName()));
+            IntegerRange range = WiringValidationUtil.getConnectionCardinality(entry.getKey());
             port.addConstraint(new PortConstraint(entry.getValue().getName(), 0, Integer.MAX_VALUE));
             vertex.addPort(port);
         }
