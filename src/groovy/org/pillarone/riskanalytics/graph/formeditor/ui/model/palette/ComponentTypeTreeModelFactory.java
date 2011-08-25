@@ -26,11 +26,19 @@ public class ComponentTypeTreeModelFactory {
         }
         TypeTreeNode root = new TypeTreeNode("", "Categories");
         root.setLeaf(false);
-        for (Map.Entry<String, List<ComponentDefinition>> category : categoryMap.entrySet()) {
+        final List<Map.Entry<String, List<ComponentDefinition>>> entries = new ArrayList<Map.Entry<String, List<ComponentDefinition>>>(categoryMap.entrySet());
+        Collections.sort(entries, new Comparator<Map.Entry<String, List<ComponentDefinition>>>() {
+            public int compare(Map.Entry<String, List<ComponentDefinition>> a, Map.Entry<String, List<ComponentDefinition>> b) {
+                return a.getKey().compareTo(b.getKey());
+            }
+        });
+        for (Map.Entry<String, List<ComponentDefinition>> category : entries) {
             TypeTreeNode categoryNode = new TypeTreeNode("", category.getKey());
             categoryNode.setLeaf(false);
             root.add(categoryNode);
-            for (ComponentDefinition cd : category.getValue()) {
+            final List<ComponentDefinition> definitions = category.getValue();
+            Collections.sort(definitions, new ComponentDefinitionComparator());
+            for (ComponentDefinition cd : definitions) {
                 TypeTreeNode leaf = new TypeTreeNode(cd);
                 leaf.setLeaf(true);
                 categoryNode.add(leaf);
@@ -62,7 +70,7 @@ public class ComponentTypeTreeModelFactory {
     }
 
     public static DefaultTreeModel getSortedComponentDefinitionsTreeModel() {
-        List<ComponentDefinition> componentDefinitions = PaletteService.getInstance().getAllComponentDefinitions();
+        List<ComponentDefinition> componentDefinitions = new ArrayList<ComponentDefinition>(PaletteService.getInstance().getAllComponentDefinitions());
         Collections.sort(componentDefinitions, new ComponentDefinitionComparator());
         final TypeTreeNode root = new TypeTreeNode("", "root");
         root.setLeaf(false);

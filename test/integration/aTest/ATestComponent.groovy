@@ -1,6 +1,7 @@
 package aTest
 
 import org.pillarone.riskanalytics.core.components.Component
+import org.pillarone.riskanalytics.core.components.ComponentCategory
 
 
 class ATestComponent extends Component {
@@ -12,6 +13,7 @@ class ATestComponent extends Component {
 
 }
 
+@ComponentCategory(categories=["MyCategory"])
 class BTestComponent extends ATestComponent {
 
 }

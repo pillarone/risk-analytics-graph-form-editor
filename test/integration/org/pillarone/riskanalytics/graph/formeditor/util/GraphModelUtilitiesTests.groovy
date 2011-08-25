@@ -15,7 +15,7 @@ import org.pillarone.riskanalytics.graph.formeditor.examples.SingleNormalClaimsG
 class GraphModelUtilitiesTests extends GroovyTestCase {
 
     void setUp() {
-        PaletteService.instance.clearCache()
+        PaletteService.instance.reset()
         Thread.currentThread().contextClassLoader = new DatabaseClassLoader(Thread.currentThread().contextClassLoader)
     }
 
@@ -37,6 +37,6 @@ class GraphModelUtilitiesTests extends GroovyTestCase {
     }
 
     void tearDown() {
-        PaletteService.instance.clearCache()
+        PaletteService.instance.reset()
     }
 }
