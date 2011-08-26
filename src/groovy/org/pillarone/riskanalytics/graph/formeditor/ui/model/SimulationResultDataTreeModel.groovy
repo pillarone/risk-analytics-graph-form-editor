@@ -5,13 +5,13 @@ import com.ulcjava.base.application.tabletree.ITableTreeNode
 import com.ulcjava.base.application.tabletree.ITableTreeModel
 import com.ulcjava.base.application.tabletree.AbstractTableTreeModel
 import java.util.Map.Entry
+import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities
 
 /**
  *
  */
 class SimulationResultDataTreeModel extends AbstractTableTreeModel  implements ITableTreeModel {
 
-    private static final String PATHSEP = ':'
     private ParentNode fRoot
     private String[] fPeriodLabels
 
@@ -110,7 +110,7 @@ class SimulationResultDataTreeModel extends AbstractTableTreeModel  implements I
     }
 
     private ParentNode getNode(String path) {
-        String[] pathElements = path.split(PATHSEP)
+        String[] pathElements = path.split(GraphModelUtilities.PATHSEP)
         ParentNode node = fRoot
         pathElements[0..-1].each { name ->
             node = getNode(node, name)
