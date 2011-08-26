@@ -5,6 +5,7 @@ import com.ulcjava.base.client.UISession
 import com.ulcjava.base.shared.logging.LogManager
 import com.ulcjava.base.shared.logging.SimpleLogManager
 import com.ulcjava.container.local.server.LocalContainerAdapter
+import org.pillarone.riskanalytics.graph.formeditor.environment.shared.UIManagerHelper
 
 class FormEditorLauncher extends LocalContainerAdapter {
 
@@ -14,6 +15,7 @@ class FormEditorLauncher extends LocalContainerAdapter {
     }
 
     public static void launch() {
+        UIManagerHelper.setLookAndFeel()
         LogManager.setLogManager(new SimpleLogManager())
         FormEditorLauncher launcher = new FormEditorLauncher()
         launcher.start()

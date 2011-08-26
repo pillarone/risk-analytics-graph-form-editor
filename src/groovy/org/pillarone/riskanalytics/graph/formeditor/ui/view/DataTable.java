@@ -114,11 +114,19 @@ public class DataTable extends ULCBoxPane {
 
     private void addCellEditorsAndRenderers() {
         Map<Class, ITableTreeCellEditor> editors = createEditors();
-        for (int i = 1; i < fTableTree.getColumnModel().getColumnCount(); i++) {
+        DefaultTableTreeCellRenderer defaultTableTreeCellRenderer = new DefaultTableTreeCellRenderer();
+        for (int i = 0; i < fTableTree.getColumnModel().getColumnCount(); i++) {
             ULCTableTreeColumn column = fTableTree.getColumnModel().getColumn(i);
-            column.setCellEditor(new DelegatingCellEditor(editors));
-            IDataType dataType = new ULCNumberDataType<Double>(ClientContext.getLocale());
-            column.setCellRenderer(new BasicCellRenderer(i, dataType));
+            column.setMaxWidth(200);
+            if (i == 0) {
+                column.setCellRenderer(defaultTableTreeCellRenderer);
+            } else {
+                column.setCellEditor(new DelegatingCellEditor(editors));
+                IDataType dataType = new ULCNumberDataType<Double>(ClientContext.getLocale());
+                column.setCellRenderer(new BasicCellRenderer(i, dataType));
+            }
+
+
         }
     }
 
@@ -209,7 +217,31 @@ public class DataTable extends ULCBoxPane {
         }
     }
 
-    public class BasicCellRenderer extends DefaultTableTreeCellRenderer implements ITableTreeCellRenderer {
+
+
+    public class DelegatingCellRenderer extends DefaultTableTreeCellRenderer {
+
+        private HashMap<Class, ITableTreeCellRenderer> renderers;
+
+        public DelegatingCellRenderer(HashMap<Class, ITableTreeCellRenderer> renderers) {
+            this.renderers = renderers;
+        }
+
+        @Override
+        public IRendererComponent getTableTreeCellRendererComponent(ULCTableTree ulcTableTree, Object value,
+                                                                    boolean selected, boolean hasFocus, boolean expanded,
+                                                                    boolean leaf, Object node) {
+            ITableTreeCellRenderer renderer = renderers.get(node.getClass());
+            if (renderer != null) {
+                return renderer.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
+            } else {
+                return super.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
+            }
+        }
+    }
+}
+
+class BasicCellRenderer extends DefaultTableTreeCellRenderer implements ITableTreeCellRenderer {
 
         protected int columnIndex;
         private IDataType dataType;
@@ -237,25 +269,3 @@ public class DataTable extends ULCBoxPane {
             return super.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
         }
     }
-
-    public class DelegatingCellRenderer extends DefaultTableTreeCellRenderer {
-
-        private HashMap<Class, ITableTreeCellRenderer> renderers;
-
-        public DelegatingCellRenderer(HashMap<Class, ITableTreeCellRenderer> renderers) {
-            this.renderers = renderers;
-        }
-
-        @Override
-        public IRendererComponent getTableTreeCellRendererComponent(ULCTableTree ulcTableTree, Object value,
-                                                                    boolean selected, boolean hasFocus, boolean expanded,
-                                                                    boolean leaf, Object node) {
-            ITableTreeCellRenderer renderer = renderers.get(node.getClass());
-            if (renderer != null) {
-                return renderer.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
-            } else {
-                return super.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
-            }
-        }
-    }
-}

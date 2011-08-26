@@ -44,7 +44,7 @@ class GraphElementNode extends SimpleTableTreeNode {
         }
     }
 
-    private void updateColumnValues() {
+    public void updateColumnValues() {
         // name
         this.name = element.getDisplayName()
 
@@ -98,4 +98,5 @@ class GraphElementNode extends SimpleTableTreeNode {
 
         }
     }
+
 }

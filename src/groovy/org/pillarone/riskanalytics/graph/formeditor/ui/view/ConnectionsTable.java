@@ -45,7 +45,6 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
         this.setPreferredScrollableViewportSize(new Dimension(preferredWidth, preferredHeight));
 
         fSelectionListeners = new ArrayList<ISelectionListener>();
-        this.setSelectionBackground(Color.yellow);
 
         addListeners();
 
