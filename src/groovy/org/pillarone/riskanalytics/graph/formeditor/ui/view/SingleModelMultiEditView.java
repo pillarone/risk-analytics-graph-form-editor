@@ -13,6 +13,8 @@ import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.applicationframework.application.form.BeanFormDialog;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.*;
+import com.ulcjava.base.application.tabletree.ITableTreeNode;
+import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.KeyStroke;
 import org.pillarone.riskanalytics.core.simulation.engine.SimulationRunner;
@@ -49,6 +51,7 @@ public class SingleModelMultiEditView extends AbstractBean {
     private CommentView fCommentView;
     private ULCCloseableTabbedPane fDataSetSheets;
     private ULCCloseableTabbedPane fResultSheets;
+    private WatchesTable fWatchesTable;
 
     private IActionListener f9_pressed;
 
@@ -343,8 +346,19 @@ public class SingleModelMultiEditView extends AbstractBean {
         fRightTabbedPane.setSelectedIndex(fRightTabbedPane.indexOfTab("Results"));
     }
 
+    public void addWatch(String path) {
+        if (fWatchesTable == null) {
+            fWatchesTable = new WatchesTable();
+            ULCScrollPane watchesPane = new ULCScrollPane(fWatchesTable);
+            fRightTabbedPane.addTab("Watches", watchesPane);
+            fVisualEditorView.setWatchList(fWatchesTable.getModel());
+        }
+        fWatchesTable.getModel().addWatch(path);
+        fRightTabbedPane.setSelectedIndex(fRightTabbedPane.indexOfTab("Watches"));
+    }
+
     public Parameterization getSelectedParametrization() {
-        ULCComponent comp = fDataSetSheets.getSelectedComponent();
+        ULCComponent comp = fDataSetSheets != null ? fDataSetSheets.getSelectedComponent() : null;
         if (comp != null) {
             return ((DataTable) fDataSetSheets.getSelectedComponent()).getModel().getParametrization();
         }
@@ -368,7 +382,11 @@ public class SingleModelMultiEditView extends AbstractBean {
             ModelGraphModel model = (ModelGraphModel) fGraphModel;
             model.resolveStartComponents();
             Parameterization parametrization = this.getSelectedParametrization();
-            if (parametrization != null) {
+            if (parametrization == null) {
+                ULCAlert alert = new ULCAlert("No Simulation Done",
+                            "Reason: Input parameters missing.", "ok");
+                    alert.show();
+            } else {
                 ProbeSimulationService simulationService = new ProbeSimulationService();
                 try {
                     SimulationRunner runner = simulationService.getSimulationRunner(model, parametrization);
