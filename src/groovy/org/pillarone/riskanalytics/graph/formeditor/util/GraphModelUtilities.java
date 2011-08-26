@@ -1,6 +1,7 @@
 package org.pillarone.riskanalytics.graph.formeditor.util;
 
 import org.apache.tools.ant.taskdefs.optional.PropertyFile;
+import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.model.registry.ModelRegistry;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.graphexport.AbstractGraphExport;
@@ -11,12 +12,11 @@ import org.pillarone.riskanalytics.graph.core.loader.ClassType;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GraphModelUtilities {
+
+    public static final String PATHSEP = ":";
 
     /**
      * Replace the given component node in the given model by a new component node with given name and type.
@@ -187,6 +187,64 @@ public class GraphModelUtilities {
             tmpList.add(entry.getValue());
         }
         return paths;
+    }
+
+    public static String getPath(GraphElement element, final AbstractGraphModel model) {
+        List<GraphElement> modelTreePath = getModelTreePath(element, model);
+        if (modelTreePath.size()>0) {
+            String path = modelTreePath.get(0).getName();
+            for (int i = 1; i < modelTreePath.size(); i++) {
+                path = path + PATHSEP + modelTreePath.get(i).getName();
+            }
+            return path;
+        }
+        return null;
+    }
+
+    public static List<GraphElement> getModelTreePath(GraphElement element, final AbstractGraphModel model) {
+        List<GraphElement> modelTreePath = new LinkedList<GraphElement>();
+        Iterator<ComponentNode> it = model.getAllComponentNodes().iterator();
+        while (modelTreePath.size()==0 || it.hasNext()) {
+            List<GraphElement> subTree = getModelTreePath(element, it.next());
+            if (subTree.size()>0) {
+                modelTreePath = subTree;
+            }
+        }
+        return modelTreePath;
+    }
+
+    public static List<GraphElement> getModelTreePath(GraphElement element, final GraphElement context) {
+        List<GraphElement> modelTreePath = new LinkedList<GraphElement>();
+        if (context instanceof ComposedComponentNode) {
+            ComposedComponentNode cc = (ComposedComponentNode)context;
+            for (ComponentNode node : cc.getComponentGraph().getAllComponentNodes()) {
+                if (node.equals(element)) {
+                    modelTreePath.add(element);
+                    return modelTreePath;
+                } else {
+                    List<GraphElement> subPath = getModelTreePath(element, node);
+                    if (subPath.size()>0) {
+                        modelTreePath.addAll(subPath);
+                        return modelTreePath;
+                    }
+                }
+            }
+        }
+        if (element instanceof Port && context instanceof ComponentNode) {
+            for (Port p : ((ComponentNode)context).getInPorts()) {
+                if (p.equals(element)) {
+                    modelTreePath.add(element);
+                    return modelTreePath;
+                }
+            }
+            for (Port p : ((ComponentNode)context).getOutPorts()) {
+                if (p.equals(element)) {
+                    modelTreePath.add(element);
+                    return modelTreePath;
+                }
+            }
+        }
+        return modelTreePath;
     }
 
     /**
