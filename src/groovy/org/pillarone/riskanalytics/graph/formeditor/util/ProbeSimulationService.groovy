@@ -93,11 +93,13 @@ class ProbeSimulationService extends SimulationRunner {
 
     private class ProbeModelStructure extends ModelStructure {
 
-        String configText = '''
+        /*String configText = '''
             periodCount = 1
             company {
             }
-        '''
+        '''*/
+        String configText = ''' '''
+
         ProbeModelStructure(String name) {
             super(name)
             mapFromDao(null, true)
@@ -160,7 +162,7 @@ class ProbeSimulationService extends SimulationRunner {
         public attachToModel(Model model, StructureInformation structureInformation) {
             def pathElements = path.split("\\:")
             def sender = model
-            pathElements[1..-2].each {propertyName ->
+            pathElements[0..-2].each {propertyName ->
                 if (sender.properties.containsKey(propertyName)) {
                     sender = sender[propertyName]
                 }
