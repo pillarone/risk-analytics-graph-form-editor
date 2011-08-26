@@ -49,6 +49,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     Map<Vertex, ComponentNode> fNodesToBeAdded;
     Map<String, Connection> fConnectionsMap;
     List<Connection> fConnectionsToBeAdded;
+    IWatchList fWatchList;
 
     List<ISelectionListener> fSelectionListeners;
     IGraphSelectionListener fGraphSelectionListener;
@@ -259,6 +260,11 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         fULCGraphComponent.layout();
     }
 
+    public void setWatchList(IWatchList watchList) {
+        fWatchList = watchList;
+    }
+
+
     @Action
     public void newNodeAction() {
         NodeEditDialog dialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), fGraphModel);
@@ -339,6 +345,22 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
     }
 
+    @Action
+    public void addSelectedToWatches() {
+        Set<Port> selectedPorts = fULCGraph.getSelectionModel().getSelectedPorts();
+        for (Port port : selectedPorts) {
+            org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort = getGraphPort(port);
+            if (graphPort == null) {
+                ULCAlert alert = new ULCAlert("No watches added.",
+                        "Port " + port.getTitle() + " cannot be identified.", "ok");
+                alert.show();
+                return;
+            }
+            String path = GraphModelUtilities.getPath(graphPort, fGraphModel);
+            fWatchList.addWatch(path);
+        }
+    }
+
     private ULCPopupMenu createPopupMenu() {
         ULCPopupMenu popupMenu = new ULCPopupMenu();
         ApplicationActionMap actionMap = fApplicationContext.getActionMap(this);
@@ -355,6 +377,10 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             ULCMenuItem removeReplicatedPortItem = new ULCMenuItem("remove port");
             removeReplicatedPortItem.addActionListener(actionMap.get("removePortAction"));
             popupMenu.add(removeReplicatedPortItem);
+        } else {
+            ULCMenuItem addToWatchesItem = new ULCMenuItem("add port to watches");
+            addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));
+            popupMenu.add(addToWatchesItem);
         }
 
 
@@ -522,6 +548,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 v.setStyle(StyleType.fillColor, "white");
             }
             fULCGraph.updateElement(v);
+            fULCGraphComponent.refresh();
         }
     }
 
