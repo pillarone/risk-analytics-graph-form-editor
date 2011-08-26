@@ -4,28 +4,29 @@ import com.ulcjava.applicationframework.application.ApplicationActionMap;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.datatype.IDataType;
 import com.ulcjava.base.application.datatype.ULCNumberDataType;
-import com.ulcjava.base.application.event.ActionEvent;
-import com.ulcjava.base.application.event.FocusEvent;
-import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.event.IFocusListener;
+import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.tabletree.*;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.Color;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.shared.UlcEventConstants;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.IDataTreeNode;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  *
  */
-public class DataTable extends ULCBoxPane {
+public class DataTable extends ULCBoxPane implements ISelectionListener {
 
     ModelGraphModel fGraphModel;
     DataTableTreeModel fTableModel;
@@ -218,7 +219,6 @@ public class DataTable extends ULCBoxPane {
     }
 
 
-
     public class DelegatingCellRenderer extends DefaultTableTreeCellRenderer {
 
         private HashMap<Class, ITableTreeCellRenderer> renderers;
@@ -239,33 +239,61 @@ public class DataTable extends ULCBoxPane {
             }
         }
     }
+
+    public void applyFilter(IComponentNodeFilter filter) {
+    }
+
+    public void setSelectedComponents(List<ComponentNode> selection) {
+        for (ComponentNode cn : selection) {
+            IDataTreeNode node = fTableModel.findNode(cn.getName());
+            if (node != null) {
+                TreePath treePath = new TreePath(DefaultTableTreeModel.getPathToRoot(node));
+                fTableTree.makeVisible(treePath);
+                fTableTree.scrollCellToVisible(treePath, 0);
+                if (!fTableTree.getSelectionModel().isPathSelected(treePath))
+                    fTableTree.getSelectionModel().setSelectionPath(treePath);
+            }
+        }
+    }
+
+    public void setSelectedConnections(List<Connection> selection) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public void clearSelection() {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public void addTreeSelectionListener(ITreeSelectionListener treeSelectionListener) {
+        fTableTree.addTreeSelectionListener(treeSelectionListener);
+    }
 }
 
 class BasicCellRenderer extends DefaultTableTreeCellRenderer implements ITableTreeCellRenderer {
 
-        protected int columnIndex;
-        private IDataType dataType;
+    protected int columnIndex;
+    private IDataType dataType;
 
-        public BasicCellRenderer(int columnIndex, IDataType dataType) {
-            this.columnIndex = columnIndex;
-            this.dataType = dataType;
-        }
-
-
-        public IRendererComponent getTableTreeCellRendererComponent(ULCTableTree ulcTableTree, Object value,
-                                                                    boolean selected, boolean hasFocus, boolean expanded,
-                                                                    boolean leaf, Object node) {
-            if (!selected) {
-                if (value != null || ((IMutableTableTreeNode) node).isCellEditable(columnIndex)) {
-                    setBackground(Color.white);
-                    // setComponentPopupMenu(menu);
-                } else {
-                    setBackground(Color.lightGray);
-                    setComponentPopupMenu(null);
-                }
-                setHorizontalAlignment(ULCLabel.RIGHT);
-            }
-            setDataType(dataType);
-            return super.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
-        }
+    public BasicCellRenderer(int columnIndex, IDataType dataType) {
+        this.columnIndex = columnIndex;
+        this.dataType = dataType;
     }
+
+
+    public IRendererComponent getTableTreeCellRendererComponent(ULCTableTree ulcTableTree, Object value,
+                                                                boolean selected, boolean hasFocus, boolean expanded,
+                                                                boolean leaf, Object node) {
+        if (!selected) {
+            if (value != null || ((IMutableTableTreeNode) node).isCellEditable(columnIndex)) {
+                setBackground(Color.white);
+                // setComponentPopupMenu(menu);
+            } else {
+                setBackground(Color.lightGray);
+                setComponentPopupMenu(null);
+            }
+            setHorizontalAlignment(ULCLabel.RIGHT);
+        }
+        setDataType(dataType);
+        return super.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
+    }
+}

@@ -49,6 +49,7 @@ public class SingleModelMultiEditView extends AbstractBean {
     private CommentView fCommentView;
     private ULCCloseableTabbedPane fDataSetSheets;
     private ULCCloseableTabbedPane fResultSheets;
+    private ITabListener tabListener;
 
     private IActionListener f9_pressed;
 
@@ -290,7 +291,13 @@ public class SingleModelMultiEditView extends AbstractBean {
             fDataSetSheets = new ULCCloseableTabbedPane();
             fDataSetSheets.addTabListener(new ITabListener() {
                 public void tabClosing(TabEvent event) {
-                    event.getClosableTabbedPane().closeCloseableTab(event.getTabClosingIndex());
+                    int tabClosingIndex = event.getTabClosingIndex();
+                    ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
+                    if (component instanceof ISelectionListener) {
+                        fFormEditorView.removeSelectionListener((ISelectionListener) component);
+                        fVisualEditorView.removeSelectionListener((ISelectionListener) component);
+                    }
+                    event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
                     if (fDataSetSheets.getTabCount() > 0) {
                         event.getClosableTabbedPane().setSelectedIndex(0);
                     }
@@ -303,12 +310,15 @@ public class SingleModelMultiEditView extends AbstractBean {
         DataTable dataTable;
         if (p == null) {
             dataTable = new DataTable((ModelGraphModel) fGraphModel, 1, name);
+            fFormEditorView.addSelectionListener(dataTable);
+            fVisualEditorView.addSelectionListener(dataTable);
+            dataTable.addTreeSelectionListener(fVisualEditorView);
         } else {
             p.setName(name);
             dataTable = new DataTable((ModelGraphModel) fGraphModel, p);
         }
         fDataSetSheets.addTab(name, dataTable);
-        fDataSetSheets.setSelectedIndex(fDataSetSheets.getTabCount()-1);
+        fDataSetSheets.setSelectedIndex(fDataSetSheets.getTabCount() - 1);
         fLeftTabbedPane.setSelectedIndex(fLeftTabbedPane.indexOfTab("Parameters"));
     }
 
@@ -318,7 +328,13 @@ public class SingleModelMultiEditView extends AbstractBean {
             fResultSheets = new ULCCloseableTabbedPane();
             fResultSheets.addTabListener(new ITabListener() {
                 public void tabClosing(TabEvent event) {
-                    event.getClosableTabbedPane().closeCloseableTab(event.getTabClosingIndex());
+                    int tabClosingIndex = event.getTabClosingIndex();
+                    event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
+                    ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
+                    if (component instanceof ISelectionListener) {
+                        fFormEditorView.removeSelectionListener((ISelectionListener) component);
+                        fVisualEditorView.removeSelectionListener((ISelectionListener) component);
+                    }
                     if (fResultSheets.getTabCount() > 0) {
                         event.getClosableTabbedPane().setSelectedIndex(0);
                     }
@@ -329,12 +345,14 @@ public class SingleModelMultiEditView extends AbstractBean {
             fRightTabbedPane.addTab("Results", results);
         }
         SimulationResultTable resultTable = new SimulationResultTable(output, periodLabels);
+        fFormEditorView.addSelectionListener(resultTable);
+        fVisualEditorView.addSelectionListener(resultTable);
         ULCScrollPane resultScrollPane = new ULCScrollPane(resultTable);
         ULCBoxPane resultTablePane = new ULCBoxPane(true);
         resultTablePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, resultScrollPane);
         resultTablePane.setBorder(BorderFactory.createEmptyBorder());
         int index = fResultSheets.indexOfTab(name);
-        if (index<0 || inNewTab) {
+        if (index < 0 || inNewTab) {
             fResultSheets.addTab(name, resultTablePane);
         } else {
             fResultSheets.setComponentAt(index, resultTablePane);
@@ -375,14 +393,14 @@ public class SingleModelMultiEditView extends AbstractBean {
                     runner.start();
                     Map output = simulationService.getOutput();
                     List<String> periodLabels = parametrization.getPeriodLabels();
-                    if (periodLabels==null) {
+                    if (periodLabels == null) {
                         periodLabels = new ArrayList<String>();
                         for (int i = 0; i < parametrization.getPeriodCount(); i++) {
                             periodLabels.add(Integer.toString(i));
                         }
                         parametrization.setPeriodLabels(periodLabels);
                     }
-                    this.addSimulationResult(output, "results_"+parametrization.getName(), newTab, parametrization.getPeriodLabels());
+                    this.addSimulationResult(output, "results_" + parametrization.getName(), newTab, parametrization.getPeriodLabels());
                 } catch (Exception ex) {
                     ULCAlert alert = new ULCAlert("Simulation failed",
                             "Reason: " + ex.getMessage(), "ok");

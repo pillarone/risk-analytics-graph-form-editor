@@ -9,12 +9,17 @@ import com.ulcjava.base.application.datatype.ULCNumberDataType;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.tabletree.DefaultTableTreeCellRenderer;
+import com.ulcjava.base.application.tabletree.DefaultTableTreeModel;
 import com.ulcjava.base.application.tabletree.ULCTableTreeColumn;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.Dimension;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.IDataTreeNode;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.SimulationResultDataTreeModel;
 
 import java.util.List;
@@ -23,7 +28,7 @@ import java.util.Map;
 /**
  *
  */
-public class SimulationResultTable extends ULCTableTree {
+public class SimulationResultTable extends ULCTableTree implements ISelectionListener {
 
     SimulationResultDataTreeModel fTableModel;
 
@@ -102,4 +107,22 @@ public class SimulationResultTable extends ULCTableTree {
         }
     }
 
+    public void applyFilter(IComponentNodeFilter filter) {
+    }
+
+    public void setSelectedComponents(List<ComponentNode> selection) {
+        for (ComponentNode cn : selection) {
+            SimulationResultDataTreeModel.ParentNode node = fTableModel.findNode(cn.getName());
+            if (node != null) {
+                TreePath treePath = new TreePath(DefaultTableTreeModel.getPathToRoot(node));
+                makeVisible(treePath);
+                scrollCellToVisible(treePath, 0);
+                if (!getSelectionModel().isPathSelected(treePath))
+                    getSelectionModel().setSelectionPath(treePath);
+            }
+        }
+    }
+
+    public void setSelectedConnections(List<Connection> selection) {
+    }
 }

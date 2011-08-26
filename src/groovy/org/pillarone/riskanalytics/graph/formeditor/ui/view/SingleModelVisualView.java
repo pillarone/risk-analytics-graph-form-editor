@@ -24,6 +24,8 @@ import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.dnd.DataFlavor;
 import com.ulcjava.base.application.dnd.Transferable;
+import com.ulcjava.base.application.event.ITreeSelectionListener;
+import com.ulcjava.base.application.event.TreeSelectionEvent;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
@@ -34,6 +36,8 @@ import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange;
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.layout.ComponentLayout;
 import org.pillarone.riskanalytics.graph.core.layout.GraphLayoutService;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTreeComponentNode;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
@@ -41,7 +45,7 @@ import org.pillarone.riskanalytics.graph.formeditor.util.VisualSceneUtilities;
 
 import java.util.*;
 
-public class SingleModelVisualView extends AbstractBean implements GraphModelViewable, ISelectionListener {
+public class SingleModelVisualView extends AbstractBean implements GraphModelViewable, ISelectionListener, ITreeSelectionListener {
     private ApplicationContext fApplicationContext;
 
     private AbstractGraphModel fGraphModel;
@@ -549,6 +553,29 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         fULCGraph.getSelectionModel().addGraphSelectionListener(fGraphSelectionListener);
     }
 
+    /////////////////////////////////////
+    // ITreeSelectionListener
+    ////////////////////////////////////
+
+
+    public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
+        Object o = treeSelectionEvent.getPath().getLastPathComponent();
+        if (o instanceof DataTreeComponentNode) {
+            List selectedItems = new ArrayList();
+            clearSelection();
+            fULCGraph.getSelectionModel().clearSelection();
+            selectedItems.add((((DataTreeComponentNode) o).getGraphElement()));
+            setSelectedComponents(selectedItems);
+        }
+    }
+
+    private Vertex findVertexByTitle(String name) {
+        for (Vertex vertex : fULCGraph.getModel().getAllVertices()) {
+            if (vertex.getTitle().equals(name))
+                return vertex;
+        }
+        return null;
+    }
 
     ////////////////////////////////////
     // Convience methods

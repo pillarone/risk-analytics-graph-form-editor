@@ -8,7 +8,7 @@ import org.pillarone.riskanalytics.graph.formeditor.examples.Aggregator
 import org.pillarone.riskanalytics.graph.formeditor.examples.ExcessOfLoss
 import org.pillarone.riskanalytics.graph.formeditor.examples.PoissonFrequencyGenerator
 import org.pillarone.riskanalytics.graph.formeditor.examples.SingleNormalClaimsGenerator
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel.DataTreeComponentNode
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTreeComponentNode
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel.DataTreeParameterNode
 import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization

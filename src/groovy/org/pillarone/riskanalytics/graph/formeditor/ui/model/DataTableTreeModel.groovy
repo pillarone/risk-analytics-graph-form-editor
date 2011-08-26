@@ -91,67 +91,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         boolean isCellEditable(int column) { return column > 0 }
     }
 
-    class DataTreeComponentNode implements IDataTreeNode {
-        String path
-        String name
-        DataTreeComponentNode parentNode
-        GraphElement graphElement
-        List<IDataTreeNode> children = []
-        Class type = null
 
-        DataTreeComponentNode(GraphElement node, DataTreeComponentNode parent, String parentPath) {
-            this.name = node.name
-            this.parentNode = parent
-            this.path = parent == null ? "" : (parentPath.size() == 0 ? "" : parentPath + PATHSEP) + node.name
-            graphElement = node
-        }
-
-        void addChild(IDataTreeNode child) { insert(child, children.size()) }
-
-        void insert(IMutableTableTreeNode child, int i) {
-            if (child instanceof IDataTreeNode) {
-                if (i < getChildCount()) {
-                    children.add(i, (IDataTreeNode) child)
-                } else {
-                    children << (IDataTreeNode) child
-                }
-            }
-        }
-
-        ITableTreeNode getChildAt(int i) { return children[i] }
-
-        int getChildCount() { return children.size() }
-
-        void remove(int i) {
-            if (i < getChildCount()) {
-                children.remove(i)
-            }
-        }
-
-        ITableTreeNode getParent() { return parentNode }
-
-        void setParent(IMutableTableTreeNode iMutableTableTreeNode) {
-            if (parentNode instanceof DataTreeComponentNode) {
-                parentNode = (DataTreeComponentNode) iMutableTableTreeNode
-                path = parentNode.path + PATHSEP + name
-                // TODO do I need to remove this node as child from the prior parent and this as new child to the new parent?
-            }
-        }
-
-        int getIndex(ITableTreeNode child) { return children.indexOf(child) }
-
-        Object getValueAt(int column) { return column == 0 ? name : "" }
-
-        void setValueAt(Object o, int i) {
-            throw new RuntimeException("Value of a non-leaf node cannot be changed.")
-        }
-
-        boolean isCellEditable(int i) {
-            return false
-        }
-
-        boolean isLeaf() { return false }
-    }
 
     // methods to setup, manipulate and search the tree
 
@@ -374,7 +314,9 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
     }
 
     void connectionAdded(Connection c) { }
+
     void connectionRemoved(Connection c) { }
+
     void outerPortAdded(Port p) {}
 
     void outerPortRemoved(Port p) {}
@@ -403,7 +345,77 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         }
     }
 
+    public DataTreeComponentNode findNode(String name) {
+        for (IDataTreeNode node: fRoot.getChildren()) {
+            if (node instanceof DataTreeComponentNode && node.name.equals(name))
+                return node
+        }
+        return null
+    }
+
 }
+
+class DataTreeComponentNode implements IDataTreeNode {
+        String path
+        String name
+        DataTreeComponentNode parentNode
+        GraphElement graphElement
+        List<IDataTreeNode> children = []
+        Class type = null
+
+        DataTreeComponentNode(GraphElement node, DataTreeComponentNode parent, String parentPath) {
+            this.name = node.name
+            this.parentNode = parent
+            this.path = parent == null ? "" : (parentPath.size() == 0 ? "" : parentPath + PATHSEP) + node.name
+            graphElement = node
+        }
+
+        void addChild(IDataTreeNode child) { insert(child, children.size()) }
+
+        void insert(IMutableTableTreeNode child, int i) {
+            if (child instanceof IDataTreeNode) {
+                if (i < getChildCount()) {
+                    children.add(i, (IDataTreeNode) child)
+                } else {
+                    children << (IDataTreeNode) child
+                }
+            }
+        }
+
+        ITableTreeNode getChildAt(int i) { return children[i] }
+
+        int getChildCount() { return children.size() }
+
+        void remove(int i) {
+            if (i < getChildCount()) {
+                children.remove(i)
+            }
+        }
+
+        ITableTreeNode getParent() { return parentNode }
+
+        void setParent(IMutableTableTreeNode iMutableTableTreeNode) {
+            if (parentNode instanceof DataTreeComponentNode) {
+                parentNode = (DataTreeComponentNode) iMutableTableTreeNode
+                path = parentNode.path + PATHSEP + name
+                // TODO do I need to remove this node as child from the prior parent and this as new child to the new parent?
+            }
+        }
+
+        int getIndex(ITableTreeNode child) { return children.indexOf(child) }
+
+        Object getValueAt(int column) { return column == 0 ? name : "" }
+
+        void setValueAt(Object o, int i) {
+            throw new RuntimeException("Value of a non-leaf node cannot be changed.")
+        }
+
+        boolean isCellEditable(int i) {
+            return false
+        }
+
+        boolean isLeaf() { return false }
+    }
 
 public interface IDataTreeNode extends IMutableTableTreeNode {
     String getPath()
