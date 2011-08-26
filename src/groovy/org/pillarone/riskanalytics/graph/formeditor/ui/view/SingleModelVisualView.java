@@ -707,12 +707,25 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
 
         public void edgeRemoved(@NotNull Edge edge) {
-            if (fConnectionsMap.containsKey(edge.getId())) {
-                Connection conn = fConnectionsMap.get(edge.getId());
-                fConnectionsMap.remove(edge.getId());
-                fGraphModel.removeConnection(conn);
+            org.pillarone.riskanalytics.graph.core.graph.model.Port outPort = getGraphPort(fULCGraph.getPort(edge.getSourceId()));
+            org.pillarone.riskanalytics.graph.core.graph.model.Port inPort = getGraphPort(fULCGraph.getPort(edge.getTargetId()));
+            for (String connectionKey : fConnectionsMap.keySet()) {
+                Connection connection = fConnectionsMap.get(connectionKey);
+                if (connection.getFrom().toString().equals(outPort.toString()) && connection.getTo().toString().equals(inPort.toString())) {
+                    fConnectionsMap.remove(connectionKey);
+                    fGraphModel.removeConnection(connection);
+                    break;
+                }
             }
+            //fja: it doesn't work, edge.getId is null
+            //            if (fConnectionsMap.containsKey(edge.getId())) {
+//                Connection conn = fConnectionsMap.get(edge.getId());
+//                fConnectionsMap.remove(edge.getId());
+//                fGraphModel.removeConnection(conn);
+//            }
+//        }
         }
+
     }
 
     private class GraphModelListener implements IGraphModelChangeListener {

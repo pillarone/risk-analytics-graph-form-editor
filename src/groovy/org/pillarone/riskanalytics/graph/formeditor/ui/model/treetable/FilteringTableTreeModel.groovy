@@ -46,7 +46,7 @@ class FilteringTableTreeModel extends AbstractTableTreeModel implements ITableTr
     }
 
     private def findValidSynchronizationStart(TreePath path) {
-        ITableTreeNode  node = (ITableTreeNode) path.lastPathComponent
+        ITableTreeNode node = (ITableTreeNode) path.lastPathComponent
         while (!(nodeMapping[node] && isAcceptedNode(node)) && node.parent != null) {
             node = node.parent
         }
@@ -173,7 +173,7 @@ class FilteringTableTreeModel extends AbstractTableTreeModel implements ITableTr
     }
 
     public boolean isLeaf(Object node) {
-        return ((ITableTreeNode)node).childCount == 0;
+        return ((ITableTreeNode) node).childCount == 0;
     }
 
     public int getIndexOfChild(Object parent, Object child) {
@@ -269,9 +269,21 @@ class FilteringTableTreeModel extends AbstractTableTreeModel implements ITableTr
     private class GraphListener implements IGraphModelChangeListener {
 
         public void connectionAdded(Connection c) {
+            GraphElementNode from = model.findNode(c.from)
+            from.updateColumnValues()
+            nodeChanged(model.getTreePath(from));
+            GraphElementNode toNode = model.findNode(c.to)
+            toNode.updateColumnValues()
+            nodeChanged(model.getTreePath(toNode));
         }
 
         public void connectionRemoved(Connection c) {
+            GraphElementNode from = model.findNode(c.from)
+            from.updateColumnValues()
+            nodeChanged(model.getTreePath(from));
+            GraphElementNode toNode = model.findNode(c.to)
+            toNode.updateColumnValues()
+            nodeChanged(model.getTreePath(toNode));
         }
 
         public void nodeAdded(ComponentNode node) {
