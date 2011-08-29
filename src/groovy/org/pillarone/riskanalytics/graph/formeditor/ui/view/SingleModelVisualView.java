@@ -23,19 +23,23 @@ import com.ulcjava.applicationframework.application.ApplicationActionMap;
 import com.ulcjava.applicationframework.application.ApplicationContext;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.dnd.DataFlavor;
+import com.ulcjava.base.application.dnd.DnDTreeData;
 import com.ulcjava.base.application.dnd.Transferable;
+import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.jetbrains.annotations.NotNull;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.NoneComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange;
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.layout.ComponentLayout;
 import org.pillarone.riskanalytics.graph.core.layout.GraphLayoutService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.VisualSceneUtilities;
 
@@ -129,6 +133,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         graphFrame.setWindowDecorationStyle(ULCRootPane.NONE);
         graphFrame.setBorder(BorderFactory.createEmptyBorder());
         graphFrame.putClientProperty("JInternalFrame.isPalette", Boolean.TRUE);
+        graphFrame.setIcon(false);
         graphFrame.setVisible(true);
 
         ULCGraphOutline satelliteView = new ULCGraphOutline(fULCGraphComponent);
@@ -138,7 +143,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         satelliteFrame.setBounds(1205, 375, 200, 120);
         satelliteFrame.setWindowDecorationStyle(ULCRootPane.NONE);
         satelliteFrame.putClientProperty("JInternalFrame.isPalette", Boolean.TRUE);
-        //satelliteFrame.setBorder(BorderFactory.createEmptyBorder());
+        satelliteFrame.setBorder(BorderFactory.createEmptyBorder());
+        satelliteFrame.setIcon(false);
         satelliteFrame.setVisible(true);
 
         content.add(graphFrame);
@@ -355,6 +361,11 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                         "Port " + port.getTitle() + " cannot be identified.", "ok");
                 alert.show();
                 return;
+            } else if (graphPort instanceof InPort) {
+                ULCAlert alert = new ULCAlert("In-Port selected.",
+                        "Only out-ports can be watched.", "ok");
+                alert.show();
+                return;
             }
             String path = GraphModelUtilities.getPath(graphPort, fGraphModel);
             fWatchList.addWatch(path);
@@ -365,9 +376,9 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         ULCPopupMenu popupMenu = new ULCPopupMenu();
         ApplicationActionMap actionMap = fApplicationContext.getActionMap(this);
 
-        ULCMenuItem addNodeItem = new ULCMenuItem("add node");
+        /*ULCMenuItem addNodeItem = new ULCMenuItem("add node");
         addNodeItem.addActionListener(actionMap.get("addNodeAction"));
-        popupMenu.add(addNodeItem);
+        popupMenu.add(addNodeItem);*/
 
         if (fGraphModel instanceof ComposedComponentGraphModel) {
             ULCMenuItem replicatePortItem = new ULCMenuItem("replicate port");
@@ -378,7 +389,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             removeReplicatedPortItem.addActionListener(actionMap.get("removePortAction"));
             popupMenu.add(removeReplicatedPortItem);
         } else {
-            ULCMenuItem addToWatchesItem = new ULCMenuItem("add port to watches");
+            ULCMenuItem addToWatchesItem = new ULCMenuItem("add to watches");
             addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));
             popupMenu.add(addToWatchesItem);
         }
@@ -540,9 +551,10 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     /////////////////////////////////////////
 
     public void applyFilter(IComponentNodeFilter filter) {
+        boolean isTrivialFilter = filter instanceof NoneComponentNodeFilter;
         for (Map.Entry<String, ComponentNode> entry : fNodesMap.entrySet()) {
             Vertex v = fULCGraph.getVertex(entry.getKey());
-            if (filter.isSelected(entry.getValue())) {
+            if (filter.isSelected(entry.getValue())&&!isTrivialFilter) {
                 v.setStyle(StyleType.fillColor, "yellow");
             } else {
                 v.setStyle(StyleType.fillColor, "white");
@@ -660,7 +672,9 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         if (p instanceof org.pillarone.riskanalytics.graph.core.graph.model.InPort) {
             port = new Port(id, PortType.REPLICATE_IN, p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
             IntegerRange range = p.getConnectionCardinality();
-            port.addConstraint(new PortConstraint(p.getPacketType().getName(), range.getFrom(), range.getTo()));
+            int rangeLower = range != null ? range.getFrom() : 0;
+            int rangeUpper = range != null ? range.getTo() : Integer.MAX_VALUE;
+            port.addConstraint(new PortConstraint(p.getPacketType().getName(), rangeLower, rangeUpper));
         } else {
             port = new Port(id, PortType.REPLICATE_OUT, p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
             port.addConstraint(new PortConstraint(p.getPacketType().getName(), 0, Integer.MAX_VALUE));
@@ -889,13 +903,12 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         @Override
         public boolean importData(final ULCComponent inTargetComponent, final Transferable inTransferable) {
-            final Object data = inTransferable.getTransferData(DataFlavor.DROP_FLAVOR);
-            if (data instanceof GraphTransferData) {
-                final GraphTransferData transferData = (GraphTransferData) data;
-
+            final Object dropData0 = inTransferable.getTransferData(DataFlavor.DROP_FLAVOR);
+            if (dropData0 instanceof GraphTransferData) {
+                final GraphTransferData dropData = (GraphTransferData) dropData0;
+                Vertex vertex = dropData.getTransferredVertex();
                 String compDef = null;
 
-                Vertex vertex = (transferData).getTransferredVertex();
                 // try first whether the dragged object is already a vertex (then it comes from a palette)
                 if (vertex != null) {
                     compDef = vertex.getTemplateId();
@@ -904,9 +917,15 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                     // if not returned yet it has not been a vertex
                     // then it typically comes from a TypeTreeNode
                     // try to collect the information needed from there
-                    final Point mouseLocation = transferData.getMouseLocation();
-                    compDef = transferData.getTransferString();
-                    fCurrentPosition = mouseLocation;
+                    fCurrentPosition = dropData.getMouseLocation();
+
+                    final Object dragData0 = inTransferable.getTransferData(DataFlavor.DRAG_FLAVOR);
+                    DnDTreeData dragData = (DnDTreeData) dragData0;
+                    TreePath[] paths = dragData.getTreePaths();
+                    Object selected = paths[0].getLastPathComponent();
+                    if (selected instanceof TypeTreeNode) {
+                        compDef = ((TypeTreeNode) selected).getFullName();
+                    }
                 }
 
                 NodeEditDialog nodeEditDialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), fGraphModel);
