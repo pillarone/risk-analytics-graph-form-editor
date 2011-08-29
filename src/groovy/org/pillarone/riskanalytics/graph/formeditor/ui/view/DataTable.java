@@ -14,6 +14,7 @@ import com.ulcjava.base.application.util.Color;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.shared.UlcEventConstants;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
+import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel;
@@ -27,12 +28,12 @@ import java.util.Map;
  */
 public class DataTable extends ULCBoxPane {
 
-    ModelGraphModel fGraphModel;
+    AbstractGraphModel fGraphModel;
     DataTableTreeModel fTableModel;
     ULCTableTree fTableTree;
 
 
-    public DataTable(ModelGraphModel model, int periodCount, String dataObjectName) {
+    public DataTable(AbstractGraphModel model, int periodCount, String dataObjectName) {
         super(true);
         fTableModel = new DataTableTreeModel(model, periodCount, dataObjectName);
         fGraphModel = model;
@@ -41,7 +42,7 @@ public class DataTable extends ULCBoxPane {
         addCellEditorsAndRenderers();
     }
 
-    public DataTable(ModelGraphModel model, Parameterization parametrization) {
+    public DataTable(AbstractGraphModel model, Parameterization parametrization) {
         super(true);
         fTableModel = new DataTableTreeModel(model, parametrization);
         fGraphModel = model;
