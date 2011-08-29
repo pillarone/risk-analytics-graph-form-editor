@@ -29,7 +29,7 @@ public class WatchesTable extends ULCBoxPane {
         super(true);
         fTableModel = new WatchesTreeModel();
         createView();
-        addCellEditorsAndRenderers();
+        addCellRenderers();
     }
 
     public void createView() {
@@ -55,8 +55,36 @@ public class WatchesTable extends ULCBoxPane {
         return fTableModel;
     }
 
+    public ULCTableTree getTable() {
+        return fTableTree;
+    }
+
     private void createContextMenu() {
         ULCPopupMenu menu = new ULCPopupMenu();
+
+        ULCMenuItem removeItem = new ULCMenuItem("remove");
+        removeItem.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                TreePath[] selectedPaths = fTableTree.getSelectedPaths();
+                for (TreePath treePath : selectedPaths) {
+                    if (treePath.getPathCount()==2) {
+                        String path = (String) ((ITableTreeNode) treePath.getLastPathComponent()).getValueAt(0);
+                        fTableModel.removeWatch(path);
+                    }
+                }
+            }
+        });
+        menu.add(removeItem);
+
+        ULCMenuItem removeAllItem = new ULCMenuItem("remove all");
+        removeAllItem.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                fTableModel.removeAllWatches();
+            }
+        });
+        menu.add(removeAllItem);
+
+        menu.addSeparator();
 
         ULCMenuItem expandItem = new ULCMenuItem("expand");
         expandItem.addActionListener(new IActionListener() {
@@ -66,6 +94,7 @@ public class WatchesTable extends ULCBoxPane {
             }
         });
         menu.add(expandItem);
+
         ULCMenuItem expandAllItem = new ULCMenuItem("expand all");
         expandAllItem.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -92,151 +121,12 @@ public class WatchesTable extends ULCBoxPane {
         fTableTree.setComponentPopupMenu(menu);
     }
 
-
-    private void addCellEditorsAndRenderers() {
-        Map<Class, ITableTreeCellEditor> editors = createEditors();
-        for (int i = 1; i < fTableTree.getColumnModel().getColumnCount(); i++) {
+    private void addCellRenderers() {
+        DefaultTableTreeCellRenderer defaultTableTreeCellRenderer = new DefaultTableTreeCellRenderer();
+        for (int i = 0; i < fTableTree.getColumnModel().getColumnCount(); i++) {
             ULCTableTreeColumn column = fTableTree.getColumnModel().getColumn(i);
-            column.setCellEditor(new DelegatingCellEditor(editors));
-            IDataType dataType = new ULCNumberDataType<Double>(ClientContext.getLocale());
-            column.setCellRenderer(new BasicCellRenderer(i, dataType));
-        }
-    }
-
-    private class DelegatingCellEditor extends DefaultCellEditor implements ITableTreeCellEditor {
-
-        private Map<Class, ITableTreeCellEditor> editors;
-
-        public DelegatingCellEditor(Map<Class, ITableTreeCellEditor> editors) {
-            super(new ULCTextField());
-            this.editors = editors;
-        }
-
-        public IEditorComponent getTableTreeCellEditorComponent(ULCTableTree ulcTableTree, Object value,
-                                                                boolean selected, boolean expanded,
-                                                                boolean leaf, Object node) {
-            ITableTreeCellEditor editor = null;
-            if (node instanceof IDataTreeNode) {
-                editor = editors.get(((IDataTreeNode) node).getType());
-            }
-            if (editor != null) {
-                return editor.getTableTreeCellEditorComponent(ulcTableTree, value, selected, expanded, leaf, node);
-            } else {
-                return super.getTableTreeCellEditorComponent(ulcTableTree, value, selected, expanded, leaf, node);
-            }
-        }
-    }
-
-    private Map<Class, ITableTreeCellEditor> createEditors() {
-        Map<Class, ITableTreeCellEditor> editors = new HashMap<Class, ITableTreeCellEditor>();
-        // double
-        BaseCellEditor doubleEditor = new BaseCellEditor(Double.class) {
-            @Override
-            public IEditorComponent getTableTreeCellEditorComponent(ULCTableTree tableTree, Object value, boolean selected, boolean expanded, boolean leaf, Object node) {
-                ULCTextField editor = (ULCTextField) super.getTableTreeCellEditorComponent(tableTree, value, selected, expanded, leaf, node);
-                editor.setDataType(this.dataType);
-                editor.setHorizontalAlignment(ULCTextField.RIGHT);
-                return editor;
-            }
-        };
-        editors.put(Double.class, doubleEditor);
-
-        // integer
-        BaseCellEditor integerEditor = new BaseCellEditor(Integer.class) {
-            @Override
-            public IEditorComponent getTableTreeCellEditorComponent(ULCTableTree tableTree, Object value, boolean selected, boolean expanded, boolean leaf, Object node) {
-                ULCTextField editor = (ULCTextField) super.getTableTreeCellEditorComponent(tableTree, value, selected, expanded, leaf, node);
-                editor.setDataType(this.dataType);
-                editor.setHorizontalAlignment(ULCTextField.RIGHT);
-                return editor;
-            }
-        };
-        editors.put(Integer.class, integerEditor);
-
-        // boolean
-        ITableTreeCellEditor booleanEditor = new CheckBoxCellComponent();
-        editors.put(Boolean.class, booleanEditor);
-
-        return editors;
-    }
-
-    private class BaseCellEditor extends DefaultCellEditor {
-        protected IDataType dataType;
-
-        BaseCellEditor(Class type) {
-            super(new ULCTextField());
-            if (type.equals(Double.class)) {
-                dataType = new ULCNumberDataType<Double>(ClientContext.getLocale());
-            } else if (type.equals(Integer.class)) {
-                dataType = new ULCNumberDataType<Integer>(ClientContext.getLocale());
-            }
-        }
-    }
-
-    private class CheckBoxCellComponent extends ULCCheckBox implements ITableTreeCellRenderer, ITableTreeCellEditor {
-
-        CheckBoxCellComponent() {
-            setHorizontalAlignment(ULCCheckBox.RIGHT);
-        }
-
-        public IRendererComponent getTableTreeCellRendererComponent(ULCTableTree ulcTableTree, Object value, boolean selected, boolean hasFocus, boolean expanded, boolean leaf, Object node) {
-            selected = (Boolean) value;
-            return this;
-        }
-
-        public IEditorComponent getTableTreeCellEditorComponent(ULCTableTree tableTree, Object value, boolean selected, boolean expanded, boolean leaf, Object node) {
-            selected = (Boolean) value;
-            return this;
-        }
-    }
-
-    public class BasicCellRenderer extends DefaultTableTreeCellRenderer implements ITableTreeCellRenderer {
-
-        protected int columnIndex;
-        private IDataType dataType;
-
-        public BasicCellRenderer(int columnIndex, IDataType dataType) {
-            this.columnIndex = columnIndex;
-            this.dataType = dataType;
-        }
-
-
-        public IRendererComponent getTableTreeCellRendererComponent(ULCTableTree ulcTableTree, Object value,
-                                                                    boolean selected, boolean hasFocus, boolean expanded,
-                                                                    boolean leaf, Object node) {
-            if (!selected) {
-                if (value != null || ((IMutableTableTreeNode) node).isCellEditable(columnIndex)) {
-                    setBackground(Color.white);
-                    // setComponentPopupMenu(menu);
-                } else {
-                    setBackground(Color.lightGray);
-                    setComponentPopupMenu(null);
-                }
-                setHorizontalAlignment(ULCLabel.RIGHT);
-            }
-            setDataType(dataType);
-            return super.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
-        }
-    }
-
-    public class DelegatingCellRenderer extends DefaultTableTreeCellRenderer {
-
-        private HashMap<Class, ITableTreeCellRenderer> renderers;
-
-        public DelegatingCellRenderer(HashMap<Class, ITableTreeCellRenderer> renderers) {
-            this.renderers = renderers;
-        }
-
-        @Override
-        public IRendererComponent getTableTreeCellRendererComponent(ULCTableTree ulcTableTree, Object value,
-                                                                    boolean selected, boolean hasFocus, boolean expanded,
-                                                                    boolean leaf, Object node) {
-            ITableTreeCellRenderer renderer = renderers.get(node.getClass());
-            if (renderer != null) {
-                return renderer.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
-            } else {
-                return super.getTableTreeCellRendererComponent(ulcTableTree, value, selected, hasFocus, expanded, leaf, node);
-            }
+            column.setMaxWidth(200);
+            column.setCellRenderer(defaultTableTreeCellRenderer);
         }
     }
 }
