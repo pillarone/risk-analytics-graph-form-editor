@@ -1,12 +1,11 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.model
 
-import com.ulcjava.base.application.tabletree.ITableTreeNode
-import com.ulcjava.base.application.tabletree.ITableTreeModel
 import com.ulcjava.base.application.tabletree.AbstractTableTreeModel
-import java.util.Map.Entry
+import com.ulcjava.base.application.tabletree.ITableTreeModel
+import com.ulcjava.base.application.tabletree.ITableTreeNode
 import com.ulcjava.base.application.tree.TreePath
+import java.util.Map.Entry
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.IWatchList
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 
 /**
  *
@@ -15,31 +14,61 @@ class WatchesTreeModel extends AbstractTableTreeModel  implements ITableTreeMode
 
     private static final String PATHSEP = ':'
     private ParentNode fRoot
-    private String[] fPeriodLabels
+    private List<String> fPeriodLabels
 
     public WatchesTreeModel() {
         super()
         fRoot = new ParentNode("Watches", null)
-        fPeriodLabels = ["Name", 1]
+        fPeriodLabels = [1]
     }
 
     public void addWatch(String path) {
         if (!fRoot.hasChild(path)) {
             ParentNode node = new ParentNode(path, fRoot)
             fRoot.addChild(path, node)
-            nodesWereInserted(new TreePath([fRoot, node] as Object[], [fRoot.childCount-1] as int[]));
+            structureChanged()
+            //nodesWereInserted(new TreePath([fRoot] as Object[], [fRoot.childCount-1] as int[]));
+
         }
     }
 
     public void removeWatch(String path) {
-        List watchesToRemove = fRoot.children.collect {entry -> entry.key==path}
-        watchesToRemove.each {it -> fRoot.children.remove(it.key)}
+        Map watchesToRemove = fRoot.children.findAll {entry -> entry.key==path}
+        List<Integer> indices = []
+        List<ITableTreeNode> nodes = []
+        watchesToRemove.each {key,value ->
+            indices << fRoot.getIndex(value)
+            nodes << value
+            fRoot.children.remove(key)}
+        nodesWereRemoved(new TreePath([fRoot] as Object[]), indices as int[], nodes as ITableTreeNode[])
     }
 
     public void removeAllWatches() {
         fRoot.children = [:]
+        nodeStructureChanged(new TreePath([fRoot] as Object[]))
     }
 
+    public void injectData(Map simulationResults, List<String> periodLabels) {
+        if (periodLabels != fPeriodLabels) {
+            fPeriodLabels = periodLabels
+        }
+        for (Entry entry : fRoot.children) {
+            Map dataNode = simulationResults[entry.key]
+            if (dataNode) {
+                ParentNode watchNode = entry.value
+                for (Entry fieldEntry : dataNode.entrySet()) {
+                    if (!watchNode.hasChild(fieldEntry.key)) {
+                        ParentNode fieldNode = new ParentNode(fieldEntry.key, watchNode)
+                        watchNode.addChild(fieldEntry.key, fieldNode)
+                    }
+                    ParentNode fieldNode = (ParentNode) watchNode.children[fieldEntry.key]
+                    createDataSubTree(fieldNode, (Map) fieldEntry.value)
+                }
+                nodeStructureChanged(new TreePath([fRoot,watchNode] as Object[]));
+            }
+        }
+    }
+    
     class DataNode implements ITableTreeNode {
         int index
         ITableTreeNode parentNode
@@ -89,30 +118,6 @@ class WatchesTreeModel extends AbstractTableTreeModel  implements ITableTreeMode
         }
         boolean hasChild(def id) {
             return children.containsKey(id)
-        }
-
-        void addData(Map data) {
-
-        }
-    }
-
-    public void injectData(Map simulationResults, List<String> periodLabels) {
-        if (periodLabels != fPeriodLabels) {
-            fPeriodLabels = periodLabels
-        }
-        for (Entry entry : fRoot.children) {
-            Map dataNode = simulationResults[entry.key]
-            if (dataNode) {
-                ParentNode watchNode = entry.value
-                for (Entry fieldEntry : dataNode.entrySet()) {
-                    if (!watchNode.hasChild(fieldEntry.key)) {
-                        ParentNode fieldNode = new ParentNode(watchNode, fieldEntry.key)
-                        watchNode.addChild(fieldEntry.key, fieldNode)
-                    }
-                    ParentNode fieldNode = (ParentNode) watchNode.children[fieldEntry.key]
-                    createDataSubTree(fieldNode, (Map) fieldEntry.value)
-                }
-            }
         }
     }
 
