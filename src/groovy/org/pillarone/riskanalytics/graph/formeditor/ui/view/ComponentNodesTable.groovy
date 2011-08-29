@@ -1,46 +1,33 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 
+import com.ulcjava.applicationframework.application.Action
+import com.ulcjava.applicationframework.application.ApplicationActionMap
 import com.ulcjava.applicationframework.application.ApplicationContext
-import com.ulcjava.base.application.ClientContext
-import com.ulcjava.base.application.ULCTableTree
-import com.ulcjava.base.application.event.ITreeSelectionListener
-import com.ulcjava.base.application.event.TreeSelectionEvent
+import com.ulcjava.base.application.dnd.DataFlavor
+import com.ulcjava.base.application.dnd.DnDTreeData
+import com.ulcjava.base.application.dnd.TransferHandler
+import com.ulcjava.base.application.dnd.Transferable
 import com.ulcjava.base.application.tabletree.AbstractTableTreeModel
 import com.ulcjava.base.application.tabletree.DefaultTableTreeCellRenderer
 import com.ulcjava.base.application.tabletree.ULCTableTreeColumn
 import com.ulcjava.base.application.tree.TreePath
 import com.ulcjava.base.application.tree.ULCTreeSelectionModel
-import com.ulcjava.base.application.util.Color
 import com.ulcjava.base.application.util.Dimension
+import com.ulcjava.base.application.util.KeyStroke
 import com.ulcjava.base.shared.UlcEventConstants
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.NoneComponentNodeFilter
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.FilteringTableTreeModel
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.GraphElementNode
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodesTableTreeModel
+import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities
+import com.ulcjava.base.application.*
+import com.ulcjava.base.application.event.*
 import org.pillarone.riskanalytics.graph.core.graph.model.*
-import com.ulcjava.base.application.ULCPopupMenu
-import com.ulcjava.base.application.ULCMenuItem
-import com.ulcjava.applicationframework.application.ApplicationActionMap
-import com.ulcjava.base.application.IAction
-import com.ulcjava.base.application.util.KeyStroke
-import com.ulcjava.base.application.event.KeyEvent
-import com.ulcjava.base.application.ULCComponent
-import com.ulcjava.applicationframework.application.Action
-import com.ulcjava.base.application.ULCAlert
-import com.ulcjava.base.application.UlcUtilities
-import com.ulcjava.base.application.event.IWindowListener
-import com.ulcjava.base.application.event.WindowEvent
-import com.ulcjava.base.application.event.IActionListener
-import com.ulcjava.base.application.event.ActionEvent
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean
-import com.ulcjava.base.application.dnd.TransferHandler
-import com.ulcjava.base.application.dnd.Transferable
-import com.ulcjava.base.application.dnd.DataFlavor
-import com.ulcjava.base.application.dnd.DnDTreeData
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean
 
 /**
  *
@@ -52,6 +39,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     ApplicationContext fApplicationContext;
     List<ISelectionListener> fSelectionListeners;
     boolean fExternalSelection;
+    IWatchList fWatchList;
 
     public ComponentNodesTable(ApplicationContext ctx, AbstractGraphModel model) {
         fApplicationContext = ctx;
@@ -135,9 +123,9 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         ULCPopupMenu nodesMenu = new ULCPopupMenu();
         ApplicationActionMap actionMap = fApplicationContext.getActionMap(this)
 
-        ULCMenuItem addItem = new ULCMenuItem("add node")
+        /*ULCMenuItem addItem = new ULCMenuItem("add node")
         addItem.addActionListener(actionMap.get("newNodeAction"))
-        nodesMenu.add(addItem)
+        nodesMenu.add(addItem)*/
 
         ULCMenuItem editItem = new ULCMenuItem("edit node")
         IAction editNodeAction = actionMap.get("modifyNodeAction");
@@ -165,6 +153,12 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
 
         nodesMenu.addSeparator()
 
+        ULCMenuItem addToWatchesItem = new ULCMenuItem("add to watches");
+        addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));
+        nodesMenu.add(addToWatchesItem);
+
+        nodesMenu.addSeparator()
+
         ULCMenuItem expandItem = new ULCMenuItem("expand")
         expandItem.addActionListener(actionMap.get("expandAction"))
         nodesMenu.add(expandItem)
@@ -189,6 +183,10 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         nodesMenu.add(clearSelectionsItem)
 
         this.setComponentPopupMenu(nodesMenu)
+    }
+
+    public void setWatchList(IWatchList watchList) {
+        fWatchList = watchList;
     }
 
     @Action
@@ -379,6 +377,21 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         clearSelection();
         for (ISelectionListener listener: fSelectionListeners) {
             listener.clearSelection();
+        }
+    }
+
+    @Action
+    public void addSelectedToWatches() {
+        List<Port> selectedPorts = this.getSelectedPorts();
+        for (Port graphPort : selectedPorts) {
+            if (graphPort instanceof InPort) {
+                ULCAlert alert = new ULCAlert("In-Port selected.",
+                        "Only out-ports can be watched.", "ok");
+                alert.show();
+                return;
+            }
+            String path = GraphModelUtilities.getPath(graphPort, fGraphModel);
+            fWatchList.addWatch(path);
         }
     }
 
