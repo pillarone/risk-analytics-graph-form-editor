@@ -60,8 +60,6 @@ public class GraphModelEditor extends AbstractBean {
     private Map<ULCComponent, SingleModelMultiEditView> fModelTabs;
     /* A dialog for models or composed components to be imported.*/
     private TypeImportDialog fTypeImportView;
-    /* Palette views.*/
-    private ULCBoxPane fPaletteArea;
 
     private ModelRepositoryTree fModelRepositoryTree;
 
@@ -103,9 +101,9 @@ public class GraphModelEditor extends AbstractBean {
 
         ULCBoxPane palettePane = new ULCBoxPane(1, 2);
         TabularFilterView filterView = new TabularFilterView();
-        fPaletteArea = getPalettePane(filterView);
+        ULCBoxPane paletteArea = getPalettePane(filterView);
         palettePane.add(ULCBoxPane.BOX_LEFT_TOP, filterView.getContent());
-        palettePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, new ULCScrollPane(fPaletteArea));
+        palettePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, new ULCScrollPane(paletteArea));
 
         ULCBoxPane repositoryTreePane = new ULCBoxPane(true);
         repositoryTreePane.setPreferredSize(new Dimension(200, 200));
@@ -443,7 +441,7 @@ public class GraphModelEditor extends AbstractBean {
             }
 
             public void onFailure(int reason, String description) {
-                new ULCAlert(ancestor, "Export failed", description, "Ok").show();
+                new ULCAlert(ancestor, "Export failed", description, "ok").show();
             }
         };
         ClientContext.chooseFile(chooser, config, ancestor);
@@ -467,7 +465,7 @@ public class GraphModelEditor extends AbstractBean {
     }
 
     public ULCToolBar getToolBar() {
-        return new ToolBarFactory(getActionMap()).createToolBar("newModelAction", "importModelAction", "saveModelAction", "exportModelToGroovyAction", "exportModelToApplicationAction", "createParametersAction", "importParametersAction", "simulateAction");
+        return new ToolBarFactory(getActionMap()).createToolBar("newModelAction", "importModelAction", "saveModelAction", "exportModelToGroovyAction", "exportModelToApplicationAction", "createParametersAction", "importParametersAction", "exportParametersAction", "simulateAction");
     }
 
     @Action
@@ -513,48 +511,17 @@ public class GraphModelEditor extends AbstractBean {
         ClientContext.loadFile(handler, config, fEditorArea);
     }
 
-    /*private class DataNameDialog extends ULCDialog {
-        private BeanFormDialog<DataNameFormModel> fBeanForm;
-
-        DataNameDialog(ULCWindow parent) {
-            super(parent);
-            boolean metalLookAndFeel = "Metal".equals(ClientContext.getLookAndFeelName());
-            if (!metalLookAndFeel && ClientContext.getLookAndFeelSupportsWindowDecorations()) {
-                setUndecorated(true);
-                setWindowDecorationStyle(ULCDialog.PLAIN_DIALOG);
-            }
-            createBeanView();
-            setTitle("Name of the data set to be created");
-            setLocationRelativeTo(parent);
+    @Action
+    public void exportParametersAction() {
+        ULCComponent comp = fEditorArea.getSelectedComponent();
+        DataTable data = fModelTabs.get(comp).getSelectedDataTable();
+        if (data==null) {
+            ULCAlert alert = new ULCAlert("No data selected",
+                    "No data to export", "ok");
+            alert.show();
+            return;
         }
-
-        @SuppressWarnings("serial")
-        private void createBeanView() {
-            DataNameFormModel model = new DataNameFormModel(new NameBean());
-            DataNameForm form = new DataNameForm(model);
-            fBeanForm = new BeanFormDialog<DataNameFormModel>(form);
-            add(fBeanForm.getContentPane());
-            fBeanForm.addSaveActionListener(new IActionListener() {
-                public void actionPerformed(ActionEvent event) {
-                    NameBean bean = fBeanForm.getModel().getBean();
-                    String nodeName = bean.getName();
-                    setVisible(false);
-                    fBeanForm.reset();
-                }
-            });
-
-            setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-            addWindowListener(new IWindowListener() {
-                public void windowClosing(WindowEvent event) {
-                    fBeanForm.interceptIfDirty(new Runnable() {
-                        public void run() {
-                            setVisible(false);
-                        }
-                    });
-                }
-            });
-            pack();
-        }
-    } */
-
+        String content = " "; // TODO
+        saveOutput(data.getName() + ".groovy", content, UlcUtilities.getWindowAncestor(this.getContentView()));
+    }
 }
