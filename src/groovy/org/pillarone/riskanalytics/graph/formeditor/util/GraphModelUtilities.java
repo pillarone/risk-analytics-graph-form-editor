@@ -204,7 +204,7 @@ public class GraphModelUtilities {
     public static List<GraphElement> getModelTreePath(GraphElement element, final AbstractGraphModel model) {
         List<GraphElement> modelTreePath = new LinkedList<GraphElement>();
         Iterator<ComponentNode> it = model.getAllComponentNodes().iterator();
-        while (modelTreePath.size()==0 || it.hasNext()) {
+        while (modelTreePath.size()==0 && it.hasNext()) {
             List<GraphElement> subTree = getModelTreePath(element, it.next());
             if (subTree.size()>0) {
                 modelTreePath = subTree;
@@ -215,30 +215,32 @@ public class GraphModelUtilities {
 
     public static List<GraphElement> getModelTreePath(GraphElement element, final GraphElement context) {
         List<GraphElement> modelTreePath = new LinkedList<GraphElement>();
-        if (context instanceof ComposedComponentNode) {
-            ComposedComponentNode cc = (ComposedComponentNode)context;
-            for (ComponentNode node : cc.getComponentGraph().getAllComponentNodes()) {
-                if (node.equals(element)) {
-                    modelTreePath.add(element);
-                    return modelTreePath;
-                } else {
+        if (element.equals(context)) {
+            modelTreePath.add(element);
+            return modelTreePath;
+        } else if (context instanceof ComponentNode) {
+            ComponentNode c = (ComponentNode) context;
+            if (context instanceof ComposedComponentNode) {
+                ComposedComponentNode cc = (ComposedComponentNode)c;
+                for (ComponentNode node : cc.getComponentGraph().getAllComponentNodes()) {
                     List<GraphElement> subPath = getModelTreePath(element, node);
                     if (subPath.size()>0) {
+                        modelTreePath.add(c);
                         modelTreePath.addAll(subPath);
                         return modelTreePath;
                     }
                 }
             }
-        }
-        if (element instanceof Port && context instanceof ComponentNode) {
             for (Port p : ((ComponentNode)context).getInPorts()) {
                 if (p.equals(element)) {
+                    modelTreePath.add(c);
                     modelTreePath.add(element);
                     return modelTreePath;
                 }
             }
             for (Port p : ((ComponentNode)context).getOutPorts()) {
                 if (p.equals(element)) {
+                    modelTreePath.add(c);
                     modelTreePath.add(element);
                     return modelTreePath;
                 }
