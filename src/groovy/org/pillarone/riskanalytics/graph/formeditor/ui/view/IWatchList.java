@@ -13,6 +13,4 @@ public interface IWatchList {
     public void removeWatch(String path);
 
     public void removeAllWatches();
-
-    public void injectData(Map simulationResults, List<String> periodLabels);
 }
