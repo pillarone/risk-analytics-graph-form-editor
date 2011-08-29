@@ -351,6 +351,13 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         }
     }
 
+    public DataTreeComponentNode findNode(String name) {
+        for (IDataTreeNode node: fRoot.getChildren()) {
+            if (node instanceof DataTreeComponentNode && node.name.equals(name))
+                return node
+        }
+        return null
+    }
 }
 
 public interface IDataTreeNode extends IMutableTableTreeNode {

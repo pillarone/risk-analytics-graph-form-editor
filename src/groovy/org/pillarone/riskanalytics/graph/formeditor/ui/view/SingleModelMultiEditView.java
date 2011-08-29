@@ -5,7 +5,6 @@ import com.canoo.ulc.detachabletabbedpane.server.ITabListener;
 import com.canoo.ulc.detachabletabbedpane.server.TabEvent;
 import com.canoo.ulc.detachabletabbedpane.server.ULCCloseableTabbedPane;
 import com.canoo.ulc.detachabletabbedpane.server.ULCDetachableTabbedPane;
-import com.canoo.ulc.graph.ULCGraphOutline;
 import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.Action;
 import com.ulcjava.applicationframework.application.ApplicationActionMap;
@@ -14,16 +13,12 @@ import com.ulcjava.applicationframework.application.form.BeanFormDialog;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.tabletree.ITableTreeNode;
-import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.KeyStroke;
 import org.pillarone.riskanalytics.core.simulation.engine.SimulationRunner;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
-import org.pillarone.riskanalytics.core.util.MathUtils;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.Port;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.ComponentNodeFilterFactory;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataNameFormModel;
@@ -52,6 +47,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
     private ULCCloseableTabbedPane fDataSetSheets;
     private ULCCloseableTabbedPane fResultSheets;
     private WatchesTable fWatchesTable;
+    private ITabListener tabListener;
 
     private IActionListener f9_pressed;
 
@@ -300,7 +296,13 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             fDataSetSheets = new ULCCloseableTabbedPane();
             fDataSetSheets.addTabListener(new ITabListener() {
                 public void tabClosing(TabEvent event) {
-                    event.getClosableTabbedPane().closeCloseableTab(event.getTabClosingIndex());
+                    int tabClosingIndex = event.getTabClosingIndex();
+                    ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
+                    if (component instanceof ISelectionListener) {
+                        fFormEditorView.removeSelectionListener((ISelectionListener) component);
+                        fVisualEditorView.removeSelectionListener((ISelectionListener) component);
+                    }
+                    event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
                     if (fDataSetSheets.getTabCount() > 0) {
                         event.getClosableTabbedPane().setSelectedIndex(0);
                     }
@@ -313,12 +315,15 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         DataTable dataTable;
         if (p == null) {
             dataTable = new DataTable(fGraphModel, 1, name);
+            fFormEditorView.addSelectionListener(dataTable);
+            fVisualEditorView.addSelectionListener(dataTable);
+            dataTable.addTreeSelectionListener(fVisualEditorView);
         } else {
             p.setName(name);
             dataTable = new DataTable(fGraphModel, p);
         }
         fDataSetSheets.addTab(name, dataTable);
-        fDataSetSheets.setSelectedIndex(fDataSetSheets.getTabCount()-1);
+        fDataSetSheets.setSelectedIndex(fDataSetSheets.getTabCount() - 1);
         fLeftTabbedPane.setSelectedIndex(fLeftTabbedPane.indexOfTab("Parameters"));
     }
 
@@ -328,7 +333,13 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             fResultSheets = new ULCCloseableTabbedPane();
             fResultSheets.addTabListener(new ITabListener() {
                 public void tabClosing(TabEvent event) {
-                    event.getClosableTabbedPane().closeCloseableTab(event.getTabClosingIndex());
+                    int tabClosingIndex = event.getTabClosingIndex();
+                    event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
+                    ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
+                    if (component instanceof ISelectionListener) {
+                        fFormEditorView.removeSelectionListener((ISelectionListener) component);
+                        fVisualEditorView.removeSelectionListener((ISelectionListener) component);
+                    }
                     if (fResultSheets.getTabCount() > 0) {
                         event.getClosableTabbedPane().setSelectedIndex(0);
                     }
@@ -338,12 +349,14 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             fRightTabbedPane.addTab("Results", results);
         }
         SimulationResultTable resultTable = new SimulationResultTable(output, periodLabels);
+        fFormEditorView.addSelectionListener(resultTable);
+        fVisualEditorView.addSelectionListener(resultTable);
         ULCScrollPane resultScrollPane = new ULCScrollPane(resultTable);
         ULCBoxPane resultTablePane = new ULCBoxPane(true);
         resultTablePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, resultScrollPane);
         resultTablePane.setBorder(BorderFactory.createEmptyBorder());
         int index = fResultSheets.indexOfTab(name);
-        if (index<0 || inNewTab) {
+        if (index < 0 || inNewTab) {
             fResultSheets.addTab(name, resultTablePane);
         } else {
             fResultSheets.setComponentAt(index, resultTablePane);
