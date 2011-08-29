@@ -20,6 +20,8 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.core.output.*
+import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
+import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 
 /**
  * 
@@ -29,14 +31,19 @@ class ProbeSimulationService extends SimulationRunner {
     Map output // path -> field -> period -> iteration -> single values
 
 
-    public SimulationRunner getSimulationRunner(ModelGraphModel graphModel, Parameterization parametrization) {
+    public SimulationRunner getSimulationRunner(AbstractGraphModel graphModel, Parameterization parametrization) {
         // name
         String name = graphModel.name+"_temp"
         long time = System.currentTimeMillis()
 
         // model instance
         ModelFactory factory = new ModelFactory()
-        Model model = factory.getModelInstance(graphModel)
+        Model model = null
+        if (graphModel instanceof ModelGraphModel) {
+            model = factory.getModelInstance((ModelGraphModel) graphModel)
+        } else {
+            model = factory.getComposedComponentTestModel((ComposedComponentGraphModel) graphModel, parametrization)
+        }
 
         // create a simulation object for the probing
         Simulation simulation = new Simulation(name+"_"+time)
@@ -117,7 +124,7 @@ class ProbeSimulationService extends SimulationRunner {
 
         SimulationScope fSimulationScope
 
-        public ProbeResultConfiguration(ModelGraphModel graphModel, SimulationScope simulationScope) {
+        public ProbeResultConfiguration(AbstractGraphModel graphModel, SimulationScope simulationScope) {
             super(graphModel.name)
             fSimulationScope = simulationScope
             collectors = []
