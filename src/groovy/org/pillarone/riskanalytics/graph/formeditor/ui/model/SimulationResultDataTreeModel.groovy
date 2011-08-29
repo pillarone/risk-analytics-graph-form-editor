@@ -126,6 +126,17 @@ class SimulationResultDataTreeModel extends AbstractTableTreeModel  implements I
         return (ParentNode) parent.children[id]
     }
 
+    public ParentNode findNode(String name) {
+        ParentNode result
+        for (ParentNode node: fRoot.getChildren().values()) {
+            if (node instanceof ParentNode && node.getId().equals(name)){
+                result =  node
+                break
+            }
+        }
+        return result
+    }
+
     // Methods overwriting ITableTreeModel
 
     public int getColumnCount() {
