@@ -49,7 +49,7 @@ public class TypeTreeNode extends DefaultMutableTreeNode implements Comparable<T
     }
 
     public String toString() {
-        return fFullName;
+        return fSimpleName;
     }
 
     public String getName() {
