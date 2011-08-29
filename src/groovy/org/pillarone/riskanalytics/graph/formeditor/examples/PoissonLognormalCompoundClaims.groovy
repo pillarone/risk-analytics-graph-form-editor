@@ -38,7 +38,7 @@ class PoissonLognormalCompoundClaims extends ComposedComponent {
      * The distribution is parametrized by the mean and standard deviation of the underlying normal distribution
      * (see the parameters <code>subClaimsGen.parmMu</code> and <code>subClaimsGen.parmSigma</code>).
      */
-    SingleLognormalClaimsGenerator subClaimsGen = new SingleLognormalClaimsGenerator(name: 'subClaimsGen')
+    SingleLogNormalClaimsGenerator subClaimsGen = new SingleLogNormalClaimsGenerator(name: 'subClaimsGen')
 
     public void wire() {
         WiringUtils.use(PortReplicatorCategory) {
