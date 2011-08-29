@@ -89,6 +89,11 @@ public class SingleModelFormView extends AbstractBean implements GraphModelViewa
         fConnectionsTable.removeSelectionListener(selectionListener);
     }
 
+    public void setWatchList(IWatchList watchList) {
+        fNodesTable.setWatchList(watchList);
+    }
+
+
     public void newNodeAction(String componentType) {
         fNodesTable.newNodeAction(componentType);
     }
