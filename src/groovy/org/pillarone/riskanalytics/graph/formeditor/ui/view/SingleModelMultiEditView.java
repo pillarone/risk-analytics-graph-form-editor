@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class SingleModelMultiEditView extends AbstractBean {
+public class SingleModelMultiEditView extends AbstractBean implements IWatchList {
     private ApplicationContext fApplicationContext;
 
     private AbstractGraphModel fGraphModel;
@@ -61,11 +61,15 @@ public class SingleModelMultiEditView extends AbstractBean {
         boolean isModel = model instanceof ModelGraphModel;
         createView(isModel);
         injectGraphModel(model);
+        fVisualEditorView.setWatchList(this);
+        fFormEditorView.setWatchList(this);
+
         f9_pressed = new IActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 simulateAction(false);
             }
         };
+        fMainView.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
     public void createView(boolean isModel) {
@@ -234,13 +238,12 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         // results --> will be added on demand
 
+        // watches --> will be added on demand
+
         fLeftTabbedPane.addTab("Help", new ULCScrollPane(fHelpView.getContent()));
         fRightTabbedPane.addTab("Comments", new ULCScrollPane(fCommentView.getContent()));
         fLeftTabbedPane.setSelectedIndex(0);
         fRightTabbedPane.setSelectedIndex(0);
-        // satellite view - this is a bit ugly that I need to get and inject the component wrapping the ulc graph here!
-        //ULCGraphOutline satelliteView = new ULCGraphOutline(fVisualEditorView.getULCGraphComponent());
-        //fRightTabbedPane.addTab("Info", satelliteView);
 
         propertiesAreaSplitPane.setLeftComponent(fLeftTabbedPane);
         propertiesAreaSplitPane.setRightComponent(fRightTabbedPane);
@@ -278,6 +281,13 @@ public class SingleModelMultiEditView extends AbstractBean {
         return fGraphModel;
     }
 
+    public DataTable getSelectedDataTable() {
+        if (fDataSetSheets != null && fDataSetSheets.getTabCount()>0) {
+            return (DataTable) fDataSetSheets.getSelectedComponent();
+        }
+        return null;
+    }
+
     public void addParameterSet(Parameterization p) {
         DataNameDialog dialog = new DataNameDialog(UlcUtilities.getWindowAncestor(fMainView), p);
         dialog.setModal(true);
@@ -285,9 +295,6 @@ public class SingleModelMultiEditView extends AbstractBean {
     }
 
     public void addParameterSet(Parameterization p, String name) {
-        if (fGraphModel instanceof ComposedComponentGraphModel) {
-            return;
-        }
         if (!fLeftTabbedPane.anyTabContains("Parameters")) {
             ULCBoxPane data = new ULCBoxPane();
             fDataSetSheets = new ULCCloseableTabbedPane();
@@ -305,10 +312,10 @@ public class SingleModelMultiEditView extends AbstractBean {
 
         DataTable dataTable;
         if (p == null) {
-            dataTable = new DataTable((ModelGraphModel) fGraphModel, 1, name);
+            dataTable = new DataTable(fGraphModel, 1, name);
         } else {
             p.setName(name);
-            dataTable = new DataTable((ModelGraphModel) fGraphModel, p);
+            dataTable = new DataTable(fGraphModel, p);
         }
         fDataSetSheets.addTab(name, dataTable);
         fDataSetSheets.setSelectedIndex(fDataSetSheets.getTabCount()-1);
@@ -328,7 +335,6 @@ public class SingleModelMultiEditView extends AbstractBean {
                 }
             });
             results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
-            results.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
             fRightTabbedPane.addTab("Results", results);
         }
         SimulationResultTable resultTable = new SimulationResultTable(output, periodLabels);
@@ -343,7 +349,23 @@ public class SingleModelMultiEditView extends AbstractBean {
             fResultSheets.setComponentAt(index, resultTablePane);
             fResultSheets.setSelectedIndex(index);
         }
-        fRightTabbedPane.setSelectedIndex(fRightTabbedPane.indexOfTab("Results"));
+
+        boolean hasWatches = fWatchesTable != null && ((ITableTreeNode)fWatchesTable.getModel().getRoot()).getChildCount()>0;
+        if (hasWatches) {
+            fWatchesTable.getModel().injectData(output, periodLabels);
+            fWatchesTable.getTable().expandAll();
+        }
+
+        int resultIndex = fRightTabbedPane.indexOfTab("Results");
+        int watchIndex = fRightTabbedPane.indexOfTab("Watches");
+        int selectedIndex = fRightTabbedPane.getSelectedIndex();
+        if (selectedIndex!=resultIndex && selectedIndex!=watchIndex) {
+            if (hasWatches) {
+                fRightTabbedPane.setSelectedIndex(watchIndex);
+            } else {
+                fRightTabbedPane.setSelectedIndex(resultIndex);
+            }
+        }        
     }
 
     public void addWatch(String path) {
@@ -351,10 +373,18 @@ public class SingleModelMultiEditView extends AbstractBean {
             fWatchesTable = new WatchesTable();
             ULCScrollPane watchesPane = new ULCScrollPane(fWatchesTable);
             fRightTabbedPane.addTab("Watches", watchesPane);
-            fVisualEditorView.setWatchList(fWatchesTable.getModel());
         }
         fWatchesTable.getModel().addWatch(path);
+        fWatchesTable.getTable().expandAll();
         fRightTabbedPane.setSelectedIndex(fRightTabbedPane.indexOfTab("Watches"));
+    }
+
+    public void removeWatch(String path) {
+        fWatchesTable.getModel().removeWatch(path);
+    }
+
+    public void removeAllWatches() {
+        fWatchesTable.getModel().removeAllWatches();
     }
 
     public Parameterization getSelectedParametrization() {
@@ -378,34 +408,30 @@ public class SingleModelMultiEditView extends AbstractBean {
 
     @Action
     public void simulateAction(boolean newTab) {
-        if (fGraphModel instanceof ModelGraphModel) {
-            ModelGraphModel model = (ModelGraphModel) fGraphModel;
-            model.resolveStartComponents();
-            Parameterization parametrization = this.getSelectedParametrization();
-            if (parametrization == null) {
-                ULCAlert alert = new ULCAlert("No Simulation Done",
-                            "Reason: Input parameters missing.", "ok");
-                    alert.show();
-            } else {
-                ProbeSimulationService simulationService = new ProbeSimulationService();
-                try {
-                    SimulationRunner runner = simulationService.getSimulationRunner(model, parametrization);
-                    runner.start();
-                    Map output = simulationService.getOutput();
-                    List<String> periodLabels = parametrization.getPeriodLabels();
-                    if (periodLabels==null) {
-                        periodLabels = new ArrayList<String>();
-                        for (int i = 0; i < parametrization.getPeriodCount(); i++) {
-                            periodLabels.add(Integer.toString(i));
-                        }
-                        parametrization.setPeriodLabels(periodLabels);
+        Parameterization parametrization = this.getSelectedParametrization();
+        if (parametrization == null) {
+            ULCAlert alert = new ULCAlert("No Simulation Done",
+                    "Reason: Input parameters missing.", "ok");
+            alert.show();
+        } else {
+            ProbeSimulationService simulationService = new ProbeSimulationService();
+            try {
+                SimulationRunner runner = simulationService.getSimulationRunner(fGraphModel, parametrization);
+                runner.start();
+                Map output = simulationService.getOutput();
+                List<String> periodLabels = parametrization.getPeriodLabels();
+                if (periodLabels == null) {
+                    periodLabels = new ArrayList<String>();
+                    for (int i = 0; i < parametrization.getPeriodCount(); i++) {
+                        periodLabels.add(Integer.toString(i));
                     }
-                    this.addSimulationResult(output, "results_"+parametrization.getName(), newTab, parametrization.getPeriodLabels());
-                } catch (Exception ex) {
-                    ULCAlert alert = new ULCAlert("Simulation failed",
-                            "Reason: " + ex.getMessage(), "ok");
-                    alert.show();
+                    parametrization.setPeriodLabels(periodLabels);
                 }
+                this.addSimulationResult(output, "results_" + parametrization.getName(), newTab, periodLabels);
+            } catch (Exception ex) {
+                ULCAlert alert = new ULCAlert("Simulation failed",
+                        "Reason: " + ex.getMessage(), "ok");
+                alert.show();
             }
         }
     }
