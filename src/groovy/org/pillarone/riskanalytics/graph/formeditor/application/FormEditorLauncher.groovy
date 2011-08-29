@@ -15,7 +15,7 @@ class FormEditorLauncher extends LocalContainerAdapter {
     }
 
     public static void launch() {
-        UIManagerHelper.setLookAndFeel()
+        // UIManagerHelper.setLookAndFeel()
         LogManager.setLogManager(new SimpleLogManager())
         FormEditorLauncher launcher = new FormEditorLauncher()
         launcher.start()
