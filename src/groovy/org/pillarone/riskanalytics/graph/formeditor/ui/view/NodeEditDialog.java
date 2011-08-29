@@ -7,10 +7,7 @@ import com.ulcjava.base.application.ULCDialog;
 import com.ulcjava.base.application.ULCWindow;
 import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.util.KeyStroke;
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
-import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeFormModel;
@@ -106,6 +103,16 @@ public class NodeEditDialog extends ULCDialog {
                 }
                 setVisible(false);
             }
+
+            private boolean validate() {
+                if (fBeanForm.getModel().hasErrors()) return false;
+                if (fGraphModel instanceof ComposedComponentGraphModel) {
+                    if (!fBeanForm.getModel().getBean().getName().startsWith("sub")) {
+                        return false;
+                    }
+                }
+                return true;
+            }            
         };
         fBeanForm.addSaveActionListener(action);
         KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
