@@ -1,162 +1,51 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.model
 
 import com.ulcjava.base.application.tabletree.AbstractTableTreeModel
-import com.ulcjava.base.application.tabletree.ITableTreeModel
+import com.ulcjava.base.application.tabletree.IMutableTableTreeNode
 import com.ulcjava.base.application.tabletree.ITableTreeNode
 import com.ulcjava.base.application.tree.TreePath
 import java.lang.reflect.Field
-import org.pillarone.riskanalytics.core.components.Component
+import org.pillarone.riskanalytics.core.packets.Packet
+import org.pillarone.riskanalytics.core.parameter.Parameter
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization
 import org.pillarone.riskanalytics.core.simulation.item.parameter.ParameterHolder
 import org.pillarone.riskanalytics.core.simulation.item.parameter.ParameterHolderFactory
 import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraphImport
-import org.pillarone.riskanalytics.graph.core.graph.model.*
-import com.ulcjava.base.application.tabletree.IMutableTableTreeNode
 import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities
+import org.pillarone.riskanalytics.graph.core.graph.model.*
 
 /**
  *
  */
 class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelChangeListener {
 
-    private static final String PATHSEP = ':'
+    static final String PATHSEP = ':'
     private DataTreeComponentNode fRoot
     private Parameterization fParametrization
 
-    public DataTableTreeModel(ModelGraphModel model, int periodCount, String dataObjectName) {
+    public DataTableTreeModel(AbstractGraphModel model, int periodCount, String dataObjectName) {
         this(model, new Parameterization(name: dataObjectName, periodCount: periodCount))
     }
 
-    public DataTableTreeModel(ModelGraphModel model, Parameterization parametrization) {
+    public DataTableTreeModel(AbstractGraphModel model, Parameterization parametrization) {
         fRoot = new DataTreeComponentNode(model, null, "")
         createTree()
         fParametrization = parametrization
         injectParametrizationToTree(fParametrization)
     }
 
-
-
-    class DataTreeParameterNode implements IDataTreeNode {
-        String path
-        String name
-        DataTreeComponentNode parentNode
-        Object paramObject
-        Class type
-        List<ParameterHolder> parameters
-
-        DataTreeParameterNode(String path, Object paramObject, DataTreeComponentNode parent) {
-            this.name = path.substring(path.lastIndexOf(PATHSEP) + 1)
-            this.path = path
-            this.parentNode = parent
-            this.paramObject = paramObject
-            this.type = paramObject.class
-            parameters = []
-        }
-
-        ITableTreeNode getChildAt(int i) { return null }
-
-        int getChildCount() { return 0 }
-
-        void insert(IMutableTableTreeNode iMutableTableTreeNode, int i) {
-            throw new RuntimeException("No child can be inserted in a data leaf node.")
-        }
-
-        void remove(int i) {
-            throw new RuntimeException("There are no children that could be removed in a data leaf node.")
-        }
-
-        ITableTreeNode getParent() { return parentNode }
-
-        void setParent(IMutableTableTreeNode iMutableTableTreeNode) {
-            if (parentNode instanceof DataTreeComponentNode) {
-                parentNode = (DataTreeComponentNode) iMutableTableTreeNode
-                path = parentNode.path + PATHSEP + name
-                // TODO do I need to remove this node as child from the prior parent and this as new child to the new parent?
-            }
-        }
-
-        int getIndex(ITableTreeNode child) { throw new IndexOutOfBoundsException("No children attached to this data node in the data tree.") }
-
-        Object getValueAt(int column) { return column == 0 ? name : parameters.get(column - 1).getBusinessObject() }
-
-        void setValueAt(Object value, int column) {
-            if (column > 0) {
-                ParameterHolder holder = parameters.get(column - 1)
-                holder.setValue(value)
-            }
-        }
-
-        boolean isLeaf() { return true }
-
-        boolean isCellEditable(int column) { return column > 0 }
-    }
-
-    class DataTreeComponentNode implements IDataTreeNode {
-        String path
-        String name
-        DataTreeComponentNode parentNode
-        GraphElement graphElement
-        List<IDataTreeNode> children = []
-        Class type = null
-
-        DataTreeComponentNode(GraphElement node, DataTreeComponentNode parent, String parentPath) {
-            this.name = node.name
-            this.parentNode = parent
-            this.path = parent == null ? "" : (parentPath.size() == 0 ? "" : parentPath + PATHSEP) + node.name
-            graphElement = node
-        }
-
-        void addChild(IDataTreeNode child) { insert(child, children.size()) }
-
-        void insert(IMutableTableTreeNode child, int i) {
-            if (child instanceof IDataTreeNode) {
-                if (i < getChildCount()) {
-                    children.add(i, (IDataTreeNode) child)
-                } else {
-                    children << (IDataTreeNode) child
-                }
-            }
-        }
-
-        ITableTreeNode getChildAt(int i) { return children[i] }
-
-        int getChildCount() { return children.size() }
-
-        void remove(int i) {
-            if (i < getChildCount()) {
-                children.remove(i)
-            }
-        }
-
-        ITableTreeNode getParent() { return parentNode }
-
-        void setParent(IMutableTableTreeNode iMutableTableTreeNode) {
-            if (parentNode instanceof DataTreeComponentNode) {
-                parentNode = (DataTreeComponentNode) iMutableTableTreeNode
-                path = parentNode.path + PATHSEP + name
-                // TODO do I need to remove this node as child from the prior parent and this as new child to the new parent?
-            }
-        }
-
-        int getIndex(ITableTreeNode child) { return children.indexOf(child) }
-
-        Object getValueAt(int column) { return column == 0 ? name : "" }
-
-        void setValueAt(Object o, int i) {
-            throw new RuntimeException("Value of a non-leaf node cannot be changed.")
-        }
-
-        boolean isCellEditable(int i) {
-            return false
-        }
-
-        boolean isLeaf() { return false }
-    }
-
     // methods to setup, manipulate and search the tree
-
     public void createTree() {
         addChildren(fRoot)
+
+        // add nodes to specify the packets if graph model is associated with a composed component
+        if (fRoot.graphElement instanceof ComposedComponentGraphModel) {
+            for (InPort p : ((ComposedComponentGraphModel)fRoot.graphElement).outerInPorts) {
+                DataTreePacketNode packetNode = new DataTreePacketNode(p, fRoot)
+                packetNode.parentNode = fRoot
+                fRoot.addChild packetNode
+            }
+        }
     }
 
     private boolean addChildren(DataTreeComponentNode parent) {
@@ -208,7 +97,9 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
 
     public List<DataTreeParameterNode> getAllLeaves(ITableTreeNode node) {
         List<DataTreeParameterNode> leaves = new ArrayList<DataTreeParameterNode>()
-        if (node instanceof DataTreeComponentNode) {
+        if (node instanceof DataTreePacketNode) {
+            return leaves
+        } else if (node instanceof DataTreeComponentNode) {
             ((DataTreeComponentNode) node).children?.each { child ->
                 leaves.addAll(getAllLeaves(child))
             }
@@ -284,13 +175,28 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         return column == 0 ? "Name" : fParametrization.getPeriodLabel(column - 1);
     }
 
-    // linking parameterization (--> ParameterizationHolder's) and the leaves in the tree
+    // linking parametrization (--> ParameterizationHolder's) and the leaves in the tree
     public void injectParametrizationToTree(Parameterization parametrization) {
         fParametrization = parametrization
-        int periodCount = fParametrization.periodCount
         List<DataTreeParameterNode> leaves = getAllLeaves(fRoot)
         leaves.each { leaf ->
             linkLeafParametrization(leaf, fParametrization)
+        }
+
+        int periodCount = fParametrization.periodCount
+        List<ITableTreeNode> packetNodes = fRoot.children.findAll {node -> node instanceof DataTreePacketNode}.toList()
+        for (ITableTreeNode packetNode0 : packetNodes) {
+            DataTreePacketNode packetNode = (DataTreePacketNode) packetNode0
+            for (int i = 0; i<periodCount;i++) {
+                final Packet packet = (Packet) packetNode.type.newInstance()
+                PacketParameter param = new PacketParameter()
+                param.path=packetNode.path
+                param.periodIndex=i
+                param.packetValue=packet
+                ParameterHolder parameterHolder = new PacketHolder(param)
+                packetNode.parameters.add parameterHolder
+                parametrization.addParameter(parameterHolder)
+            }
         }
     }
 
@@ -403,6 +309,48 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         }
     }
 
+    class PacketHolder extends ParameterHolder {
+
+        Packet value
+
+        PacketHolder(Parameter p) {
+            super(p)
+        }
+
+        @Override
+        void setParameter(Parameter parameter) {
+            this.value = parameter.packetValue
+        }
+
+        @Override
+        Object getBusinessObject() {
+            return value
+        }
+
+        @Override protected void updateValue(Object newValue) {
+            value = (Packet) newValue
+        }
+
+        @Override
+        void applyToDomainObject(Parameter parameter) {
+            parameter.packetValue = value
+        }
+
+        @Override
+        Parameter createEmptyParameter() {
+            return null  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+    }
+
+    class PacketParameter extends Parameter {
+        Packet packetValue
+
+        Class persistedClass() {
+            PacketParameter
+        }
+    }
+
 }
 
 public interface IDataTreeNode extends IMutableTableTreeNode {
@@ -412,3 +360,183 @@ public interface IDataTreeNode extends IMutableTableTreeNode {
 
     Class getType()
 }
+
+class DataTreeParameterNode implements IDataTreeNode {
+    String path
+    String name
+    DataTreeComponentNode parentNode
+    Object paramObject
+    Class type
+    List<ParameterHolder> parameters
+
+    DataTreeParameterNode(String path, Object paramObject, DataTreeComponentNode parent) {
+        this.name = path.substring(path.lastIndexOf(DataTableTreeModel.PATHSEP) + 1)
+        this.path = path
+        this.parentNode = parent
+        this.paramObject = paramObject
+        this.type = paramObject.class
+        parameters = []
+    }
+
+    ITableTreeNode getChildAt(int i) { return null }
+
+    int getChildCount() { return 0 }
+
+    void insert(IMutableTableTreeNode iMutableTableTreeNode, int i) {
+        throw new RuntimeException("No child can be inserted in a data leaf node.")
+    }
+
+    void remove(int i) {
+        throw new RuntimeException("There are no children that could be removed in a data leaf node.")
+    }
+
+    ITableTreeNode getParent() { return parentNode }
+
+    void setParent(IMutableTableTreeNode iMutableTableTreeNode) {
+        if (parentNode instanceof DataTreeComponentNode) {
+            parentNode = (DataTreeComponentNode) iMutableTableTreeNode
+            path = parentNode.path + DataTableTreeModel.PATHSEP + name
+            // TODO do I need to remove this node as child from the prior parent and this as new child to the new parent?
+        }
+    }
+
+    int getIndex(ITableTreeNode child) { throw new IndexOutOfBoundsException("No children attached to this data node in the data tree.") }
+
+    Object getValueAt(int column) { return column == 0 ? name : parameters.get(column - 1).getBusinessObject() }
+
+    void setValueAt(Object value, int column) {
+        if (column > 0) {
+            ParameterHolder holder = parameters.get(column - 1)
+            holder.setValue(value)
+        }
+    }
+
+    boolean isLeaf() { return true }
+
+    boolean isCellEditable(int column) { return column > 0 }
+}
+
+class DataTreeComponentNode implements IDataTreeNode {
+    String path
+    String name
+    DataTreeComponentNode parentNode
+    GraphElement graphElement
+    List<IDataTreeNode> children = []
+    Class type = null
+
+    DataTreeComponentNode() {}
+
+    DataTreeComponentNode(GraphElement node, DataTreeComponentNode parent, String parentPath) {
+        this.name = node.name
+        this.parentNode = parent
+        this.path = parent == null ? "" : (parentPath.size() == 0 ? "" : parentPath + DataTableTreeModel.PATHSEP) + node.name
+        graphElement = node
+    }
+
+    void addChild(IDataTreeNode child) { insert(child, children.size()) }
+
+    void insert(IMutableTableTreeNode child, int i) {
+        if (child instanceof IDataTreeNode) {
+            if (i < getChildCount()) {
+                children.add(i, (IDataTreeNode) child)
+            } else {
+                children << (IDataTreeNode) child
+            }
+        }
+    }
+
+    ITableTreeNode getChildAt(int i) { return children[i] }
+
+    int getChildCount() { return children.size() }
+
+    void remove(int i) {
+        if (i < getChildCount()) {
+            children.remove(i)
+        }
+    }
+
+    ITableTreeNode getParent() { return parentNode }
+
+    void setParent(IMutableTableTreeNode iMutableTableTreeNode) {
+        if (parentNode instanceof DataTreeComponentNode) {
+            parentNode = (DataTreeComponentNode) iMutableTableTreeNode
+            path = parentNode.path + DataTableTreeModel.PATHSEP + name
+            // TODO do I need to remove this node as child from the prior parent and this as new child to the new parent?
+        }
+    }
+
+    int getIndex(ITableTreeNode child) { return children.indexOf(child) }
+
+    Object getValueAt(int column) { return column == 0 ? name : "" }
+
+    void setValueAt(Object o, int i) {
+        throw new RuntimeException("Value of a non-leaf node cannot be changed.")
+    }
+
+    boolean isCellEditable(int i) {
+        return false
+    }
+
+    boolean isLeaf() { return false }
+}
+
+class DataTreePacketNode extends DataTreeComponentNode {
+
+    List<ParameterHolder> parameters
+
+    DataTreePacketNode(Port port, DataTreeComponentNode root) {
+        this.name = port.name
+        this.parentNode = root
+        this.path = "provider_"+port.name+DataTableTreeModel.PATHSEP + "parmPacket"
+        graphElement = port
+        type = port.getPacketType()
+
+        parameters = []
+
+        Packet packet = (Packet) type.newInstance()
+        Field[] fields = type.getDeclaredFields().findAll { field ->
+            !field.name.startsWith("\$") && !field.name.startsWith("_") && !field.name.startsWith("metaClass")}
+        for (Field field : fields) {
+            Object value
+            if (field.type.isPrimitive()) {
+                switch(field.type) {
+                    case Boolean.TYPE: value = Boolean.FALSE
+                        break
+                    case Integer.TYPE:
+                    case Long.TYPE: value = 0
+                        break
+                    case Float.TYPE:
+                    case Double.TYPE: value = 0.0
+                        break
+                }
+            } else {
+                value = field.type.newInstance()
+            }
+            DataTreePacketFieldNode fieldNode = new DataTreePacketFieldNode(field.name, this.path, value, this)
+            this.addChild fieldNode
+        }
+    }
+}
+
+class DataTreePacketFieldNode extends DataTreeParameterNode {
+
+    DataTreePacketFieldNode(String fieldName, String packetPath, Object paramObject, DataTreePacketNode parent) {
+        super(packetPath + DataTableTreeModel.PATHSEP + fieldName, paramObject, parent)
+        this.name = fieldName
+        this.paramObject = paramObject
+        this.type = paramObject.class
+    }
+
+    Object getValueAt(int column) {
+        return column == 0 ? name : ((DataTreePacketNode)parent).parameters.get(column - 1).getBusinessObject()."$name"
+    }
+
+    void setValueAt(Object value, int column) {
+        if (column > 0) {
+            ParameterHolder holder = ((DataTreePacketNode)parent).parameters.get(column-1)
+            holder.getBusinessObject()."$name"=value
+        }
+    }
+}
+
+
