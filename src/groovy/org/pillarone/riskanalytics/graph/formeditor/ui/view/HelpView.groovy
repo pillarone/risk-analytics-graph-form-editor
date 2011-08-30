@@ -101,7 +101,7 @@ class HelpView implements ISelectionListener {
         htmlParameterList <<= "</ul>"
         String htmlDescription = "<h4>Description: </h4>" + description
 
-        return htmlTitle + " " + htmlCategories + " " + htmlClassName + " "  + htmlType + " " + htmlPortsList + " " + htmlParameterList + " " + htmlDescription
+        return htmlTitle + " " + htmlDescription + " " + htmlCategories + " " + htmlClassName + " "  + htmlType + " " + htmlPortsList + " " + htmlParameterList
     }
 }
 
