@@ -1,15 +1,14 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
-import com.ulcjava.base.application.tree.DefaultMutableTreeNode;
+import com.ulcjava.base.application.tree.AbstractTreeModel;
 import com.ulcjava.base.application.tree.DefaultTreeModel;
-import com.ulcjava.base.application.tree.ITreeModel;
-import com.ulcjava.base.application.tree.ITreeNode;
+import com.ulcjava.base.application.tree.TreePath;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
-import org.pillarone.riskanalytics.graph.core.palette.service.IPaletteServiceListener;
-import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.ComponentTypeTreeModelFactory;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.FilteringTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class ComponentTypeTree extends AbstractComponentDefinitionTree {
 
@@ -24,6 +23,25 @@ public class ComponentTypeTree extends AbstractComponentDefinitionTree {
 
     @Override
     protected void insertNodeForComponentDefinition(ComponentDefinition definition) {
-        //TODO
+        final List<String> typeNames = Arrays.asList(definition.getTypeClass().getName().split("\\."));
+        TypeTreeNode root = (TypeTreeNode) fTreeModel.getRoot();
+        insertNode(root, definition, typeNames);
     }
+
+    private void insertNode(TypeTreeNode current, ComponentDefinition definition, List<String> typeNames) {
+        if (typeNames.size() > 1) {
+            String currentNode = typeNames.get(0);
+            insertNode(findOrCreateNode(current, currentNode), definition, typeNames.subList(1, typeNames.size()));
+            return;
+        }
+
+        final int insertIndex = findInsertIndex(current, definition.getSimpleName());
+        final TypeTreeNode typeTreeNode = new TypeTreeNode(definition);
+        typeTreeNode.setLeaf(true);
+        current.insert(typeTreeNode, insertIndex);
+        ((AbstractTreeModel) fTreeModel).nodesWereInserted(new TreePath(DefaultTreeModel.getPathToRoot(current)), new int[]{insertIndex});
+
+    }
+
+
 }
