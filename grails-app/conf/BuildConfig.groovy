@@ -58,7 +58,7 @@ grails.project.dependency.resolution = {
         compile group: 'canoo', name: 'ulc-servlet-client', version: ulcVersion
         compile group: 'canoo', name: 'ulc-standalone-client', version: ulcVersion
 
-        compile group: 'canoo', name: 'ULCGraph-client', version: "0.6.1-SNAPSHOT"
+        compile group: 'canoo', name: 'ULCGraph-client', version: "0.6.2-SNAPSHOT"
         compile group: 'jgraphx', name: 'jgraphx', version: "1.7.1.0"
 
     }
@@ -94,4 +94,4 @@ coverage {
             '**TagLib**'
     ]
 }
-//grails.plugin.location.'risk-analytics-graph-core' = "../RiskAnalyticsGraphCore"
+// grails.plugin.location.'risk-analytics-graph-core' = "../RiskAnalyticsGraphCore"
