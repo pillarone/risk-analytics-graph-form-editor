@@ -347,12 +347,13 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             fResultSheets.addTabListener(new ITabListener() {
                 public void tabClosing(TabEvent event) {
                     int tabClosingIndex = event.getTabClosingIndex();
-                    event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
+
                     ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
                     if (component instanceof ISelectionListener) {
                         fFormEditorView.removeSelectionListener((ISelectionListener) component);
                         fVisualEditorView.removeSelectionListener((ISelectionListener) component);
                     }
+                     event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
                     if (fResultSheets.getTabCount() > 0) {
                         event.getClosableTabbedPane().setSelectedIndex(0);
                     }
