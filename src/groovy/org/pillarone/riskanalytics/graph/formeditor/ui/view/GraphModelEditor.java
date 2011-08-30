@@ -13,12 +13,16 @@ import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.event.KeyEvent;
 import com.ulcjava.base.application.util.*;
 import com.ulcjava.base.shared.FileChooserConfig;
+import groovy.util.ConfigObject;
+import models.core.CoreModel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.model.Model;
+import org.pillarone.riskanalytics.core.parameterization.ParameterWriter;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
+import org.pillarone.riskanalytics.core.util.IConfigObjectWriter;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
@@ -29,6 +33,7 @@ import org.pillarone.riskanalytics.graph.core.graphimport.GraphImportService;
 import org.pillarone.riskanalytics.graph.core.graphimport.ModelGraphImport;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
+import org.pillarone.riskanalytics.graph.formeditor.util.FileStoreHandler;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities;
 
@@ -394,7 +399,7 @@ public class GraphModelEditor extends AbstractBean {
     public void exportModelToGroovyAction() {
         AbstractGraphModel model = getSelectedModel();
         String text = GraphModelUtilities.getGroovyModelCode(model);
-        saveOutput(model.getName() + ".groovy", text, UlcUtilities.getWindowAncestor(this.getContentView()));
+        FileStoreHandler.saveOutput(model.getName() + ".groovy", text, UlcUtilities.getWindowAncestor(this.getContentView()));
     }
 
     private AbstractGraphModel getSelectedModel() {
@@ -403,49 +408,6 @@ public class GraphModelEditor extends AbstractBean {
         return model;
     }
 
-    private void saveOutput(String name, final String text, final ULCWindow ancestor) {
-        FileChooserConfig config = new FileChooserConfig();
-        config.setDialogTitle("Save file as");
-        config.setDialogType(FileChooserConfig.SAVE_DIALOG);
-        config.setSelectedFile(name);
-
-        IFileChooseHandler chooser = new IFileChooseHandler() {
-            public void onSuccess(String[] filePaths, String[] fileNames) {
-                String selectedFile = filePaths[0];
-                IFileStoreHandler fileStoreHandler =
-                        new IFileStoreHandler() {
-                            public void prepareFile(java.io.OutputStream stream) throws Exception {
-                                try {
-                                    stream.write(text.getBytes());
-                                } catch (UnsupportedOperationException t) {
-                                    new ULCAlert(ancestor, "Export failed", t.getMessage(), "Ok").show();
-                                } catch (Throwable t) {
-                                    new ULCAlert(ancestor, "Export failed", t.getMessage(), "Ok").show();
-                                } finally {
-                                    stream.close();
-                                }
-                            }
-
-                            public void onSuccess(String filePath, String fileName) {
-                            }
-
-                            public void onFailure(int reason, String description) {
-//	        			new ULCAlert(ancestor, "Export failed", description, "Ok").show();
-                            }
-                        };
-                try {
-                    ClientContext.storeFile(fileStoreHandler, selectedFile);
-                } catch (Exception ex) {
-
-                }
-            }
-
-            public void onFailure(int reason, String description) {
-                new ULCAlert(ancestor, "Export failed", description, "ok").show();
-            }
-        };
-        ClientContext.chooseFile(chooser, config, ancestor);
-    }
 
     @Action
     public void exportModelToApplicationAction() {
@@ -514,14 +476,17 @@ public class GraphModelEditor extends AbstractBean {
     @Action
     public void exportParametersAction() {
         ULCComponent comp = fEditorArea.getSelectedComponent();
-        DataTable data = fModelTabs.get(comp).getSelectedDataTable();
-        if (data==null) {
-            ULCAlert alert = new ULCAlert("No data selected",
-                    "No data to export", "ok");
+        Parameterization parameterization = fModelTabs.get(comp).getSelectedParametrization();
+        AbstractGraphModel model = fModelTabs.get(comp).getGraphModel();
+        if (parameterization == null) {
+            ULCAlert alert = new ULCAlert("No data selected", "No data to export", "ok");
             alert.show();
             return;
         }
-        String content = " "; // TODO
-        saveOutput(data.getName() + ".groovy", content, UlcUtilities.getWindowAncestor(this.getContentView()));
+        ConfigObject configObject = parameterization.toConfigObject();
+        configObject.put("model" , model.getPackageName()+"."+model.getName());
+        configObject.put("package" , model.getPackageName());
+        FileStoreHandler.saveOutput(parameterization.getName() + ".groovy", configObject, UlcUtilities.getWindowAncestor(this.getContentView()));
+
     }
 }
