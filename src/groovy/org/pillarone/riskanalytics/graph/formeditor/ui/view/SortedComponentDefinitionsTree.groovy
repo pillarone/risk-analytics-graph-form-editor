@@ -4,6 +4,8 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.ComponentTy
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode
 import com.ulcjava.base.application.tree.DefaultTreeModel
+import com.ulcjava.base.application.tree.TreePath
+import com.ulcjava.base.application.tree.AbstractTreeModel
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com
@@ -24,7 +26,9 @@ class SortedComponentDefinitionsTree extends AbstractComponentDefinitionTree {
         TypeTreeNode node = new TypeTreeNode(definition);
         node.setLeaf(true);
         final TypeTreeNode root = (TypeTreeNode) fTreeModel.getRoot();
-        root.insert(node, findInsertIndex(root, definition.getTypeClass().getName()));
+        final int index = findInsertIndex(root, definition.getTypeClass().getSimpleName())
+        root.insert(node, index);
+        ((AbstractTreeModel) fTreeModel).nodesWereInserted(new TreePath(root), [index] as int[]);
     }
 
 }

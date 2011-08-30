@@ -11,6 +11,7 @@ import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import aTest.ATestComponent
 import aTest.BTestComponent
+import org.pillarone.riskanalytics.graph.formeditor.examples.Adder
 
 class SortedComponentDefinitionsTreeTests extends AbstractSimpleStandaloneTestCase {
 
@@ -33,7 +34,7 @@ class SortedComponentDefinitionsTreeTests extends AbstractSimpleStandaloneTestCa
         final TreeModel model = tree.getUITree().getBasicTree().getModel()
         final Object root = tree.getRoot()
 
-        assertEquals ExampleDynamicComponent.name, model.getChild(root, 0).getValueAt(0)
+        assertEquals Adder.simpleName, model.getChild(root, 0).getValueAt(0)
 
         runVoidCommand(new ServerSideCommand() {
 
@@ -44,7 +45,7 @@ class SortedComponentDefinitionsTreeTests extends AbstractSimpleStandaloneTestCa
 
         })
 
-        assertEquals ATestComponent.name, model.getChild(root, 0).getValueAt(0)
+        assertEquals ATestComponent.simpleName, model.getChild(root, 0).getValueAt(0)
 
         runVoidCommand(new ServerSideCommand() {
 
@@ -55,8 +56,8 @@ class SortedComponentDefinitionsTreeTests extends AbstractSimpleStandaloneTestCa
 
         })
 
-        assertEquals ATestComponent.name, model.getChild(root, 0).getValueAt(0)
-        assertEquals BTestComponent.name, model.getChild(root, 1).getValueAt(0)
+        assertEquals ATestComponent.simpleName, model.getChild(root, 0).getValueAt(0)
+        assertEquals BTestComponent.simpleName, model.getChild(root, 1).getValueAt(0)
     }
 
 

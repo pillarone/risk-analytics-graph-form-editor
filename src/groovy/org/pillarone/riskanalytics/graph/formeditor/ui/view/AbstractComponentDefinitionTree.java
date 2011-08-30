@@ -3,10 +3,7 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.tree.DefaultTreeModel;
-import com.ulcjava.base.application.tree.ITreeModel;
-import com.ulcjava.base.application.tree.TreePath;
-import com.ulcjava.base.application.tree.ULCTreeSelectionModel;
+import com.ulcjava.base.application.tree.*;
 import com.ulcjava.base.application.util.Dimension;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.IPaletteServiceListener;
@@ -14,7 +11,7 @@ import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.FilteringTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 
-public abstract class AbstractComponentDefinitionTree extends ULCBoxPane implements  ISearchListener{
+public abstract class AbstractComponentDefinitionTree extends ULCBoxPane implements ISearchListener {
 
     protected ITreeModel fTreeModel;
     protected ULCTree fTree;
@@ -28,16 +25,16 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
     }
 
     protected ITreeModel getTreeModel() {
-        final FilteringTreeModel treeModel = new FilteringTreeModel(createTreeModel());
+//        final FilteringTreeModel treeModel = new FilteringTreeModel(createTreeModel());
         PaletteService.getInstance().addPaletteServiceListener(new IPaletteServiceListener() {
 
             public void componentDefinitionAdded(ComponentDefinition definition) {
                 insertNodeForComponentDefinition(definition);
-                treeModel.applyFilter();
+//                treeModel.applyFilter();
             }
 
         });
-        return treeModel;
+        return createTreeModel();
     }
 
     protected abstract DefaultTreeModel createTreeModel();
@@ -45,17 +42,35 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
     protected abstract void insertNodeForComponentDefinition(ComponentDefinition definition);
 
     protected int findInsertIndex(TypeTreeNode node, String newNodeName) {
-        if(node.getChildCount() == 0) {
+        if (node.getChildCount() == 0) {
             return 0;
         }
 
         int index = 0;
         TypeTreeNode current = (TypeTreeNode) node.getChildAt(index);
-        while (node.getChildCount() > index && (newNodeName.compareTo(current.getFullName()) > 0)) {
-            current = (TypeTreeNode) node.getChildAt(++index);
+        while (node.getChildCount() > index && (newNodeName.compareTo(current.getName()) > 0)) {
+            index++;
+            if (index < node.getChildCount()) {
+                current = (TypeTreeNode) node.getChildAt(index);
+            }
         }
 
         return index;
+    }
+
+    protected TypeTreeNode findOrCreateNode(TypeTreeNode parent, String childName) {
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            TypeTreeNode child = (TypeTreeNode) parent.getChildAt(i);
+            if (child.getName().equals(childName)) {
+                return child;
+            }
+        }
+
+        TypeTreeNode newNode = new TypeTreeNode("", childName);
+        final int insertIndex = findInsertIndex(parent, childName);
+        parent.insert(newNode, insertIndex);
+        ((AbstractTreeModel) fTreeModel).nodesWereInserted(new TreePath(DefaultTreeModel.getPathToRoot(parent)), new int[]{insertIndex});
+        return newNode;
     }
 
     private void createView() {
@@ -103,6 +118,6 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
     }
 
     public void search(String text) {
-        ((FilteringTreeModel)fTreeModel).setFilter(new NameFilter(text));
+//        ((FilteringTreeModel) fTreeModel).setFilter(new NameFilter(text));
     }
 }
