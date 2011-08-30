@@ -627,7 +627,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
     }
 
-    private void clearEdgeSelection() {
+    private void clearPortSelection() {
         List<Port> selectedP = new ArrayList<Port>();
         selectedP.addAll(fULCGraph.getSelectionModel().getSelectedPorts());
         for (Port p : selectedP) {
@@ -635,7 +635,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
     }
 
-    private void clearPortSelection() {
+    private void clearEdgeSelection() {
         List<Edge> selectedE = new ArrayList<Edge>();
         selectedE.addAll(fULCGraph.getSelectionModel().getSelectedEdges());
         for (Edge e : selectedE) {
@@ -722,6 +722,11 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
         if (ulcPort != null) {
             fRootVertex.removePort(ulcPort);
+
+            // fix for ULCG-44
+            if (fULCGraph.getSelectionModel().getSelectedPorts().contains(ulcPort)) {
+                fULCGraph.selectionRemoved(ulcPort);
+            }
         }
     }
 
@@ -775,25 +780,28 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
 
         public void edgeRemoved(@NotNull Edge edge) {
-            org.pillarone.riskanalytics.graph.core.graph.model.Port outPort = getGraphPort(fULCGraph.getPort(edge.getSourceId()));
-            org.pillarone.riskanalytics.graph.core.graph.model.Port inPort = getGraphPort(fULCGraph.getPort(edge.getTargetId()));
-            for (String connectionKey : fConnectionsMap.keySet()) {
-                Connection connection = fConnectionsMap.get(connectionKey);
-                if (connection.getFrom().toString().equals(outPort.toString()) && connection.getTo().toString().equals(inPort.toString())) {
-                    fConnectionsMap.remove(connectionKey);
-                    fGraphModel.removeConnection(connection);
-                    break;
+            //fja: it doesn't work, edge.getId is null
+            if (edge.getId()!=null && fConnectionsMap.containsKey(edge.getId())) {
+                Connection conn = fConnectionsMap.get(edge.getId());
+                fConnectionsMap.remove(edge.getId());
+                fGraphModel.removeConnection(conn);
+            } else {
+                Port sourcePort = fULCGraph.getPort(edge.getSourceId());
+                Port targetPort = fULCGraph.getPort(edge.getTargetId());
+                if (sourcePort != null && targetPort != null) {
+                    org.pillarone.riskanalytics.graph.core.graph.model.Port outPort = getGraphPort(sourcePort);
+                    org.pillarone.riskanalytics.graph.core.graph.model.Port inPort = getGraphPort(targetPort);
+                    for (String connectionKey : fConnectionsMap.keySet()) {
+                        Connection connection = fConnectionsMap.get(connectionKey);
+                        if (connection.getFrom().toString().equals(outPort.toString()) && connection.getTo().toString().equals(inPort.toString())) {
+                            fConnectionsMap.remove(connectionKey);
+                            fGraphModel.removeConnection(connection);
+                            break;
+                        }
+                    }
                 }
             }
-            //fja: it doesn't work, edge.getId is null
-            //            if (fConnectionsMap.containsKey(edge.getId())) {
-//                Connection conn = fConnectionsMap.get(edge.getId());
-//                fConnectionsMap.remove(edge.getId());
-//                fGraphModel.removeConnection(conn);
-//            }
-//        }
         }
-
     }
 
     private class GraphModelListener implements IGraphModelChangeListener {
@@ -847,13 +855,13 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         public void outerPortAdded(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
             addOuterPort(p);
             fULCGraph.updateElement(fRootVertex);
-            fULCGraphComponent.layout();
+            // fULCGraphComponent.layout();
         }
 
         public void outerPortRemoved(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
             removeOuterPort(p);
             fULCGraph.updateElement(fRootVertex);
-            fULCGraphComponent.layout();
+            // fULCGraphComponent.layout();
         }
 
         public void nodesSelected(List<ComponentNode> nodes) {
