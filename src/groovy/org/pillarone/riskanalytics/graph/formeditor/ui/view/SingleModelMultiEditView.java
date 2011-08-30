@@ -129,6 +129,14 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
         filterValue.registerKeyboardAction(action, enter, ULCComponent.WHEN_FOCUSED);
 
+        // refresh layout button:
+        final ULCButton refreshLayout = new ULCButton("Layout");
+        refreshLayout.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                fVisualEditorView.getULCGraphComponent().layout();
+            }
+        });
+
         // button to select the view
         ULCBoxPane viewSelector = new ULCBoxPane(false);
         ULCRadioButton formSelectButton = new ULCRadioButton("Forms");
@@ -153,6 +161,8 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
 
         // view selector
         toolBarPane.add(ULCBoxPane.BOX_EXPAND_CENTER, ULCFiller.createHorizontalGlue());
+        toolBarPane.add(ULCBoxPane.BOX_RIGHT_CENTER, refreshLayout);
+        //toolBarPane.add(ULCBoxPane.BOX_EXPAND_CENTER, ULCFiller.createHorizontalGlue());
         toolBarPane.add(ULCBoxPane.BOX_RIGHT_CENTER, viewSelector);
         toolBarPane.setBorder(BorderFactory.createEtchedBorder());
 
@@ -176,6 +186,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
                 cardPane.setSelectedComponent(formView);
                 fFormEditorView.setVisible(true);
                 fVisualEditorView.setVisible(false);
+                refreshLayout.setEnabled(false);
                 fTextEditorView.setVisible(false);
 
             }
@@ -185,6 +196,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
                 fTextEditorView.injectGraphModel(fGraphModel); // here the situation is different -> on each switch to the text view the code is generated
                 fTextEditorView.setVisible(true);
                 fVisualEditorView.setVisible(false);
+                refreshLayout.setEnabled(false);
                 fFormEditorView.setVisible(false);
                 cardPane.setSelectedComponent(textView);
             }
@@ -194,6 +206,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
 //                fVisualEditorView.injectGraphModel(fGraphModel);
                 cardPane.setSelectedComponent(visualView);
                 fVisualEditorView.setVisible(true);
+                refreshLayout.setEnabled(true);
                 fFormEditorView.setVisible(false);
                 fTextEditorView.setVisible(false);
             }
