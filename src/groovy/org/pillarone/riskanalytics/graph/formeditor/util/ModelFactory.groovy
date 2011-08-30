@@ -28,6 +28,10 @@ class ModelFactory {
                 return graphModel.packageName+"."+graphModel.name
             }
 
+            public String getPackage() {
+                return graphModel.packageName
+            }
+
             @Override
             void initComponents() {
                 for (ComponentNode node : graphModel.allComponentNodes) {
@@ -97,6 +101,10 @@ class ModelFactory {
 
             public String getName() {
                 return "ComposedComponentTest"
+            }
+
+            public String getPackage() {
+                return ccGraphModel.packageName
             }
 
             @Override
