@@ -1,6 +1,8 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
+import com.ulcjava.base.application.tree.AbstractTreeModel;
 import com.ulcjava.base.application.tree.DefaultTreeModel;
+import com.ulcjava.base.application.tree.TreePath;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.ComponentTypeTreeModelFactory;
@@ -24,24 +26,14 @@ public class ComponentCategoryTree extends AbstractComponentDefinitionTree {
         final List<String> categories = PaletteService.getInstance().getCategoriesFromDefinition(definition);
         TypeTreeNode root = (TypeTreeNode) fTreeModel.getRoot();
         for (String category : categories) {
-            final TypeTreeNode categoryNode = findCategoryNode(root, category);
+            final TypeTreeNode categoryNode = findOrCreateNode(root, category);
             TypeTreeNode leaf = new TypeTreeNode(definition);
             leaf.setLeaf(true);
-            categoryNode.insert(leaf, findInsertIndex(categoryNode, definition.getTypeClass().getName()));
+            final int insertIndex = findInsertIndex(categoryNode, definition.getTypeClass().getSimpleName());
+            categoryNode.insert(leaf, insertIndex);
+            ((AbstractTreeModel) fTreeModel).nodesWereInserted(new TreePath(DefaultTreeModel.getPathToRoot(categoryNode)), new int[]{insertIndex});
         }
 
     }
 
-    protected TypeTreeNode findCategoryNode(TypeTreeNode root, String name) {
-        for (int i = 0; i < root.getChildCount(); i++) {
-            TypeTreeNode child = (TypeTreeNode) root.getChildAt(i);
-            if (child.getFullName().equals(name)) {
-                return child;
-            }
-        }
-
-        TypeTreeNode categoryNode = new TypeTreeNode("", name);
-        root.insert(categoryNode, findInsertIndex(root, name));
-        return categoryNode;
-    }
 }
