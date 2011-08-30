@@ -22,13 +22,26 @@ public class UIManagerHelper {
         //  setMacLookAndFeel();
         //}
         else setSystemLookAndFeel();
+    }
 
+    public static void setTextFieldUI() {
+        if (isWindowsOS()) {
+            UIManager.put("TextFieldUI", WindowsTextFieldUI.class.getName());
+        } else if (isLinux()) {
+            UIManager.put("TextFieldUI", MetalTextFieldUI.class.getName());            
+        } else {
+            UIManager.put("TextFieldUI", MetalTextFieldUI.class.getName());
+        }
+    }
+
+    public static void setTooltipDismissDelay() {
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
+    }
 
+    public static void setParserDelegator() {
         //workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6993073
         new ParserDelegator();
     }
-
 
     private static boolean isWindowsOS() {
         return getOS().indexOf("windows") > -1;
@@ -72,12 +85,10 @@ public class UIManagerHelper {
 
     private static void setWindowsLookAndFeel() {
         setLookAndFeel(new WindowsLookAndFeel());
-        UIManager.put("TextFieldUI", WindowsTextFieldUI.class.getName());
 
     }
 
     public static void setLinuxLookAndFeel() {
         setLookAndFeel(new MetalLookAndFeel());
-        UIManager.put("TextFieldUI", MetalTextFieldUI.class.getName());
     }
 }
