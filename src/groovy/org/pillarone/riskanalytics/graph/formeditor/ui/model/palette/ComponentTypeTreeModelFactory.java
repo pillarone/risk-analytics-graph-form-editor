@@ -71,7 +71,7 @@ public class ComponentTypeTreeModelFactory {
 
     public static DefaultTreeModel getSortedComponentDefinitionsTreeModel() {
         List<ComponentDefinition> componentDefinitions = new ArrayList<ComponentDefinition>(PaletteService.getInstance().getAllComponentDefinitions());
-        Collections.sort(componentDefinitions, ComponentDefinition.getComparator());
+        Collections.sort(componentDefinitions, new ComponentDefinitionComparator());
         final TypeTreeNode root = new TypeTreeNode("", "root");
         root.setLeaf(false);
         for (ComponentDefinition componentDef : componentDefinitions) {
