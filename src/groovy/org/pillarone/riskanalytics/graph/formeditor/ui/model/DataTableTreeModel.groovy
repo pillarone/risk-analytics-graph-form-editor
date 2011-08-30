@@ -297,7 +297,8 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
             if (node instanceof DataTreePacketNode) {
                 int index = fRoot.children.indexOf(node)
                 fRoot.remove index
-                nodesWereRemoved(new TreePath([fRoot] as Object[]), [index] as int[])
+                node.parameters.each { holder -> fParametrization.removeParameter holder }
+                nodesWereRemoved(new TreePath([fRoot] as Object[]), [index] as int[], [node] as IDataTreeNode[])
             }
         }
     }
