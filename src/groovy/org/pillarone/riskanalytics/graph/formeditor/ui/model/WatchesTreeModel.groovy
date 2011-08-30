@@ -62,6 +62,7 @@ class WatchesTreeModel extends AbstractTableTreeModel  implements ITableTreeMode
                         watchNode.addChild(fieldEntry.key, fieldNode)
                     }
                     ParentNode fieldNode = (ParentNode) watchNode.children[fieldEntry.key]
+                    fieldNode.children = [:]
                     createDataSubTree(fieldNode, (Map) fieldEntry.value)
                 }
                 nodeStructureChanged(new TreePath([fRoot,watchNode] as Object[]));
