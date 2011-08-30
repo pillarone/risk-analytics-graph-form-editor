@@ -281,9 +281,26 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
 
     void connectionAdded(Connection c) { }
     void connectionRemoved(Connection c) { }
-    void outerPortAdded(Port p) {}
+    void outerPortAdded(Port p) {
+        if (fRoot.graphElement instanceof ComposedComponentGraphModel) {
+            DataTreePacketNode packetNode = new DataTreePacketNode(p, fRoot)
+            packetNode.parentNode = fRoot
+            fRoot.addChild packetNode
+            nodeStructureChanged(new TreePath([fRoot] as Object[]))
+        }
+    }
 
-    void outerPortRemoved(Port p) {}
+    void outerPortRemoved(Port p) {
+        if (fRoot.graphElement instanceof ComposedComponentGraphModel) {
+            String nodeName = p.name
+            IDataTreeNode node = findNode(nodeName)
+            if (node instanceof DataTreePacketNode) {
+                int index = fRoot.children.indexOf(node)
+                fRoot.remove index
+                nodesWereRemoved(new TreePath([fRoot] as Object[]), [index] as int[])
+            }
+        }
+    }
 
     void nodesSelected(List<ComponentNode> nodes) { }
 
@@ -351,9 +368,9 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         }
     }
 
-    public DataTreeComponentNode findNode(String name) {
+    public IDataTreeNode findNode(String name) {
         for (IDataTreeNode node: fRoot.getChildren()) {
-            if (node instanceof DataTreeComponentNode && node.name.equals(name))
+            if ((node instanceof DataTreeComponentNode || node instanceof DataTreePacketNode) && node.name.equals(name))
                 return node
         }
         return null
