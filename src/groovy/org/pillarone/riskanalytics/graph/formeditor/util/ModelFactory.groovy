@@ -15,6 +15,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.InPort
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization
 import org.pillarone.riskanalytics.core.packets.Packet
+import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 
 /**
  */
@@ -38,6 +39,20 @@ class ModelFactory {
                     Class componentClazz = node.type.typeClass
                     Component comp = componentClazz.newInstance()
                     this.metaClass."$node.name"=comp
+                    setComponentNames(comp, node)
+                }
+            }
+
+            void setComponentNames(Component c, ComponentNode node) {
+                if (c.name==null) {
+                    c.name = node.name
+                }
+                if (node instanceof ComposedComponentNode) {
+                    ComposedComponentNode ccNode = (ComposedComponentNode) node
+                    for (ComponentNode subNode : ccNode.componentGraph.allComponentNodes) {
+                        Component subComp = c."$subNode.name"
+                        setComponentNames(subComp, subNode)
+                    }
                 }
             }
 
@@ -50,17 +65,8 @@ class ModelFactory {
                         allComposedComponents << component
                     }
                 }*/
-
-                graphModel.startComponents = graphModel.resolveStartComponents()
-                graphModel.startComponents.each {node ->
-                    Component comp = (Component) this."$node.name";
-                    if (comp instanceof ComposedComponent) {
-                        ComposedComponent cc = (ComposedComponent) comp;
-                        List<Component> starters = getStarterComponents(cc, (ComposedComponentNode)node)
-                        starters.each {it -> addStartComponent(it)}
-                    } else {
-                        addStartComponent(comp)
-                    }
+                for (Component starter : getStarterComponents(this, graphModel)) {
+                    addStartComponent(starter)
                 }
             }
 
@@ -188,7 +194,6 @@ class ModelFactory {
         try {
             // in case the class implements a doCalculation I assume that the call to the starter component is done
             ccClazz.getDeclaredMethod("doCalculation", null)
-            startComponents.add(cc)
         } catch (NoSuchMethodException ex) {
             // if no such method is found assume that start component has not been set --> hence we need to search for it
             // TODO: for deployment in RA we need to do changes in RA core as well...
@@ -196,8 +201,14 @@ class ModelFactory {
             for (ComponentNode node: ccNode.componentGraph.allComponentNodes) {
                 boolean inConnected = false
                 for (InPort inport: node.inPorts) {
-                    if (internalConnections.find {it.to == inport} != null) {
+                    Connection conn = internalConnections.find {it.to == inport}
+                    if (conn != null && !conn.isReplicatingConnection()) {
                         inConnected = true
+                    } else if (conn != null) {
+                        inConnected = true
+                        // TODO check whether this port is connected from outside - if yes, set isConnected to true
+                        // InPort replPort = (InPort) conn.from
+                        // InPort externallyVisibleInPort = (InPort) ccNode.getPort(replPort.name)
                     }
                 }
                 if (!inConnected) {
@@ -207,19 +218,28 @@ class ModelFactory {
                         if (startingSubComps.size()>0) {
                             startComponents.addAll(startingSubComps)
                         }
-                    } else {
-                        startComponents.add(c)
                     }
+                    startComponents.add(c)
                 }
             }
         }
         return startComponents
     }
 
-    public static List<Component> getStarterComponents(StochasticModel model, ComposedComponentGraphModel ccGraphModel) {
+    public static List<Component> getStarterComponents(StochasticModel model, AbstractGraphModel graphModel) {
         List<Component> startComponents = new ArrayList<Component>()
-        List<Connection> internalConnections = ccGraphModel.allConnections
-        for (ComponentNode node: ccGraphModel.allComponentNodes) {
+        List<Connection> internalConnections = graphModel.allConnections
+        for (ComponentNode node: graphModel.allComponentNodes) {
+            // check first the sub-components (recursively)
+            Component c = model."$node.name"
+            if (node instanceof ComposedComponentNode) {
+                List<Component> startingSubComps = getStarterComponents((ComposedComponent)c, (ComposedComponentNode)node)
+                if (startingSubComps.size()>0) {
+                    startComponents.addAll(startingSubComps)
+                }
+            }
+
+            // then check whether the current component is in-connected, if not add it to the starter component
             boolean inConnected = false
             for (InPort inport: node.inPorts) {
                 if (internalConnections.find {it.to == inport} != null) {
@@ -227,15 +247,7 @@ class ModelFactory {
                 }
             }
             if (!inConnected) {
-                Component c = model."$node.name"
-                if (node instanceof ComposedComponentNode) {
-                    List<Component> startingSubComps = getStarterComponents((ComposedComponent)c, (ComposedComponentNode)node)
-                    if (startingSubComps.size()>0) {
-                        startComponents.addAll(startingSubComps)
-                    }
-                } else {
-                    startComponents.add(c)
-                }
+                startComponents.add(c)
             }
         }
         return startComponents
