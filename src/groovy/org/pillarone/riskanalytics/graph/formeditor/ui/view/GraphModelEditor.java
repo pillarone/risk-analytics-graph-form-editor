@@ -390,7 +390,7 @@ public class GraphModelEditor extends AbstractBean {
     public void exportModelToGroovyAction() {
         AbstractGraphModel model = getSelectedModel();
         String text = GraphModelUtilities.getGroovyModelCode(model);
-        saveOutput(model.getName() + ".groovy", text, UlcUtilities.getWindowAncestor(this.getContentView()));
+        saveOutput(model.getName() + ".groovy", text, UlcUtilities.getWindowAncestor(fModelRepositoryTree));
     }
 
     private AbstractGraphModel getSelectedModel() {
@@ -518,6 +518,6 @@ public class GraphModelEditor extends AbstractBean {
             return;
         }
         String content = " "; // TODO
-        saveOutput(data.getName() + ".groovy", content, UlcUtilities.getWindowAncestor(this.getContentView()));
+        saveOutput(data.getName() + ".groovy", content, UlcUtilities.getWindowAncestor(fModelRepositoryTree));
     }
 }
