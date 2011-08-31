@@ -24,9 +24,7 @@ class GraphElementTreeBuilder {
         if (parent instanceof ComposedComponentNode) {
             ComposedComponentNode cc = (ComposedComponentNode) parent;
             if (cc.getComponentGraph() == null) {
-                ComposedComponentGraphImport importer = new ComposedComponentGraphImport();
-                ComposedComponentGraphModel ccModel = (ComposedComponentGraphModel) importer.importGraph(cc.getType().getTypeClass(), "");
-                cc.setComponentGraph(ccModel);
+                cc.setComponentGraph(cc.getComponentGraph())
             }
             return searchForChildren(((ComposedComponentNode) parent).getComponentGraph());
         }
@@ -50,6 +48,18 @@ class GraphElementTreeBuilder {
     public GraphElementNode buildNode(GraphElement element) {
         GraphElementNode node = new GraphElementNode(element, element.name)
         elementNodes[element] = node
+        if (element instanceof Port) {
+            Port port = (Port) element
+            Port twinPort = null
+            if (port.isComposedComponentOuterPort()) {
+                twinPort = ((Port)element).componentNode?.getPort(element.name)
+            } else if (port.componentNode instanceof ComposedComponentNode) {
+                twinPort = ((ComposedComponentNode)port.componentNode).componentGraph.getOuterPort(element.name)
+            }
+            if (twinPort) {
+                elementNodes[twinPort] = node
+            }
+        }
         for (GraphElement el : searchForChildren(element)) {
             GraphElementNode childNode = buildNode(el)
             if (childNode) {
