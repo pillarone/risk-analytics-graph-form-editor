@@ -27,6 +27,7 @@ import org.pillarone.riskanalytics.graph.core.graphimport.AbstractGraphImport;
 import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraphImport;
 import org.pillarone.riskanalytics.graph.core.graphimport.GraphImportService;
 import org.pillarone.riskanalytics.graph.core.graphimport.ModelGraphImport;
+import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
@@ -248,7 +249,7 @@ public class GraphModelEditor extends AbstractBean {
      * @throws ClassNotFoundException
      */
     public boolean importComponentType(String clazzName) throws ClassNotFoundException {
-        Class clazz = getClass().getClassLoader().loadClass(clazzName);
+        Class clazz = PaletteService.getInstance().getComponentDefinition(clazzName).getTypeClass(); // getClass().getClassLoader().loadClass(clazzName);
         AbstractGraphImport importer = null;
         if (ComposedComponent.class.isAssignableFrom(clazz)) {
             importer = new ComposedComponentGraphImport();
