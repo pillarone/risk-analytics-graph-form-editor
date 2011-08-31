@@ -9,6 +9,7 @@ import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.IPaletteServiceListener;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.FilteringTreeModel;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.ITreeFilter;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 
 public abstract class AbstractComponentDefinitionTree extends ULCBoxPane implements ISearchListener {
@@ -25,16 +26,27 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
     }
 
     protected ITreeModel getTreeModel() {
-// final FilteringTreeModel treeModel = new FilteringTreeModel(createTreeModel());
+        final FilteringTreeModel treeModel = new FilteringTreeModel(createTreeModel(), new ITreeFilter() {
+            public boolean acceptNode(ITreeNode node) {
+                return true;
+            }
+        });
         PaletteService.getInstance().addPaletteServiceListener(new IPaletteServiceListener() {
 
             public void componentDefinitionAdded(ComponentDefinition definition) {
                 insertNodeForComponentDefinition(definition);
-// treeModel.applyFilter();
             }
 
         });
-        return createTreeModel();
+        return treeModel;
+    }
+
+    protected FilteringTreeModel getFilteringTreeModel() {
+        return (FilteringTreeModel) fTreeModel;
+    }
+
+    protected AbstractTreeModel getActualTreeModel() {
+        return (AbstractTreeModel) getFilteringTreeModel().getModel();
     }
 
     protected abstract DefaultTreeModel createTreeModel();
@@ -69,7 +81,7 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
         TypeTreeNode newNode = new TypeTreeNode("", childName);
         final int insertIndex = findInsertIndex(parent, childName);
         parent.insert(newNode, insertIndex);
-        ((AbstractTreeModel) fTreeModel).nodesWereInserted(new TreePath(DefaultTreeModel.getPathToRoot(parent)), new int[]{insertIndex});
+        getActualTreeModel().nodesWereInserted(new TreePath(DefaultTreeModel.getPathToRoot(parent)), new int[]{insertIndex});
         return newNode;
     }
 
@@ -118,7 +130,7 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
     }
 
     public void search(String text) {
-// ((FilteringTreeModel) fTreeModel).setFilter(new NameFilter(text));
+        ((FilteringTreeModel) fTreeModel).setFilter(new NameFilter(text));
     }
 }
 

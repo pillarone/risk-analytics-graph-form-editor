@@ -1,44 +1,56 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.model.palette
 
-import com.ulcjava.base.application.tree.DefaultTreeModel
-import org.pillarone.riskanalytics.graph.formeditor.ui.view.INameFilter
+import com.ulcjava.base.application.tree.AbstractTreeModel
+import com.ulcjava.base.application.event.ITreeModelListener
 import com.ulcjava.base.application.tree.ITreeNode
-
+import com.ulcjava.base.application.tree.ITreeModel
 import com.ulcjava.base.application.tree.TreePath
+import com.ulcjava.base.application.event.TreeModelEvent
 
-/**
- * @author fouad.jaada@intuitive-collaboration.com
- */
-class FilteringTreeModel extends DefaultTreeModel {
 
-    DefaultTreeModel model
-    INameFilter filter
+class FilteringTreeModel extends AbstractTreeModel implements ITreeModelListener {
+
+    ITreeModel model
+    ITreeFilter filter
     FilterTreeNode filteredRoot
     Map<ITreeNode, FilterTreeNode> nodeMapping = [:]
 
-    public FilteringTreeModel(DefaultTreeModel treeModel) {
-        super(treeModel.root)
-        this.model = treeModel
+    public FilteringTreeModel(ITreeModel model, ITreeFilter filter) {
+        this.@model = model
+        this.@filter = filter
         filteredRoot = new FilterTreeNode(originalNode: (ITreeNode) model.root)
         applyFilter()
+        this.@model.addTreeModelListener(this)
     }
 
-
-
-    public void setFilter(INameFilter nameFilter) {
-        clearFilter()
-        this.@filter = nameFilter
-        applyFilter()
-    }
-
-    public void clearFilter() {
-        this.@filter = null
+    public void setFilter(ITreeFilter newFilter) {
+        this.@filter = newFilter
         applyFilter()
     }
 
     public void applyFilter() {
         synchronizeFilteredTree((ITreeNode) model.root, filteredRoot)
     }
+
+    protected void reapplyFilter() {
+        synchronizeFilteredTree((ITreeNode) model.root, filteredRoot)
+    }
+
+    private void synchronizeTreePath(TreePath path) {
+        def node = findValidSynchronizationStart(path)
+
+        synchronizeFilteredTree(node, nodeMapping[node])
+    }
+
+    private def findValidSynchronizationStart(TreePath path) {
+        ITreeNode node = (ITreeNode) path.lastPathComponent
+        while (!(nodeMapping[node] && isAcceptedNode(node)) && node.parent != null) {
+            node = node.parent
+        }
+        return node
+    }
+
+
 
     protected void synchronizeFilteredTree(ITreeNode node, FilterTreeNode filteredNode) {
         nodeMapping[node] = filteredNode
@@ -50,8 +62,7 @@ class FilteringTreeModel extends DefaultTreeModel {
             if (isAcceptedNode(childNode)) {
                 if (!filteredChildNode) {
                     filteredChildNode = new FilterTreeNode(parent: filteredNode, originalChildIndex: childIndex, originalNode: childNode)
-
-                    filteredNode.childNodes.add(model.getIndexOfChild(node, childNode), filteredChildNode)
+                    addFilterChildNode(filteredNode, filteredChildNode)
                     addActiveIndex(filteredNode, filteredNode.childNodes.indexOf(filteredChildNode))
                     nodeMapping[childNode] = filteredChildNode
                     nodesWereInserted(new TreePath(getPathToRoot(node) as Object[]), [getIndexOfChild(node, childNode)] as int[])
@@ -77,10 +88,24 @@ class FilteringTreeModel extends DefaultTreeModel {
         }
     }
 
+    protected addFilterChildNode(FilterTreeNode parent, FilterTreeNode child) {
+        final int insertIndex = model.getIndexOfChild(parent.originalNode, child.originalNode)
+        parent.childNodes.add(insertIndex, child)
+        List<Integer> newIndices = []
+        for(Integer i in parent.activeIndices) {
+            if(i >= insertIndex) {
+                i++
+            }
+            newIndices << i
+        }
+        parent.activeIndices = newIndices.sort()
+    }
+
     protected void addActiveIndex(FilterTreeNode filterTreeNode, int index) {
-        if(!filterTreeNode.activeIndices.contains(index)) {
+        if (!filterTreeNode.activeIndices.contains(index)) {
             filterTreeNode.activeIndices << index
         }
+        filterTreeNode.activeIndices = filterTreeNode.activeIndices.sort()
     }
 
     private def removeFilteredChildNodeIndex(FilterTreeNode filteredChildNode) {
@@ -88,7 +113,7 @@ class FilteringTreeModel extends DefaultTreeModel {
         int removedIndex = filteredNode.childNodes.indexOf(filteredChildNode)
         def activeIndicesIndex = filteredNode.activeIndices.indexOf(removedIndex)
 
-        filteredNode.activeIndices.remove(activeIndicesIndex as int)
+        filteredNode.activeIndices.remove(activeIndicesIndex)
         nodesWereRemoved(new TreePath(getPathToRoot(filteredNode.originalNode) as Object[]), [activeIndicesIndex] as int[], [filteredChildNode.originalNode] as Object[])
     }
 
@@ -117,6 +142,45 @@ class FilteringTreeModel extends DefaultTreeModel {
 
     }
 
+    /**
+     * Returns the path to the root.
+     *
+     * @param node the node to get the path for
+     * @return the path to the root
+     */
+    private ITreeNode[] getPathToRoot(ITreeNode node) {
+        List result = new ArrayList();
+        result.add(node);
+        while (node.getParent() != null) {
+            node = node.getParent();
+            result.add(node);
+        }
+
+        Collections.reverse(result);
+        return (ITreeNode[]) result.toArray(new ITreeNode[result.size()]);
+    }
+
+
+    public int getColumnCount() {
+        return model.columnCount;
+    }
+
+    public void setColumnCount(int newColumnCount) {
+        model.columnCount = newColumnCount
+    }
+
+    public String getColumnName(int column) {
+        model.getColumnName(column)
+    }
+
+    public Object getValueAt(Object node, int column) {
+        return model.getValueAt(node, column)
+    }
+
+    public Object getRoot() {
+        return model.root;
+    }
+
     public Object getChild(Object parent, int index) {
         def filteredNode = nodeMapping[parent]
         int i = filteredNode.activeIndices[index]
@@ -132,15 +196,64 @@ class FilteringTreeModel extends DefaultTreeModel {
         return node.childCount == 0;
     }
 
-     public int getIndexOfChild(Object parent, Object child) {
+    public int getIndexOfChild(Object parent, Object child) {
         def filteredNode = nodeMapping[parent]
         int originalIndex = filteredNode.childNodes.indexOf(nodeMapping[child])
         return filteredNode.activeIndices.indexOf(originalIndex)
     }
 
+    public boolean isCellEditable(Object node, int columnIndex) {
+        return model.isCellEditable(node, columnIndex);
+    }
+
+    public void setValueAt(Object value, Object node, int column) {
+        model.setValueAt(value, node, column);
+    }
+
+    // event forwarding by reapplying the filter
+
+    public void treeStructureChanged(TreeModelEvent event) {
+        treeNodeStructureChanged(event)
+    }
+
+    public void treeNodeStructureChanged(TreeModelEvent event) {
+        synchronizeTreePath(event.treePath)
+    }
+
+    public void treeNodesInserted(TreeModelEvent event) {
+        synchronizeTreePath(event.treePath)
+    }
+
+    public void treeNodesRemoved(TreeModelEvent event) {
+        synchronizeTreePath(event.treePath)
+    }
+
+    public void treeNodesChanged(TreeModelEvent event) {
+        List childIndices = []
+        event.children.each {
+            int childIndex = getIndexOfChild(event.treePath.lastPathComponent, it)
+            if (childIndex >= 0) {
+                childIndices << childIndex
+            }
+        }
+        if (!childIndices.empty) {
+            nodesChanged(event.treePath, childIndices as int[])
+        }
+    }
+
+    protected TreePath extractPath(TreeModelEvent event) {
+        def pathElements = event.getTreePath().getPath().toList()
+        def elements = new ArrayList(pathElements)
+        if (event.children) {
+            elements.addAll(event.children.toList())
+        }
+
+        TreePath path = new TreePath(elements as Object[])
+        return path
+    }
+
     protected boolean isAcceptedNode(ITreeNode node) {
-        if (filter == null) return true
-        boolean nodeAccepted = filter.accept(node)
+        boolean nodeAccepted = filter.acceptNode(node)
         if (!nodeAccepted) {
             node.childCount.times {
                 nodeAccepted |= isAcceptedNode((node.getChildAt(it)))
@@ -160,4 +273,12 @@ class FilteringTreeModel extends DefaultTreeModel {
     void propertyMissing(String name, Object args) {
         model.getMetaClass().setProperty(model, name, args)
     }
+
+
+}
+
+interface ITreeFilter {
+
+    boolean acceptNode(ITreeNode node)
+
 }

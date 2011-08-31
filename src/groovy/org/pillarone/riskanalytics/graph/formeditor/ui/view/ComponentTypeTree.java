@@ -1,6 +1,5 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
-import com.ulcjava.base.application.tree.AbstractTreeModel;
 import com.ulcjava.base.application.tree.DefaultTreeModel;
 import com.ulcjava.base.application.tree.TreePath;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
@@ -39,7 +38,7 @@ public class ComponentTypeTree extends AbstractComponentDefinitionTree {
         final TypeTreeNode typeTreeNode = new TypeTreeNode(definition);
         typeTreeNode.setLeaf(true);
         current.insert(typeTreeNode, insertIndex);
-        ((AbstractTreeModel) fTreeModel).nodesWereInserted(new TreePath(DefaultTreeModel.getPathToRoot(current)), new int[]{insertIndex});
+        getActualTreeModel().nodesWereInserted(new TreePath(DefaultTreeModel.getPathToRoot(current)), new int[]{insertIndex});
 
     }
 
