@@ -5,10 +5,14 @@ import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.tree.*;
 import com.ulcjava.base.application.util.Dimension;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ModelRepositoryTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ModelRepositoryTreeNode;
 
 public class ModelRepositoryTree extends ULCBoxPane {
+
+    private static Log LOG = LogFactory.getLog(ModelRepositoryTree.class);
 
     private ModelRepositoryTreeModel fTreeModel;
     private ULCTree fTree;
@@ -24,7 +28,7 @@ public class ModelRepositoryTree extends ULCBoxPane {
     public ModelRepositoryTreeModel getTreeModel() {
         return fTreeModel;
     }
-    
+
     private void createView() {
         // create tree
         fTree = new ULCTree();
@@ -54,6 +58,7 @@ public class ModelRepositoryTree extends ULCBoxPane {
                     fParent.loadModel(modelName, packageName);
                 } catch (Exception ex) {
                     ULCAlert alert = new ULCAlert("Model could not be loaded", "Reason: " + ex.getMessage(), "ok");
+                    LOG.error("Model could not be loaded", ex);
                     alert.show();
                 }
             }
