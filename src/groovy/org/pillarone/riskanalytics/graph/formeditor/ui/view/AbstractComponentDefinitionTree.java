@@ -25,12 +25,12 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
     }
 
     protected ITreeModel getTreeModel() {
-//        final FilteringTreeModel treeModel = new FilteringTreeModel(createTreeModel());
+// final FilteringTreeModel treeModel = new FilteringTreeModel(createTreeModel());
         PaletteService.getInstance().addPaletteServiceListener(new IPaletteServiceListener() {
 
             public void componentDefinitionAdded(ComponentDefinition definition) {
                 insertNodeForComponentDefinition(definition);
-//                treeModel.applyFilter();
+// treeModel.applyFilter();
             }
 
         });
@@ -118,6 +118,7 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
     }
 
     public void search(String text) {
-//        ((FilteringTreeModel) fTreeModel).setFilter(new NameFilter(text));
+// ((FilteringTreeModel) fTreeModel).setFilter(new NameFilter(text));
     }
 }
+

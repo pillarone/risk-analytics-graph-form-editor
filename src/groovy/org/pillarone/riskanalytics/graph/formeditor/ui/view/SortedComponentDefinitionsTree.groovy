@@ -8,8 +8,8 @@ import com.ulcjava.base.application.tree.TreePath
 import com.ulcjava.base.application.tree.AbstractTreeModel
 
 /**
- * @author fouad.jaada@intuitive-collaboration.com
- */
+* @author fouad.jaada@intuitive-collaboration.com
+*/
 class SortedComponentDefinitionsTree extends AbstractComponentDefinitionTree {
 
     public SortedComponentDefinitionsTree(GraphModelEditor parent) {

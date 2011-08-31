@@ -350,16 +350,12 @@ public class GraphModelEditor extends AbstractBean {
     }
 
     public void loadModel(String name, String packageName) {
-        AbstractGraphModel model = null;
         TypeDefinitionBean typeDefBean = new TypeDefinitionBean();
-        try {
-            model = getPersistenceService().load(name, packageName);
-        } catch (Exception ex) {
-        }
-        typeDefBean.setName(model.getName());
-        typeDefBean.setPackageName(model.getPackageName());
-        typeDefBean.setBaseType(model instanceof ModelGraphModel ? "Model" : "ComposedComponent");
-        addModelToView(model, typeDefBean, true);
+        final AbstractGraphModel graphModel = getPersistenceService().load(name, packageName);
+        typeDefBean.setName(graphModel.getName());
+        typeDefBean.setPackageName(graphModel.getPackageName());
+        typeDefBean.setBaseType(graphModel instanceof ModelGraphModel ? "Model" : "ComposedComponent");
+        addModelToView(graphModel, typeDefBean, true);
     }
 
     @Action
@@ -399,7 +395,7 @@ public class GraphModelEditor extends AbstractBean {
     public void exportModelToGroovyAction() {
         AbstractGraphModel model = getSelectedModel();
         String text = GraphModelUtilities.getGroovyModelCode(model);
-        FileStoreHandler.saveOutput(model.getName() + ".groovy", text, UlcUtilities.getWindowAncestor(this.getContentView()));
+        FileStoreHandler.saveOutput(model.getName() + ".groovy", text, UlcUtilities.getWindowAncestor(fModelRepositoryTree));
     }
 
     private AbstractGraphModel getSelectedModel() {

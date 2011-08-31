@@ -16,6 +16,9 @@ class FormEditorLauncher extends LocalContainerAdapter {
 
     public static void launch() {
         // UIManagerHelper.setLookAndFeel()
+        UIManagerHelper.setTooltipDismissDelay()
+        UIManagerHelper.setTextFieldUI()
+        UIManagerHelper.setParserDelegator()
         LogManager.setLogManager(new SimpleLogManager())
         FormEditorLauncher launcher = new FormEditorLauncher()
         launcher.start()
@@ -25,7 +28,7 @@ class FormEditorLauncher extends LocalContainerAdapter {
             listener.wait()
         }
     }
-
+        
 }
 
 class StandaloneSessionStateListener implements ISessionStateListener {
