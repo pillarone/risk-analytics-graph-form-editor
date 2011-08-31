@@ -53,9 +53,9 @@ class WatchesTreeModel extends AbstractTableTreeModel  implements ITableTreeMode
             fPeriodLabels = periodLabels
         }
         for (Entry entry : fRoot.children) {
+            ParentNode watchNode = entry.value
             Map dataNode = simulationResults[entry.key]
             if (dataNode) {
-                ParentNode watchNode = entry.value
                 for (Entry fieldEntry : dataNode.entrySet()) {
                     if (!watchNode.hasChild(fieldEntry.key)) {
                         ParentNode fieldNode = new ParentNode(fieldEntry.key, watchNode)
@@ -65,6 +65,9 @@ class WatchesTreeModel extends AbstractTableTreeModel  implements ITableTreeMode
                     fieldNode.children = [:]
                     createDataSubTree(fieldNode, (Map) fieldEntry.value)
                 }
+                nodeStructureChanged(new TreePath([fRoot,watchNode] as Object[]));
+            } else {
+                watchNode.children = [:]
                 nodeStructureChanged(new TreePath([fRoot,watchNode] as Object[]));
             }
         }
