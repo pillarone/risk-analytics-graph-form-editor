@@ -80,9 +80,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
         } else if (parent.graphElement instanceof ComposedComponentNode) {
             ComposedComponentNode cc = (ComposedComponentNode) parent.graphElement
             if (cc.componentGraph == null) {
-                ComposedComponentGraphImport importer = new ComposedComponentGraphImport()
-                ComposedComponentGraphModel ccModel = (ComposedComponentGraphModel) importer.importGraph(cc.getType().getTypeClass(), "")
-                cc.setComponentGraph(ccModel)
+                cc.setComponentGraph(cc.getComponentGraph())
             }
             model = cc.componentGraph
         }
