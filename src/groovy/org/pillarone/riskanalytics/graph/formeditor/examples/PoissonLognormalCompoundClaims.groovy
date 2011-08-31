@@ -10,7 +10,7 @@ import org.pillarone.riskanalytics.core.wiring.WiringUtils
 /**
  *
  */
-@ComponentCategory(categories=["Claims","Generators","Risk"])
+@ComponentCategory(categories = ["Claims", "Generators", "Risk"])
 class PoissonLognormalCompoundClaims extends ComposedComponent {
     /**
      * Provides a list of the generated single claims.

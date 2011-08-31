@@ -54,7 +54,7 @@ class ComponentTypeTreeTests extends AbstractSimpleStandaloneTestCase {
         tree.doExpandRow(1)
 
         assertEquals(1, model.getChildCount(aTest))
-         assertEquals(ATestComponent.simpleName, model.getChild(aTest, 0).getValueAt(0))
+        assertEquals(ATestComponent.simpleName, model.getChild(aTest, 0).getValueAt(0))
 
         runVoidCommand(new ServerSideCommand() {
 
