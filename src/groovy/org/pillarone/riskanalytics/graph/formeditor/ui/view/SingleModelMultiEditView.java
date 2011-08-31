@@ -400,6 +400,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             fWatchesTable = new WatchesTable();
             ULCScrollPane watchesPane = new ULCScrollPane(fWatchesTable);
             fRightTabbedPane.addTab("Watches", watchesPane);
+            fWatchesTable.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
         }
         fWatchesTable.getModel().addWatch(path);
         fWatchesTable.getTable().expandAll();
