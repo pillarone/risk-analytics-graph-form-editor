@@ -40,13 +40,12 @@ public class VisualSceneUtilities {
 
             Port port = new Port(id, PortType.IN, entry.getValue().getName(), UIUtils.formatDisplayName(entry.getKey().getName()));
             IntegerRange range = WiringValidationUtil.getConnectionCardinality(entry.getKey());
-            port.addConstraint(new PortConstraint(entry.getValue().getName(), range.getFrom(), range.getTo()));
+            port.addConstraint(new PortConstraint(entry.getValue().getName(), range != null ? range.getFrom() : 0, range != null ? range.getTo() : Integer.MAX_VALUE));
             vertex.addPort(port);
         }
         for (Map.Entry<Field, Class> entry : GroovyUtils.obtainPorts(definition, "out").entrySet()) {
             String id = "out_port_" + new Date().getTime() + "_"+Math.random();
             Port port = new Port(id, PortType.OUT, entry.getValue().getName(), UIUtils.formatDisplayName(entry.getKey().getName()));
-            IntegerRange range = WiringValidationUtil.getConnectionCardinality(entry.getKey());
             port.addConstraint(new PortConstraint(entry.getValue().getName(), 0, Integer.MAX_VALUE));
             vertex.addPort(port);
         }
