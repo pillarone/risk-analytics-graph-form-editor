@@ -7,6 +7,8 @@ import com.ulcjava.base.application.tree.*;
 import com.ulcjava.base.application.util.Dimension;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.codehaus.groovy.grails.commons.ApplicationHolder;
+import org.pillarone.riskanalytics.graph.core.graph.persistence.GraphPersistenceService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ModelRepositoryTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ModelRepositoryTreeNode;
 
@@ -36,7 +38,6 @@ public class ModelRepositoryTree extends ULCBoxPane {
         fTree.setModel(fTreeModel);
         fTree.getSelectionModel().setSelectionMode(ULCTreeSelectionModel.SINGLE_TREE_SELECTION);
         CellRenderer treeCellRenderer = new CellRenderer();
-        treeCellRenderer.setLoadModelMenuListener(new LoadModelAction());
         fTree.setCellRenderer(treeCellRenderer);
 
         ULCScrollPane treeScrollPane = new ULCScrollPane(fTree);
@@ -65,20 +66,49 @@ public class ModelRepositoryTree extends ULCBoxPane {
         }
     }
 
+    private class DeleteModelAction implements IActionListener {
+
+        GraphPersistenceService fPersistenceService;
+
+        public void actionPerformed(ActionEvent actionEvent) {
+            TreePath treePath = fTree.getSelectionModel().getSelectionPath();
+            Object selectedNode = treePath.getLastPathComponent();
+            if (selectedNode instanceof ModelRepositoryTreeNode) {
+                final String modelName = ((ModelRepositoryTreeNode)selectedNode).getName();
+                final String packageName = ((ModelRepositoryTreeNode)selectedNode).getPackageName();
+                try {
+                    // TODO -> identify AbstractGraphModel, then use getPersistenceService().delete(model);
+                } catch (Exception ex) {
+                    ULCAlert alert = new ULCAlert("Model could not be deleted", "Reason: " + ex.getMessage(), "ok");
+                    LOG.error("Model could not be deleted", ex);
+                    alert.show();
+                }
+            }
+        }
+
+        private GraphPersistenceService getPersistenceService() {
+            if (fPersistenceService == null) {
+                org.springframework.context.ApplicationContext ctx = ApplicationHolder.getApplication().getMainContext();
+                fPersistenceService = ctx.getBean(GraphPersistenceService.class);
+            }
+            return fPersistenceService;
+        }
+    }
+
     private class CellRenderer extends DefaultTreeCellRenderer {
         private ULCPopupMenu fNodePopUpMenu;
         private ULCMenuItem fShowComponentMenuItem;
+        private ULCMenuItem fDeleteMenuItem;
 
 
         CellRenderer() {
             super();
             fNodePopUpMenu = new ULCPopupMenu();
             fShowComponentMenuItem = new ULCMenuItem("load");
+            fShowComponentMenuItem.addActionListener(new LoadModelAction());
             fNodePopUpMenu.add(fShowComponentMenuItem);
-        }
-
-        public void setLoadModelMenuListener(IActionListener listener) {
-            fShowComponentMenuItem.addActionListener(listener);
+            fDeleteMenuItem = new ULCMenuItem("delete");
+            fDeleteMenuItem.addActionListener(new DeleteModelAction());
         }
 
         public IRendererComponent getTreeCellRendererComponent(ULCTree tree, Object node, boolean selected, boolean expanded, boolean leaf, boolean hasFocus) {
