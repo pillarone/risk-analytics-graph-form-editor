@@ -52,7 +52,7 @@ import java.util.Set;
  *
  * @author martin.melchior
  */
-public class GraphModelEditor extends AbstractBean {
+public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
 
     private static Log LOG = LogFactory.getLog(GraphModelEditor.class);
 
@@ -195,8 +195,8 @@ public class GraphModelEditor extends AbstractBean {
      * @param model
      * @param typeDef
      */
-    private void addModelToView(AbstractGraphModel model, TypeDefinitionBean typeDef, boolean isEditable) {
-        SingleModelMultiEditView modelView = new SingleModelMultiEditView(fContext, model);
+    public void addModelToView(AbstractGraphModel model, TypeDefinitionBean typeDef, boolean isEditable) {
+        SingleModelMultiEditView modelView = new SingleModelMultiEditView(fContext, model, this);
         fModelTabs.put(modelView.getView(), modelView);
         fEditorArea.addTab(typeDef.getName(), modelView.getView());
         fEditorArea.setSelectedIndex(fEditorArea.getComponentCount() - 1);
