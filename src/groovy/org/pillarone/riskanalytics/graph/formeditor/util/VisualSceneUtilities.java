@@ -7,6 +7,8 @@ import com.canoo.ulc.graph.shared.PortType;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.InPort;
 import org.pillarone.riskanalytics.graph.core.graph.model.OutPort;
 import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange;
@@ -17,6 +19,7 @@ import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 
 import java.lang.reflect.Field;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -24,7 +27,8 @@ import java.util.Map;
  */
 public class VisualSceneUtilities {
 
-    public static Vertex createVertex(Point mouseLocation, String componentTypePath) {
+    public static Vertex createVertex(Point mouseLocation, ComponentNode graphNode) {
+        String componentTypePath = graphNode.getType().getTypeClass().getName();
         Vertex vertex = new Vertex("internal" + new Date().getTime() + "_" + Math.random());
         vertex.setStyle("swimlane");
         if (mouseLocation==null) {
@@ -32,6 +36,7 @@ public class VisualSceneUtilities {
         }
         vertex.setRectangle(new Rectangle(mouseLocation, new Dimension(200, 200)));
         vertex.setTemplateId(componentTypePath);
+        vertex.setShowExpandIcon(graphNode instanceof ComposedComponentNode);
 
         // add the ports
         ComponentDefinition definition = PaletteService.getInstance().getComponentDefinition(componentTypePath);
@@ -55,13 +60,10 @@ public class VisualSceneUtilities {
     public static boolean isConsistentPort(Port ulcPort, org.pillarone.riskanalytics.graph.core.graph.model.Port graphModelPort) {
         boolean isConsistent = ulcPort.getTitle().equals(UIUtils.formatDisplayName(graphModelPort.getName()));
         if (isConsistent) {
-            if (graphModelPort.isComposedComponentOuterPort()) {
-                isConsistent = ulcPort.getType()==PortType.REPLICATE_IN && graphModelPort instanceof InPort
-                                        || ulcPort.getType()==PortType.REPLICATE_OUT && graphModelPort instanceof OutPort;
-            } else {
-                isConsistent = ulcPort.getType()==PortType.IN && graphModelPort instanceof InPort
-                                        || ulcPort.getType()==PortType.OUT && graphModelPort instanceof OutPort;
-            }
+            isConsistent = ((ulcPort.getType()==PortType.REPLICATE_IN || ulcPort.getType()==PortType.IN)
+                                    && graphModelPort instanceof InPort)
+                                || (ulcPort.getType()==PortType.REPLICATE_OUT || ulcPort.getType()==PortType.OUT)
+                                    && graphModelPort instanceof OutPort;
         }
         return isConsistent;
     }
