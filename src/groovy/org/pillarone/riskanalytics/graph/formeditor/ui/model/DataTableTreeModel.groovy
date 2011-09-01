@@ -256,9 +256,10 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
     void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
         if (propertyName == "name") {
             DataTreeComponentNode treeNode = (DataTreeComponentNode) getDataTreeNode(node)
+            String oldName = treeNode.name
             treeNode.name = newValue
-            String oldPath = treeNode.path
-            String newPath = oldPath.substring(0, oldPath.lastIndexOf(PATHSEP)) + PATHSEP + newValue
+            String oldPath = treeNode.path.substring(0,treeNode.path.lastIndexOf(oldName))
+            String newPath = oldPath+newValue
             treeNode.path = newPath
             List<DataTreeParameterNode> leaves = getAllLeaves(treeNode)
             leaves.each { leaf ->
