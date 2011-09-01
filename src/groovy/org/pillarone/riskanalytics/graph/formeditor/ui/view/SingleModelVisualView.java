@@ -10,9 +10,8 @@ import com.canoo.ulc.graph.dnd.GraphTransferHandler;
 import com.canoo.ulc.graph.event.DuplicateIdException;
 import com.canoo.ulc.graph.event.IGraphComponentListener;
 import com.canoo.ulc.graph.event.IGraphListener;
-import com.canoo.ulc.graph.model.Edge;
-import com.canoo.ulc.graph.model.Port;
-import com.canoo.ulc.graph.model.Vertex;
+import com.canoo.ulc.graph.model.*;
+import com.canoo.ulc.graph.model.GraphElement;
 import com.canoo.ulc.graph.shared.CollapseState;
 import com.canoo.ulc.graph.shared.PortConstraint;
 import com.canoo.ulc.graph.shared.PortType;
@@ -25,6 +24,8 @@ import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.dnd.DataFlavor;
 import com.ulcjava.base.application.dnd.DnDTreeData;
 import com.ulcjava.base.application.dnd.Transferable;
+import com.ulcjava.base.application.event.ActionEvent;
+import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.event.ITreeSelectionListener;
 import com.ulcjava.base.application.event.TreeSelectionEvent;
@@ -32,17 +33,27 @@ import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.jetbrains.annotations.NotNull;
-import org.pillarone.riskanalytics.graph.core.graph.model.*;
+import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
+import org.pillarone.riskanalytics.graph.core.graph.model.InPort;
+import org.pillarone.riskanalytics.graph.core.graph.model.OutPort;
+import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.NoneComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange;
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.layout.ComponentLayout;
 import org.pillarone.riskanalytics.graph.core.layout.GraphLayoutService;
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTreeComponentNode;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.VisualSceneUtilities;
@@ -69,6 +80,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
     private ULCBoxPane fMainView;
 
+    private IGraphModelAdder fAdderInterface;
+
     private GraphLayoutService fLayoutService;
 
     public SingleModelVisualView(ApplicationContext ctx, boolean isModel) {
@@ -77,6 +90,10 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         createView(isModel);
         fULCGraphComponent.setTransferHandler(new VertexDropHandler(fULCGraphComponent));
         fSelectionListeners = new ArrayList<ISelectionListener>();
+    }
+
+    public void setAdderInterface(IGraphModelAdder adder) {
+        fAdderInterface = adder;
     }
 
     protected void createView(boolean isModel) {
@@ -123,7 +140,82 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             }
 
             public void fetchNestedElements(Vertex vertex) {
-                //To change body of implemented methods use File | Settings | File Templates.
+                if (!vertex.getInnerElements().isEmpty()) {
+                    return;
+                }
+
+                ComponentNode node = fNodesMap.get(vertex.getId());
+                if (node instanceof ComposedComponentNode) {
+                    Map<ComponentNode,Vertex> nodesMap = new HashMap<ComponentNode,Vertex>();
+                    ComposedComponentGraphModel ccModel = ((ComposedComponentNode)node).getComponentGraph();
+                    for (ComponentNode subNode : ccModel.getAllComponentNodes()) {
+                        Vertex subVertex = VisualSceneUtilities.createVertex(null, subNode);
+                        String title =  UIUtils.formatDisplayName(subNode.getName());
+                        subVertex.setTitle(title);
+                        // subVertex.setVisible(false);
+                        vertex.addInnerElement(subVertex);
+                        nodesMap.put(subNode,subVertex);
+                    }
+
+                    for (Connection connection : ccModel.getAllConnections()) {
+                        Port fromPort = null;
+                        Port toPort = null;
+                        org.pillarone.riskanalytics.graph.core.graph.model.Port from = connection.getFrom();
+                        if (from.isComposedComponentOuterPort()) {
+                            Iterator<Port> it = vertex.getPorts().iterator();
+                            while (fromPort == null && it.hasNext()) {
+                                Port port = it.next();
+                                if (VisualSceneUtilities.isConsistentPort(port, from)) {
+                                    fromPort = port;
+                                }
+                            }
+                        } else {
+                            fromPort = getULCPort(from, nodesMap);
+                        }
+                        org.pillarone.riskanalytics.graph.core.graph.model.Port to = connection.getTo();
+                        if (to.isComposedComponentOuterPort()) {
+                            Iterator<Port> it = vertex.getPorts().iterator();
+                            while (toPort == null && it.hasNext()) {
+                                Port port = it.next();
+                                if (VisualSceneUtilities.isConsistentPort(port, to)) {
+                                    toPort = port;
+                                }
+                            }
+                        } else {
+                            toPort = getULCPort(to, nodesMap);
+                        }
+
+                        if (fromPort != null && toPort != null) {
+                            String edgeId = "edge_"+System.currentTimeMillis()+"_"+Math.random();
+                            final Edge edge = new Edge(edgeId, fromPort, toPort);
+                            vertex.addInnerElement(edge);
+                        }
+                    }
+                }
+                /*for (final Port port : vertex.getPorts()) {
+                    port.setHideLabel(true);
+                }*/
+                for (GraphElement el : vertex.getInnerElements()) {
+                    if (el instanceof Vertex) {
+                        fULCGraphComponent.autoAdjustVertexSize((Vertex)el);
+                    }
+                }
+                fULCGraph.updateElement(vertex);
+            }
+
+            private Port getULCPort(org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort, Map<ComponentNode,Vertex> nodesMap) {
+                ComponentNode fromNode = graphPort.getComponentNode();
+                Vertex v = nodesMap.get(fromNode);
+                if (v != null) {
+                    Iterator<Port> it = v.getPorts().iterator();
+                    while (it.hasNext()) {
+                        Port port = it.next();
+                        if (VisualSceneUtilities.isConsistentPort(port, graphPort)) {
+                            return port;
+                        }
+                    }
+                }
+                return null;
             }
         });
 
@@ -204,8 +296,9 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         fNodesMap = new LinkedHashMap<String, ComponentNode>();
         fNodesToBeAdded = new LinkedHashMap<Vertex, ComponentNode>();
         for (ComponentNode node : model.getAllComponentNodes()) {
-            Vertex vertex = VisualSceneUtilities.createVertex(null, node.getType().getTypeClass().getName());
-            vertex.setTitle(node.getName());
+            Vertex vertex = VisualSceneUtilities.createVertex(null, node);
+            String title = UIUtils.formatDisplayName(node.getName());
+            vertex.setTitle(title);
             fNodesToBeAdded.put(vertex, node);
         }
 
@@ -384,6 +477,30 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         addNodeItem.addActionListener(actionMap.get("addNodeAction"));
         popupMenu.add(addNodeItem);*/
 
+        ULCMenuItem showInNewTabItem = new ULCMenuItem("show in new tab");
+        showInNewTabItem.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
+                if (selectedVertices != null && selectedVertices.size()>0) {
+                    Vertex vertex = selectedVertices.iterator().next();
+                    ComponentNode node = fNodesMap.get(vertex.getId());
+                    if (node instanceof ComposedComponentNode && fAdderInterface != null) {
+                        AbstractGraphModel subModel = ((ComposedComponentNode) node).getComponentGraph();
+                        ComponentDefinition subType = node.getType();
+                        TypeDefinitionBean typeBean = new TypeDefinitionBean();
+                        typeBean.setName(subType.getSimpleName());
+                        typeBean.setPackageName(subModel.getPackageName());
+                        typeBean.setBaseType("ComposedComponent");
+                        fAdderInterface.addModelToView(subModel, typeBean, false);
+                    } else {
+                        ULCAlert alert = new ULCAlert("No Model shown", "Nothing to show here since only a simple component.", "ok");
+                        alert.show();
+                    }
+                }
+            }
+        });
+        popupMenu.add(showInNewTabItem);
+
         if (fGraphModel instanceof ComposedComponentGraphModel) {
             ULCMenuItem replicatePortItem = new ULCMenuItem("replicate port");
             replicatePortItem.addActionListener(actionMap.get("replicatePortAction"));
@@ -392,11 +509,11 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             ULCMenuItem removeReplicatedPortItem = new ULCMenuItem("remove port");
             removeReplicatedPortItem.addActionListener(actionMap.get("removePortAction"));
             popupMenu.add(removeReplicatedPortItem);
-        } else {
-            ULCMenuItem addToWatchesItem = new ULCMenuItem("add to watches");
-            addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));
-            popupMenu.add(addToWatchesItem);
         }
+        
+        ULCMenuItem addToWatchesItem = new ULCMenuItem("add to watches");
+        addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));
+        popupMenu.add(addToWatchesItem);
 
 
         popupMenu.addSeparator();
@@ -453,7 +570,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         return null;
     }
 
-    private Port getULCPort(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
+    final protected Port getULCPort(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
         Vertex v = null;
         if (!p.isComposedComponentOuterPort()) {
             ComponentNode node = p.getComponentNode();
@@ -807,8 +924,9 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     private class GraphModelListener implements IGraphModelChangeListener {
 
         public void nodeAdded(ComponentNode node) {
-            Vertex vertex = VisualSceneUtilities.createVertex(fCurrentPosition, node.getType().getTypeClass().getName());
-            vertex.setTitle(node.getName());
+            Vertex vertex = VisualSceneUtilities.createVertex(fCurrentPosition, node);
+            String title = UIUtils.formatDisplayName(node.getName());
+            vertex.setTitle(title);
             if (fMainView.isVisible()) {
                 fNodesMap.put(vertex.getId(), node);
                 try {
@@ -864,31 +982,14 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             // fULCGraphComponent.layout();
         }
 
-        public void nodesSelected(List<ComponentNode> nodes) {
-            //nothing to do
-        }
-
-        public void connectionsSelected(List<Connection> connections) {
-            //nothing to do
-        }
-
-        public void selectionCleared() {
-            //nothing to do
-        }
-
-        public void filtersApplied() {
-            // TODO - once the selection possibilities are available
-        }
-
         public void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
             Vertex vertex = getVertex(node);
             if (vertex != null) {
                 if (propertyName.equals("name")) {
-                    vertex.setTitle(node.getName());
+                    String title = UIUtils.formatDisplayName(node.getName());
+                    vertex.setTitle(title);
                 }
-                if (fNodesMap.keySet().contains(vertex.getId())) {
-                    fULCGraph.upload();
-                }
+                fULCGraph.updateElement(vertex);
             }
         }
 
