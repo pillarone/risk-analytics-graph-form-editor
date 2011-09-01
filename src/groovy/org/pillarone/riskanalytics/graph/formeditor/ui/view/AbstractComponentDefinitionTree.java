@@ -92,7 +92,6 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
         fTree.setModel(fTreeModel);
         fTree.getSelectionModel().setSelectionMode(ULCTreeSelectionModel.SINGLE_TREE_SELECTION);
         ComponentTypeTreeCellRenderer treeCellRenderer = new ComponentTypeTreeCellRenderer();
-        treeCellRenderer.setShowComponentMenuListener(new ShowComponentAction());
         fTree.setCellRenderer(treeCellRenderer);
 
         ULCScrollPane treeScrollPane = new ULCScrollPane(fTree);
@@ -112,8 +111,8 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
                 try {
                     boolean success = fParent.importComponentType(clazzName);
                     if (!success) {
-                        ULCAlert alert = new ULCAlert("No class loaded",
-                                "No class with name " + clazzName + " could be loaded as graph model.", "ok");
+                        ULCAlert alert = new ULCAlert("No Graph Model to show.",
+                                "Type " + clazzName + " is only a simple component.", "ok");
                         alert.show();
                     }
                 } catch (ClassNotFoundException ex1) {
@@ -131,6 +130,29 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
 
     public void search(String text) {
         ((FilteringTreeModel) fTreeModel).setFilter(new NameFilter(text));
+    }
+
+    public class ComponentTypeTreeCellRenderer extends DefaultTreeCellRenderer {
+        private ULCPopupMenu fNodePopUpMenu;
+        private ULCMenuItem fShowComponentMenuItem;
+
+        public ComponentTypeTreeCellRenderer() {
+            super();
+            fNodePopUpMenu = new ULCPopupMenu();
+            fShowComponentMenuItem = new ULCMenuItem("show");
+            fShowComponentMenuItem.addActionListener(new ShowComponentAction());
+            fNodePopUpMenu.add(fShowComponentMenuItem);
+        }
+
+        public IRendererComponent getTreeCellRendererComponent(ULCTree tree, Object node, boolean selected, boolean expanded, boolean leaf, boolean hasFocus) {
+            DefaultTreeCellRenderer component = (DefaultTreeCellRenderer) super.getTreeCellRendererComponent(tree, node, selected, expanded, leaf, hasFocus);
+            if (node instanceof TypeTreeNode && ((TypeTreeNode) node).isLeaf()) {
+                component.setComponentPopupMenu(fNodePopUpMenu);
+                component.setToolTipText(((TypeTreeNode) node).getFullName());
+                component.setText(((TypeTreeNode) node).getName());
+            }
+            return component;
+        }
     }
 }
 
