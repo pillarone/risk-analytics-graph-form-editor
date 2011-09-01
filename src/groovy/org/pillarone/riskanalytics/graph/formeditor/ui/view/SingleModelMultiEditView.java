@@ -51,12 +51,13 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
 
     private IActionListener f9_pressed;
 
-    public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model) {
+    public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model, IGraphModelAdder adderInterface) {
         super();
         fApplicationContext = ctx;
         boolean isModel = model instanceof ModelGraphModel;
         createView(isModel);
         injectGraphModel(model);
+        fVisualEditorView.setAdderInterface(adderInterface);
         fVisualEditorView.setWatchList(this);
         fFormEditorView.setWatchList(this);
 
@@ -361,6 +362,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             });
             results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
             fRightTabbedPane.addTab("Results", results);
+            fResultSheets.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
         }
         SimulationResultTable resultTable = new SimulationResultTable(output, periodLabels);
         fFormEditorView.addSelectionListener(resultTable);
