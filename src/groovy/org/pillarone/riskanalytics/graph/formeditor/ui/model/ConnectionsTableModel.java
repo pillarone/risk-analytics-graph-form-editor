@@ -175,19 +175,6 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
             // nothing to do
         }
 
-        public void nodesSelected(List<ComponentNode> nodes) {
-            // nothing to do here
-        }
-
-        public void connectionsSelected(List<Connection> connections) {
-        }
-
-        public void selectionCleared() {
-        }
-
-        public void filtersApplied() {
-        }
-
         public void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
             fireTableDataChanged(); // TODO could be optimized
         }
