@@ -309,29 +309,10 @@ class FilteringTableTreeModel extends AbstractTableTreeModel implements ITableTr
 
         public void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
             GraphElementNode treeNode = model.findNode(node);
-            nodeChanged(model.getTreePath(treeNode));
-        }
-
-        public void filtersApplied() {
-            /*if (fGraphModel.nodeFilters && fGraphModel.nodeFilters.size()>0) {
-                IComponentNodeFilter filter = fGraphModel.nodeFilters[0]
-                fTableModel.setFilter(filter)
-                fTableModel.applyFilter();
-            }*/
-        }
-
-        public void nodesSelected(List<ComponentNode> nodes) {
-        }
-
-        public void connectionsSelected(List<Connection> connections) {
-            // nothing to do here
-        }
-
-        public void selectionCleared() {
+            treeNode.updateColumnValues();
+            nodeChanged(model.getTreePath(treeNode), model.NAMEID);
         }
     }
-
-
 }
 
 class FilterTableTreeNode {
