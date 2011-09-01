@@ -47,7 +47,7 @@ class CommentView implements ISelectionListener {
         descriptionPane = new ULCCardPane()
         descriptionPane.setBorder(BorderFactory.createTitledBorder("Comment"))
         htmlTextPane = new ResourceLinkHtmlPane()
-        editableTextPane = new ULCTextArea()
+        editableTextPane = new ULCTextArea("...")
         editableTextPane.setEditable(true)
         descriptionPane.addCard("text", editableTextPane)
         descriptionPane.addCard("html", htmlTextPane)
@@ -120,11 +120,15 @@ class CommentView implements ISelectionListener {
             //String htmlLink = "<a href='resourceKey:'$fullName > $title </a>"
             String htmlTitle = "<b><h3> $title </h3></b>"
             String htmlClassName = "<code> $fullName </code>"
-            String text = "<div style='100%'>${htmlTitle + htmlClassName} </div>"
+            String text = "<p><div style='100%'>${htmlTitle + htmlClassName} </div></p> <br>"
+
             propertiesPane.setText(HTMLUtilities.convertToHtml(text ? text : ""))
 
             // description pane
             currentText = currentNode.comment
+            if (currentText == null || currentText=="") {
+                currentText = "No comments yet"
+            }
             String htmlText = "<div style='100%'> $currentText </div>"
             htmlTextPane.setText(HTMLUtilities.convertToHtml(htmlText ? htmlText : ""))
             descriptionPane.setSelectedComponent(htmlTextPane)
