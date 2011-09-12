@@ -195,12 +195,12 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 /*for (final Port port : vertex.getPorts()) {
                     port.setHideLabel(true);
                 }*/
+                fULCGraph.updateElement(vertex);
                 for (GraphElement el : vertex.getInnerElements()) {
                     if (el instanceof Vertex) {
                         fULCGraphComponent.autoAdjustVertexSize((Vertex)el);
                     }
                 }
-                fULCGraph.updateElement(vertex);
             }
 
             private Port getULCPort(org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort, Map<ComponentNode,Vertex> nodesMap) {
@@ -510,7 +510,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             removeReplicatedPortItem.addActionListener(actionMap.get("removePortAction"));
             popupMenu.add(removeReplicatedPortItem);
         }
-        
+
         ULCMenuItem addToWatchesItem = new ULCMenuItem("add to watches");
         addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));
         popupMenu.add(addToWatchesItem);
