@@ -4,10 +4,10 @@ import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.tree.*;
-import com.ulcjava.base.application.util.Dimension;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
+import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.persistence.GraphPersistenceService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ModelRepositoryTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ModelRepositoryTreeNode;
@@ -53,8 +53,8 @@ public class ModelRepositoryTree extends ULCBoxPane {
             TreePath treePath = fTree.getSelectionModel().getSelectionPath();
             Object selectedNode = treePath.getLastPathComponent();
             if (selectedNode instanceof ModelRepositoryTreeNode) {
-                final String modelName = ((ModelRepositoryTreeNode)selectedNode).getName();
-                final String packageName = ((ModelRepositoryTreeNode)selectedNode).getPackageName();
+                final String modelName = ((ModelRepositoryTreeNode) selectedNode).getName();
+                final String packageName = ((ModelRepositoryTreeNode) selectedNode).getPackageName();
                 try {
                     fParent.loadModel(modelName, packageName);
                 } catch (Exception ex) {
@@ -74,10 +74,16 @@ public class ModelRepositoryTree extends ULCBoxPane {
             TreePath treePath = fTree.getSelectionModel().getSelectionPath();
             Object selectedNode = treePath.getLastPathComponent();
             if (selectedNode instanceof ModelRepositoryTreeNode) {
-                final String modelName = ((ModelRepositoryTreeNode)selectedNode).getName();
-                final String packageName = ((ModelRepositoryTreeNode)selectedNode).getPackageName();
+                final String modelName = ((ModelRepositoryTreeNode) selectedNode).getName();
+                final String packageName = ((ModelRepositoryTreeNode) selectedNode).getPackageName();
                 try {
-                    // TODO -> identify AbstractGraphModel, then use getPersistenceService().delete(model);
+                    final AbstractGraphModel graphModel = getPersistenceService().load(modelName, packageName);
+                    getPersistenceService().delete(graphModel);
+                    IMutableTreeNode parent = (IMutableTreeNode) ((ModelRepositoryTreeNode) selectedNode).getParent();
+                    final int index = parent.getIndex((ITreeNode) selectedNode);
+                    parent.remove(index);
+                    fTreeModel.nodesWereRemoved(parent, new int[]{index}, new Object[]{selectedNode});
+
                 } catch (Exception ex) {
                     ULCAlert alert = new ULCAlert("Model could not be deleted", "Reason: " + ex.getMessage(), "ok");
                     LOG.error("Model could not be deleted", ex);
@@ -109,11 +115,12 @@ public class ModelRepositoryTree extends ULCBoxPane {
             fNodePopUpMenu.add(fShowComponentMenuItem);
             fDeleteMenuItem = new ULCMenuItem("delete");
             fDeleteMenuItem.addActionListener(new DeleteModelAction());
+            fNodePopUpMenu.add(fDeleteMenuItem);
         }
 
         public IRendererComponent getTreeCellRendererComponent(ULCTree tree, Object node, boolean selected, boolean expanded, boolean leaf, boolean hasFocus) {
             IRendererComponent component = super.getTreeCellRendererComponent(tree, node, selected, expanded, leaf, hasFocus);
-            if (node instanceof ModelRepositoryTreeNode && ((ModelRepositoryTreeNode)node).isLeaf()) {
+            if (node instanceof ModelRepositoryTreeNode && ((ModelRepositoryTreeNode) node).isLeaf()) {
                 setPopUpMenu((ULCComponent) component, (ModelRepositoryTreeNode) node);
             }
             setToolTip((ULCComponent) component, (ModelRepositoryTreeNode) node);
@@ -125,7 +132,7 @@ public class ModelRepositoryTree extends ULCBoxPane {
         }
 
         void setToolTip(ULCComponent component, ModelRepositoryTreeNode node) {
-            component.setToolTipText(node.getPackageName()+"."+node.getName());
+            component.setToolTipText(node.getPackageName() + "." + node.getName());
         }
     }
 }
