@@ -15,12 +15,16 @@ import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.tabletree.ITableTreeNode;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.KeyStroke;
+import org.pillarone.riskanalytics.core.model.registry.ModelRegistry;
 import org.pillarone.riskanalytics.core.simulation.engine.SimulationRunner;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.ComponentNodeFilterFactory;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
+import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataNameFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.ProbeSimulationService;
@@ -51,8 +55,23 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
 
     private IActionListener f9_pressed;
 
+    private boolean readOnly = false;
+
     public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model, IGraphModelAdder adderInterface) {
         super();
+        if (model instanceof ModelGraphModel) {
+            for (Class c : ModelRegistry.getInstance().getAllModelClasses()) {
+                if (c.getName().equals(model.getPackageName() + "." + model.getName())) {
+                    readOnly = true;
+                }
+            }
+        } else if (model instanceof ComposedComponentGraphModel) {
+            for (ComponentDefinition cd : PaletteService.getInstance().getAllComponentDefinitions()) {
+                if (cd.getTypeClass().getName().equals(model.getPackageName() + "." + model.getName())) {
+                    readOnly = true;
+                }
+            }
+        }
         fApplicationContext = ctx;
         boolean isModel = model instanceof ModelGraphModel;
         createView(isModel);
@@ -171,13 +190,13 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         // content pane - initialize the different views
         //////////////////////////////////////////////////
         final ULCCardPane cardPane = new ULCCardPane();
-        fFormEditorView = new SingleModelFormView(fApplicationContext);
+        fFormEditorView = new SingleModelFormView(fApplicationContext, readOnly);
         final ULCComponent formView = fFormEditorView.getView();
         cardPane.addCard("Form", formView);
         fTextEditorView = new SingleModelTextView(fApplicationContext);
         final ULCComponent textView = fTextEditorView.getView();
         cardPane.addCard("Text", textView);
-        fVisualEditorView = new SingleModelVisualView(fApplicationContext, isModel);
+        fVisualEditorView = new SingleModelVisualView(fApplicationContext, isModel, readOnly);
         final ULCComponent visualView = fVisualEditorView.getView();
         cardPane.addCard("Visual", visualView);
 
@@ -292,7 +311,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
     }
 
     public DataTable getSelectedDataTable() {
-        if (fDataSetSheets != null && fDataSetSheets.getTabCount()>0) {
+        if (fDataSetSheets != null && fDataSetSheets.getTabCount() > 0) {
             return (DataTable) fDataSetSheets.getSelectedComponent();
         }
         return null;
@@ -354,7 +373,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
                         fFormEditorView.removeSelectionListener((ISelectionListener) component);
                         fVisualEditorView.removeSelectionListener((ISelectionListener) component);
                     }
-                     event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
+                    event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
                     if (fResultSheets.getTabCount() > 0) {
                         event.getClosableTabbedPane().setSelectedIndex(0);
                     }
@@ -379,7 +398,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             fResultSheets.setSelectedIndex(index);
         }
 
-        boolean hasWatches = fWatchesTable != null && ((ITableTreeNode)fWatchesTable.getModel().getRoot()).getChildCount()>0;
+        boolean hasWatches = fWatchesTable != null && ((ITableTreeNode) fWatchesTable.getModel().getRoot()).getChildCount() > 0;
         if (hasWatches) {
             fWatchesTable.getModel().injectData(output, periodLabels);
             fWatchesTable.getTable().expandAll();
@@ -388,13 +407,13 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         int resultIndex = fRightTabbedPane.indexOfTab("Results");
         int watchIndex = fRightTabbedPane.indexOfTab("Watches");
         int selectedIndex = fRightTabbedPane.getSelectedIndex();
-        if (selectedIndex!=resultIndex && selectedIndex!=watchIndex) {
+        if (selectedIndex != resultIndex && selectedIndex != watchIndex) {
             if (hasWatches) {
                 fRightTabbedPane.setSelectedIndex(watchIndex);
             } else {
                 fRightTabbedPane.setSelectedIndex(resultIndex);
             }
-        }        
+        }
     }
 
     public void addWatch(String path) {

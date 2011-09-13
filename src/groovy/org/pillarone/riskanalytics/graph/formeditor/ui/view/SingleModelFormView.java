@@ -25,10 +25,14 @@ public class SingleModelFormView extends AbstractBean implements GraphModelViewa
 
     private ULCScrollPane fConnectionsPane;
     private ConnectionsTable fConnectionsTable;
-
+    private boolean readOnly = false;
 
     public SingleModelFormView(ApplicationContext ctx) {
-        super();
+        this(ctx, false);
+    }
+
+    public SingleModelFormView(ApplicationContext ctx, boolean readOnly) {
+        this.readOnly = readOnly;
         fApplicationContext = ctx;
         createView();
     }
@@ -66,12 +70,12 @@ public class SingleModelFormView extends AbstractBean implements GraphModelViewa
     public void injectGraphModel(AbstractGraphModel model) {
         fGraphModel = model;
 
-        fNodesTable = new ComponentNodesTable(fApplicationContext, fGraphModel);
+        fNodesTable = new ComponentNodesTable(fApplicationContext, fGraphModel, readOnly);
         fNodesTable.setVisible(true);
         fNodesTable.addSelectionListener(fConnectionsTable);
         fNodesPane.setViewPortView(fNodesTable);
 
-        fConnectionsTable = new ConnectionsTable(fApplicationContext, fGraphModel);
+        fConnectionsTable = new ConnectionsTable(fApplicationContext, fGraphModel, readOnly);
         fConnectionsTable.addSelectionListener(fNodesTable);
         fConnectionsPane.setViewPortView(fConnectionsTable);
 
