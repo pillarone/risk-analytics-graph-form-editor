@@ -19,6 +19,7 @@ import com.ulcjava.base.application.ULCButtonGroup
 import com.ulcjava.base.application.util.KeyStroke
 import com.ulcjava.base.application.event.KeyEvent
 import com.ulcjava.base.application.ULCComponent
+import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com, martin.melchior@fhnw.ch
@@ -34,12 +35,20 @@ class CommentView implements ISelectionListener {
     ULCButton editButton
     String currentText
     ComponentNode currentNode
+    private AbstractGraphModel graphModel
 
-    public CommentView() {
+    private boolean readOnly = false;
+
+    public CommentView(boolean readOnly) {
+        this.readOnly = readOnly
         init()
         attachListeners()
     }
 
+    public void setGraphModel(AbstractGraphModel graphModel) {
+        this.graphModel = graphModel
+    }
+    
     private void init() {
         content = new ULCBoxPane(true)
         propertiesPane = new ResourceLinkHtmlPane()
@@ -110,9 +119,14 @@ class CommentView implements ISelectionListener {
     }
 
     public void setSelectedComponents(List<ComponentNode> selectedNodes) {
-        currentNode = selectedNodes!=null && selectedNodes.size()>0 ? selectedNodes[-1] : null
+        currentNode = this.getSelectedTopLevelNode(selectedNodes)
+        boolean isEditable = true
+        if (!currentNode) {
+            isEditable = false
+            currentNode = selectedNodes != null && selectedNodes.size()>0 ? selectedNodes[0] : null
+        }
         if (currentNode) {
-            editButton.setEnabled true
+            editButton.setEnabled(!readOnly && isEditable)
             
             // properties pane
             String title = currentNode.getName()
@@ -133,6 +147,17 @@ class CommentView implements ISelectionListener {
             htmlTextPane.setText(HTMLUtilities.convertToHtml(htmlText ? htmlText : ""))
             descriptionPane.setSelectedComponent(htmlTextPane)
         }
+    }
+
+    private ComponentNode getSelectedTopLevelNode(List<ComponentNode> selectedNodes) {
+        if (selectedNodes != null) {
+            for (ComponentNode node : selectedNodes) {
+                if (graphModel.getAllComponentNodes().contains(node)) {
+                    return node
+                }
+            }
+        }
+        return null
     }
 
     public void setSelectedConnections(List<Connection> selectedConnections) {
