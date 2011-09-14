@@ -483,7 +483,7 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         ConfigObject configObject = parameterization.toConfigObject();
         configObject.put("model" , model.getPackageName()+"."+model.getName());
         configObject.put("package" , model.getPackageName());
-        FileStoreHandler.saveOutput(parameterization.getName() + ".groovy", configObject, UlcUtilities.getWindowAncestor(this.getContentView()));
+        FileStoreHandler.saveOutput(parameterization.getName() + ".groovy", configObject, UlcUtilities.getWindowAncestor(fModelRepositoryTree));
 
     }
 }
