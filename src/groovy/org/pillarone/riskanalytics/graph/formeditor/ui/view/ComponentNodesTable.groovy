@@ -361,22 +361,30 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
 
     @Action
     public void showConnectedAction() {
+        try {
         List<ComponentNode> selectedNodes = getSelectedNodes()
         List<Connection> connections = fGraphModel.getEmergingConnections(selectedNodes)
         List<ComponentNode> connectedNodes = fGraphModel.getConnectedNodes(selectedNodes)
         setSelectedConnections(connections)
         setSelectedComponents(connectedNodes)
-        fSelectionListeners*.each { it ->
-            it.setSelectedConnections(connections)
-            it.setSelectedComponents(connectedNodes)
+            fSelectionListeners*.each { it ->
+                it.setSelectedConnections(connections)
+                it.setSelectedComponents(connectedNodes)
+            }
+        } catch(Exception ex) {
+            
         }
     }
 
     @Action
     public void clearSelectionAction() {
+        try {
         clearSelection();
         for (ISelectionListener listener: fSelectionListeners) {
             listener.clearSelection();
+        }
+        } catch(Exception ex) {
+
         }
     }
 
