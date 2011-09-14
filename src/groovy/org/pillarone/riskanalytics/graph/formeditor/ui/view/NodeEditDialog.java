@@ -71,7 +71,7 @@ public class NodeEditDialog extends ULCDialog {
         // ok
         IActionListener action = new IActionListener() {
             public void actionPerformed(ActionEvent event) {
-                if (fBeanForm.getModel().hasErrors()) return;
+                if (!validate()) return;
                 NodeBean bean = fBeanForm.getModel().getBean();
                 if (fEditedNode != null) {
                     if (!fEditedNode.getName().equals(bean.getName())) {
