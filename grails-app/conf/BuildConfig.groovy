@@ -45,7 +45,7 @@ grails.project.dependency.resolution = {
 
         if (appName == "RiskAnalyticsGraphFormEditor") {
             runtime "org.pillarone:risk-analytics-core:1.4-BETA-1-kti"
-            runtime("org.pillarone:risk-analytics-graph-core:0.6") { transitive = false }
+            runtime("org.pillarone:risk-analytics-graph-core:0.6.5") { transitive = false }
         }
 
     }
@@ -58,7 +58,7 @@ grails.project.dependency.resolution = {
         compile group: 'canoo', name: 'ulc-servlet-client', version: ulcVersion
         compile group: 'canoo', name: 'ulc-standalone-client', version: ulcVersion
 
-        compile group: 'canoo', name: 'ULCGraph-client', version: "0.6.2-SNAPSHOT"
+        compile group: 'canoo', name: 'ULCGraph-client', version: "0.6.3-SNAPSHOT"
         compile group: 'jgraphx', name: 'jgraphx', version: "1.7.1.0"
 
     }
