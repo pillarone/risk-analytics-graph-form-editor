@@ -162,8 +162,10 @@ public class NodesTableTreeModel extends AbstractTableTreeModel implements ITabl
         List<TreePath> paths = new ArrayList<TreePath>();
         for (ComponentNode graphElement : nodes) {
             GraphElementNode node = findNode(graphElement);
-            TreePath path = getTreePath(node);
-            paths.add(path);
+            if (node != null) {
+                TreePath path = getTreePath(node);
+                paths.add(path);
+            }
         }
         return paths.toArray(new TreePath[paths.size()]);
     }
