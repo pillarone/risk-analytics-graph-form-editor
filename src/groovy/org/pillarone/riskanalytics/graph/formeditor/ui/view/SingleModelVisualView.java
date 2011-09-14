@@ -162,6 +162,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                         // subVertex.setVisible(false);
                         vertex.addInnerElement(subVertex);
                         nodesMap.put(subNode, subVertex);
+                        fNodesMap.put(subVertex.getId(), subNode);
                     }
 
                     for (Connection connection : ccModel.getAllConnections()) {
@@ -196,6 +197,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                             String edgeId = "edge_" + System.currentTimeMillis() + "_" + Math.random();
                             final Edge edge = new Edge(edgeId, fromPort, toPort);
                             vertex.addInnerElement(edge);
+                            fConnectionsMap.put(edge.getId(), connection);
                         }
                     }
                 }
