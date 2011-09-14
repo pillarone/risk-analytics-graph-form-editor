@@ -261,7 +261,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         fHelpView = new HelpView();
 
         // comments
-        fCommentView = new CommentView();
+        fCommentView = new CommentView(readOnly);
 
         // parameters --> will be added on demand
 
@@ -291,6 +291,8 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         fFormEditorView.injectGraphModel(model);
         fTextEditorView.injectGraphModel(model);
 
+        fCommentView.setGraphModel(model);
+
         fFormEditorView.addSelectionListener(fVisualEditorView);
         fVisualEditorView.addSelectionListener(fFormEditorView);
 
@@ -300,6 +302,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
 
         fFormEditorView.addSelectionListener(fCommentView);
         fVisualEditorView.addSelectionListener(fCommentView);
+
     }
 
     public ULCBoxPane getView() {
