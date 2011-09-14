@@ -84,8 +84,14 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
     private GraphLayoutService fLayoutService;
 
+    private boolean readOnly = false;
+
     public SingleModelVisualView(ApplicationContext ctx, boolean isModel) {
-        super();
+        this(ctx, isModel, false);
+    }
+
+    public SingleModelVisualView(ApplicationContext ctx, boolean isModel, boolean readOnly) {
+        this.readOnly = readOnly;
         fApplicationContext = ctx;
         createView(isModel);
         fULCGraphComponent.setTransferHandler(new VertexDropHandler(fULCGraphComponent));
@@ -131,6 +137,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         fULCGraph.getSelectionModel().addGraphSelectionListener(fGraphSelectionListener);
 
         fULCGraphComponent = new ULCGraphComponent(fULCGraph);
+        fULCGraphComponent.setStructureChangeable(!readOnly);
         fULCGraphComponent.addListener(new IGraphComponentListener() {
             public void doubleClickOnElement(com.canoo.ulc.graph.model.GraphElement inElement) {
                 if (inElement instanceof Vertex && fNodesMap.containsKey(inElement.getId())) {
@@ -146,15 +153,15 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
                 ComponentNode node = fNodesMap.get(vertex.getId());
                 if (node instanceof ComposedComponentNode) {
-                    Map<ComponentNode,Vertex> nodesMap = new HashMap<ComponentNode,Vertex>();
-                    ComposedComponentGraphModel ccModel = ((ComposedComponentNode)node).getComponentGraph();
+                    Map<ComponentNode, Vertex> nodesMap = new HashMap<ComponentNode, Vertex>();
+                    ComposedComponentGraphModel ccModel = ((ComposedComponentNode) node).getComponentGraph();
                     for (ComponentNode subNode : ccModel.getAllComponentNodes()) {
                         Vertex subVertex = VisualSceneUtilities.createVertex(null, subNode);
-                        String title =  UIUtils.formatDisplayName(subNode.getName());
+                        String title = UIUtils.formatDisplayName(subNode.getName());
                         subVertex.setTitle(title);
                         // subVertex.setVisible(false);
                         vertex.addInnerElement(subVertex);
-                        nodesMap.put(subNode,subVertex);
+                        nodesMap.put(subNode, subVertex);
                     }
 
                     for (Connection connection : ccModel.getAllConnections()) {
@@ -186,7 +193,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                         }
 
                         if (fromPort != null && toPort != null) {
-                            String edgeId = "edge_"+System.currentTimeMillis()+"_"+Math.random();
+                            String edgeId = "edge_" + System.currentTimeMillis() + "_" + Math.random();
                             final Edge edge = new Edge(edgeId, fromPort, toPort);
                             vertex.addInnerElement(edge);
                         }
@@ -195,15 +202,15 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 /*for (final Port port : vertex.getPorts()) {
                     port.setHideLabel(true);
                 }*/
+                fULCGraph.updateElement(vertex);
                 for (GraphElement el : vertex.getInnerElements()) {
                     if (el instanceof Vertex) {
-                        fULCGraphComponent.autoAdjustVertexSize((Vertex)el);
+                        fULCGraphComponent.autoAdjustVertexSize((Vertex) el);
                     }
                 }
-                fULCGraph.updateElement(vertex);
             }
 
-            private Port getULCPort(org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort, Map<ComponentNode,Vertex> nodesMap) {
+            private Port getULCPort(org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort, Map<ComponentNode, Vertex> nodesMap) {
                 ComponentNode fromNode = graphPort.getComponentNode();
                 Vertex v = nodesMap.get(fromNode);
                 if (v != null) {
@@ -481,7 +488,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         showInNewTabItem.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
-                if (selectedVertices != null && selectedVertices.size()>0) {
+                if (selectedVertices != null && selectedVertices.size() > 0) {
                     Vertex vertex = selectedVertices.iterator().next();
                     ComponentNode node = fNodesMap.get(vertex.getId());
                     if (node instanceof ComposedComponentNode && fAdderInterface != null) {
@@ -510,7 +517,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             removeReplicatedPortItem.addActionListener(actionMap.get("removePortAction"));
             popupMenu.add(removeReplicatedPortItem);
         }
-        
+
         ULCMenuItem addToWatchesItem = new ULCMenuItem("add to watches");
         addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));
         popupMenu.add(addToWatchesItem);
@@ -675,7 +682,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         boolean isTrivialFilter = filter instanceof NoneComponentNodeFilter;
         for (Map.Entry<String, ComponentNode> entry : fNodesMap.entrySet()) {
             Vertex v = fULCGraph.getVertex(entry.getKey());
-            if (filter.isSelected(entry.getValue())&&!isTrivialFilter) {
+            if (filter.isSelected(entry.getValue()) && !isTrivialFilter) {
                 v.setStyle(StyleType.fillColor, "yellow");
             } else {
                 v.setStyle(StyleType.fillColor, "white");
@@ -898,7 +905,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
         public void edgeRemoved(@NotNull Edge edge) {
             //fja: it doesn't work, edge.getId is null
-            if (edge.getId()!=null && fConnectionsMap.containsKey(edge.getId())) {
+            if (edge.getId() != null && fConnectionsMap.containsKey(edge.getId())) {
                 Connection conn = fConnectionsMap.get(edge.getId());
                 fConnectionsMap.remove(edge.getId());
                 fGraphModel.removeConnection(conn);

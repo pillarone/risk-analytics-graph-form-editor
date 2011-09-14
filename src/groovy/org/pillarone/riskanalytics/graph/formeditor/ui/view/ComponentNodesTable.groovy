@@ -41,7 +41,10 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     boolean fExternalSelection;
     IWatchList fWatchList;
 
-    public ComponentNodesTable(ApplicationContext ctx, AbstractGraphModel model) {
+    private boolean readOnly;
+
+    public ComponentNodesTable(ApplicationContext ctx, AbstractGraphModel model, boolean readOnly) {
+        this.readOnly = readOnly;
         fApplicationContext = ctx;
 
         NodesTableTreeModel originalModel = new NodesTableTreeModel(ctx, model)
@@ -68,8 +71,10 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
 
         createContextMenu()
 
-        TransferHandler transferHandler = new TypeTransferHandler();
-        this.setTransferHandler(transferHandler);
+        if (!readOnly) {
+            TransferHandler transferHandler = new TypeTransferHandler()
+            this.setTransferHandler(transferHandler)
+        };
     }
 
     private void setRenderer() {
@@ -92,11 +97,13 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     }
 
     private void addListeners() {
-        addActionListener(new IActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                modifyNodeAction();
-            }
-        })
+        if (!readOnly) {
+            addActionListener(new IActionListener() {
+                public void actionPerformed(ActionEvent event) {
+                    modifyNodeAction();
+                }
+            })
+        }
         getSelectionModel().addTreeSelectionListener(new ITreeSelectionListener() {
             public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
                 if (!fExternalSelection) {
@@ -127,31 +134,28 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         addItem.addActionListener(actionMap.get("newNodeAction"))
         nodesMenu.add(addItem)*/
 
-        ULCMenuItem editItem = new ULCMenuItem("edit node")
-        IAction editNodeAction = actionMap.get("modifyNodeAction");
-        editItem.addActionListener(editNodeAction);
-        this.registerKeyboardAction(editNodeAction, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true), ULCComponent.WHEN_FOCUSED);
-        nodesMenu.add(editItem)
-
-        ULCMenuItem connectItem = new ULCMenuItem("connect")
-        connectItem.addActionListener(actionMap.get("connectSelectedAction"))
-        nodesMenu.add(connectItem)
-
-        if (fGraphModel instanceof ComposedComponentGraphModel) {
-            ULCMenuItem replicateItem = new ULCMenuItem("replicate")
-            replicateItem.addActionListener(actionMap.get("replicateSelectedPortAction"))
-            nodesMenu.add(replicateItem)
+        if (!readOnly) {
+            ULCMenuItem editItem = new ULCMenuItem("edit node")
+            IAction editNodeAction = actionMap.get("modifyNodeAction")
+            editItem.addActionListener(editNodeAction)
+            this.registerKeyboardAction(editNodeAction, com.ulcjava.base.application.util.KeyStroke.getKeyStroke(com.ulcjava.base.application.event.KeyEvent.VK_ENTER, 0, true), com.ulcjava.base.application.ULCComponent.WHEN_FOCUSED)
+            nodesMenu.add(editItem)
+            ULCMenuItem connectItem = new ULCMenuItem("connect")
+            connectItem.addActionListener(actionMap.get("connectSelectedAction"))
+            nodesMenu.add(connectItem)
+            if (fGraphModel instanceof ComposedComponentGraphModel) {
+                ULCMenuItem replicateItem = new ULCMenuItem("replicate")
+                replicateItem.addActionListener(actionMap.get("replicateSelectedPortAction"))
+                nodesMenu.add(replicateItem)
+            }
+            nodesMenu.addSeparator()
+            ULCMenuItem deleteItem = new ULCMenuItem("remove")
+            IAction removeNodeAction = actionMap.get("removeAction")
+            deleteItem.addActionListener(removeNodeAction)
+            this.registerKeyboardAction(removeNodeAction, com.ulcjava.base.application.util.KeyStroke.getKeyStroke(com.ulcjava.base.application.event.KeyEvent.VK_DELETE, 0, true), com.ulcjava.base.application.ULCComponent.WHEN_FOCUSED)
+            nodesMenu.add(deleteItem)
+            nodesMenu.addSeparator()
         }
-
-        nodesMenu.addSeparator()
-
-        ULCMenuItem deleteItem = new ULCMenuItem("remove")
-        IAction removeNodeAction = actionMap.get("removeAction")
-        deleteItem.addActionListener(removeNodeAction)
-        this.registerKeyboardAction(removeNodeAction, KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0, true), ULCComponent.WHEN_FOCUSED)
-        nodesMenu.add(deleteItem)
-
-        nodesMenu.addSeparator()
 
         ULCMenuItem addToWatchesItem = new ULCMenuItem("add to watches");
         addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));

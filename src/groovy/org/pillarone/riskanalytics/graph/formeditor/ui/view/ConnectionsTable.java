@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 
+ *
  */
 public class ConnectionsTable extends ULCTable implements ISelectionListener {
 
@@ -29,8 +29,11 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
     ApplicationContext fApplicationContext;
     List<ISelectionListener> fSelectionListeners;
 
-    public ConnectionsTable(ApplicationContext ctx, AbstractGraphModel model) {
+    private boolean readOnly;
+
+    public ConnectionsTable(ApplicationContext ctx, AbstractGraphModel model, boolean readOnly) {
         fApplicationContext = ctx;
+        this.readOnly = readOnly;
 
         fTableModel = new ConnectionsTableModel(ctx, model);
         fGraphModel = model;
@@ -53,11 +56,13 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
 
     @SuppressWarnings("serial")
     private void addListeners() {
-        this.addActionListener(new IActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                modifyConnectionAction();
-            }
-        });
+        if (!readOnly) {
+            this.addActionListener(new IActionListener() {
+                public void actionPerformed(ActionEvent event) {
+                    modifyConnectionAction();
+                }
+            });
+        }
         this.getSelectionModel().addListSelectionListener(new IListSelectionListener() {
             public void valueChanged(ListSelectionEvent event) {
                 List<Connection> selectedConnections = getSelectedConnections();
@@ -82,19 +87,21 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
         ULCPopupMenu connectionsMenu = new ULCPopupMenu();
         ApplicationActionMap actionMap = fApplicationContext.getActionMap(this);
 
-        ULCMenuItem editItem = new ULCMenuItem("edit");
-        IAction editConnectionAction = actionMap.get("modifyConnectionAction");
-        editItem.addActionListener(editConnectionAction);
-        this.registerKeyboardAction(editConnectionAction, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true), ULCComponent.WHEN_FOCUSED);
-        connectionsMenu.add(editItem);
+        if (!readOnly) {
+            ULCMenuItem editItem = new ULCMenuItem("edit");
+            IAction editConnectionAction = actionMap.get("modifyConnectionAction");
+            editItem.addActionListener(editConnectionAction);
+            this.registerKeyboardAction(editConnectionAction, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true), ULCComponent.WHEN_FOCUSED);
+            connectionsMenu.add(editItem);
 
-        ULCMenuItem deleteItem = new ULCMenuItem("remove");
-        IAction removeConnectionAction = actionMap.get("removeConnectionAction");
-        deleteItem.addActionListener(removeConnectionAction);
-        this.registerKeyboardAction(removeConnectionAction, KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0, true), ULCComponent.WHEN_FOCUSED);
-        connectionsMenu.add(deleteItem);
+            ULCMenuItem deleteItem = new ULCMenuItem("remove");
+            IAction removeConnectionAction = actionMap.get("removeConnectionAction");
+            deleteItem.addActionListener(removeConnectionAction);
+            this.registerKeyboardAction(removeConnectionAction, KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0, true), ULCComponent.WHEN_FOCUSED);
+            connectionsMenu.add(deleteItem);
 
-        connectionsMenu.addSeparator();
+            connectionsMenu.addSeparator();
+        }
 
         ULCMenuItem showAttachedNodesItem = new ULCMenuItem("show connected");
         showAttachedNodesItem.addActionListener(actionMap.get("showAttachedNodesAction"));
