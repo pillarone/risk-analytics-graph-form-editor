@@ -18,19 +18,22 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.NoneComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.IDataTreeNode;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.SimulationResultDataTreeModel;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.FilteringTableTreeModel;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Map
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
 
 /**
  *
  */
 public class SimulationResultTable extends ULCTableTree implements ISelectionListener {
 
-    SimulationResultDataTreeModel fTableModel;
+    FilteringTableTreeModel fTableModel;
 
     public SimulationResultTable(Map simulationOutput, List<String> periodLabels) {
         createView();
@@ -39,7 +42,9 @@ public class SimulationResultTable extends ULCTableTree implements ISelectionLis
     }
 
     public void setData(Map simulationOutput, List<String> periodLabels) {
-        fTableModel = new SimulationResultDataTreeModel(simulationOutput, periodLabels);
+        NodeNameFilter noFilter = new NodeNameFilter(null);
+        SimulationResultDataTreeModel originalModel = new SimulationResultDataTreeModel(simulationOutput, periodLabels);
+        fTableModel = new FilteringTableTreeModel(originalModel, noFilter);
         this.setModel(fTableModel);
         this.expandAll();
     }
@@ -107,8 +112,14 @@ public class SimulationResultTable extends ULCTableTree implements ISelectionLis
         }
     }
 
-    public void applyFilter(IComponentNodeFilter filter) {
+    public void applyFilter(NodeNameFilter filter) {
+        fTableModel.setFilter(filter)
     }
+
+    void applyFilter(IComponentNodeFilter filter) {
+    }
+
+
 
     public void setSelectedComponents(List<ComponentNode> selection) {
         for (ComponentNode cn : selection) {

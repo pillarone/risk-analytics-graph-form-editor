@@ -12,31 +12,40 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 import org.pillarone.riskanalytics.graph.core.graph.model.Port
+import com.ulcjava.base.application.tabletree.IMutableTableTreeNode
 
 class FilteringTableTreeModel extends AbstractTableTreeModel implements ITableTreeModelListener {
 
-    NodesTableTreeModel model
-    IComponentNodeFilter filter
+    AbstractTableTreeModel model
+    Object filter
     FilterTableTreeNode filteredRoot
     def nodeMapping = [:]
 
-    public FilteringTableTreeModel(NodesTableTreeModel model, IComponentNodeFilter filter) {
+    public FilteringTableTreeModel(AbstractTableTreeModel model, Object filter) {
         this.@model = model
         this.@filter = filter
         filteredRoot = new FilterTableTreeNode(originalNode: (ITableTreeNode) model.root)
         applyFilter()
         this.@model.addTableTreeModelListener this
+        addGraphModelChangeListener(model)
+    }
+
+    private void addGraphModelChangeListener(NodesTableTreeModel model) {
         final IGraphModelChangeListener graphListener = new GraphListener()
         model.getGraphModel().addGraphModelChangeListener(graphListener)
     }
 
-    public void setFilter(IComponentNodeFilter newFilter) {
+    private void addGraphModelChangeListener(AbstractTableTreeModel model) {
+
+    }
+
+    public void setFilter(Object newFilter) {
         this.@filter = newFilter
         applyFilter()
     }
 
     public void applyFilter() {
-        synchronizeFilteredTree((SimpleTableTreeNode) model.root, filteredRoot)
+        synchronizeFilteredTree(model.root, filteredRoot)
     }
 
     private void synchronizeTreePath(TreePath path) {
@@ -233,17 +242,31 @@ class FilteringTableTreeModel extends AbstractTableTreeModel implements ITableTr
     }
 
     protected boolean isAcceptedNode(ITableTreeNode node) {
+        boolean nodeAccepted = filter.acceptNode(node) || (node.parent && filter.acceptNode(node.parent))
+        ITableTreeNode parent = node.parent
+        //node will be showed if at leasr one of its parent or child is accepted
+        while (parent && !nodeAccepted) {
+            nodeAccepted = parent.parent && filter.acceptNode(parent.parent)
+            parent = parent.parent
+        }
+        if (!nodeAccepted) {
+            node.childCount.times {
+                nodeAccepted |= isAcceptedNode((node.getChildAt(it)))
+            }
+        }
+        return nodeAccepted
+    }
+
+    protected boolean isAcceptedNode(GraphElementNode node) {
         boolean nodeAccepted = false
-        if (node instanceof GraphElementNode) {
-            GraphElement element = ((GraphElementNode) node).element
-            if ((element instanceof ComponentNode) || (element instanceof Port)) {
-                nodeAccepted = filter.isSelected(element)
+        GraphElement element = ((GraphElementNode) node).element
+        if ((element instanceof ComponentNode) || (element instanceof Port)) {
+            nodeAccepted = filter.isSelected(element)
+        } else {
+            if (node.parent && isAcceptedNode(node.parent)) {
+                nodeAccepted = true
             } else {
-                if (node.parent && isAcceptedNode(node.parent)) {
-                    nodeAccepted = true
-                } else {
-                    nodeAccepted = false
-                }
+                nodeAccepted = false
             }
         }
         /*if (!nodeAccepted) {
@@ -327,5 +350,11 @@ class FilterTableTreeNode {
         childNodes = []
         activeIndices = []
     }
+
+}
+
+interface INodeFilter extends IComponentNodeFilter {
+
+    public boolean isSelected(ITableTreeNode node)
 
 }

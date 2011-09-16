@@ -28,6 +28,7 @@ import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities
 import com.ulcjava.base.application.*
 import com.ulcjava.base.application.event.*
 import org.pillarone.riskanalytics.graph.core.graph.model.*
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
 
 /**
  *
@@ -413,6 +414,9 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
 
     public void applyFilter(IComponentNodeFilter filter) {
         fTableModel.setFilter(filter)
+    }
+
+    public void applyFilter(NodeNameFilter filter) {
     }
 
     public void setSelectedComponents(List<ComponentNode> selection) {

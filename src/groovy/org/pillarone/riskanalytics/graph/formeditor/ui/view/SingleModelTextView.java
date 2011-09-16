@@ -12,6 +12,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 import java.util.List;
@@ -68,6 +69,10 @@ public class SingleModelTextView extends AbstractBean implements GraphModelViewa
     /////////////////////////////////////////
 
     public void applyFilter(IComponentNodeFilter filter) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public void applyFilter(NodeNameFilter filter) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 

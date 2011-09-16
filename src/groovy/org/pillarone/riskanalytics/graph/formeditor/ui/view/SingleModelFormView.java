@@ -11,6 +11,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
 
 import java.util.List;
 
@@ -109,6 +110,9 @@ public class SingleModelFormView extends AbstractBean implements GraphModelViewa
     public void applyFilter(IComponentNodeFilter filter) {
         fNodesTable.applyFilter(filter);
         fConnectionsTable.applyFilter(filter);
+    }
+
+    public void applyFilter(NodeNameFilter filter) {
     }
 
     public void setSelectedComponents(List<ComponentNode> selection) {

@@ -14,6 +14,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNode
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ConnectionsTableModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ConnectionBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ReplicationBean;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 import java.util.ArrayList;
@@ -172,6 +173,9 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
 
     public void applyFilter(IComponentNodeFilter filter) {
         fTableModel.applyFilter(filter);
+    }
+
+    public void applyFilter(NodeNameFilter filter) {
     }
 
     public void setSelectedComponents(List<ComponentNode> selection) {

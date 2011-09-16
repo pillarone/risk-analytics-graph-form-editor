@@ -27,6 +27,7 @@ import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataNameFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
 import org.pillarone.riskanalytics.graph.formeditor.util.ProbeSimulationService;
 import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
@@ -55,6 +56,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
 
     private IActionListener f9_pressed;
     private List<ISaveListener> saveListeners = new ArrayList<ISaveListener>();
+    private List<ISelectionListener> selectionListeners = new ArrayList<ISelectionListener>();
     private boolean readOnly = false;
 
     public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model, IGraphModelAdder adderInterface) {
@@ -130,6 +132,8 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
                 fFormEditorView.applyFilter(filter);
                 fVisualEditorView.applyFilter(filter);
                 fFormEditorView.applyFilter(filter);
+                for (ISelectionListener selectionListener : selectionListeners)
+                    selectionListener.applyFilter(new NodeNameFilter(null));
             }
         });
         modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, clear);
@@ -143,6 +147,8 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
                     fFormEditorView.applyFilter(filter);
                     fVisualEditorView.applyFilter(filter);
                     fTextEditorView.applyFilter(filter);
+                    for (ISelectionListener selectionListener : selectionListeners)
+                        selectionListener.applyFilter(new NodeNameFilter(expr));
                 }
             }
         };
@@ -339,7 +345,10 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
                         fVisualEditorView.removeSelectionListener((ISelectionListener) component);
                     }
                     if (component instanceof ISaveListener)
-                        saveListeners.remove((ISaveListener)component);
+                        saveListeners.remove((ISaveListener) component);
+                    if (component instanceof SimulationResultTable)
+                        selectionListeners.remove(component);
+
                     event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
                     if (fDataSetSheets.getTabCount() > 0) {
                         event.getClosableTabbedPane().setSelectedIndex(0);
@@ -390,6 +399,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             fResultSheets.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
         }
         SimulationResultTable resultTable = new SimulationResultTable(output, periodLabels);
+        selectionListeners.add(resultTable);
         fFormEditorView.addSelectionListener(resultTable);
         fVisualEditorView.addSelectionListener(resultTable);
         ULCScrollPane resultScrollPane = new ULCScrollPane(resultTable);
@@ -443,9 +453,9 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
     }
 
     public void save() {
-       for(ISaveListener saveListener: saveListeners){
-           saveListener.save();
-       }
+        for (ISaveListener saveListener : saveListeners) {
+            saveListener.save();
+        }
     }
 
     public Parameterization getSelectedParametrization() {

@@ -54,6 +54,7 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.VisualSceneUtilities;
 
@@ -773,6 +774,9 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             fULCGraph.updateElement(v);
             fULCGraphComponent.refresh();
         }
+    }
+
+    public void applyFilter(NodeNameFilter filter) {
     }
 
     public void setSelectedComponents(List<ComponentNode> selection) {

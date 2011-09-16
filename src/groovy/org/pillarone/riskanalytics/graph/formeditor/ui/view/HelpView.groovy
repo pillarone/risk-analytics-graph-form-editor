@@ -16,6 +16,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.Port
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
 import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com, martin.melchior@fhnw.ch
@@ -67,6 +68,9 @@ class HelpView implements ISelectionListener {
     
     public void applyFilter(IComponentNodeFilter filter) {
         // nothing to do here
+    }
+
+    void applyFilter(NodeNameFilter filter) {
     }
 
     public void clearSelection() {

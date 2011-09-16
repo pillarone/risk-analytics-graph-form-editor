@@ -20,6 +20,7 @@ import com.ulcjava.base.application.util.KeyStroke
 import com.ulcjava.base.application.event.KeyEvent
 import com.ulcjava.base.application.ULCComponent
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com, martin.melchior@fhnw.ch
@@ -167,6 +168,11 @@ class CommentView implements ISelectionListener {
     public void applyFilter(IComponentNodeFilter filter) {
         // nothing to do here
     }
+
+    public void applyFilter(NodeNameFilter filter) {
+    }
+
+
 
     public void clearSelection() {
         // properties pane

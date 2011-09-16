@@ -15,6 +15,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTableTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.IDataTreeNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -240,6 +241,9 @@ public class DataTable extends ULCBoxPane implements ISelectionListener, ISaveLi
 
 
     public void applyFilter(IComponentNodeFilter filter) {}
+
+    public void applyFilter(NodeNameFilter filter) {
+    }
 
     public void setSelectedComponents(List<ComponentNode> selection) {
         for (ComponentNode cn : selection) {
