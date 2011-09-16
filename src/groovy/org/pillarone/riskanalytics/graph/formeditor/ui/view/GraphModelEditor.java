@@ -39,10 +39,7 @@ import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The main window with the form editor view.
@@ -71,6 +68,8 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
 
     private GraphPersistenceService fPersistenceService;
 
+    private List<ISaveListener> saveListeners = new ArrayList<ISaveListener>();
+
     /**
      * @param context Application context is used for accessing and using resources (such as icons, etc.).
      */
@@ -97,7 +96,14 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         fEditorArea = new ULCCloseableTabbedPane();
         fEditorArea.addTabListener(new ITabListener() {
             public void tabClosing(TabEvent event) {
-                event.getClosableTabbedPane().closeCloseableTab(event.getTabClosingIndex());
+                int tabClosingIndex = event.getTabClosingIndex();
+                ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
+                Object modelView = fModelTabs.get(component);
+                if (modelView instanceof ISaveListener) {
+                    saveListeners.remove((ISaveListener)modelView);
+                    fModelTabs.remove(component);
+                }
+                event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
                 if (fEditorArea.getTabCount() > 0) {
                     event.getClosableTabbedPane().setSelectedIndex(0);
                 }
@@ -203,6 +209,7 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         fEditorArea.setToolTipTextAt(fEditorArea.getComponentCount() - 1, model.getPackageName() + "." + model.getName());
         fEditedTypeDefinitions.add(typeDef);
         //fModelRepositoryTree.getTreeModel().addNode(model);
+        saveListeners.add(modelView);
     }
 
     private void addParameterSet(Parameterization p, String name) {
@@ -382,6 +389,9 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
             fModelRepositoryTree.getTreeModel().addNode(model);
         }
         getPersistenceService().save(model);
+        for (ISaveListener saveListener : saveListeners) {
+            saveListener.save();
+        }
     }
 
     private GraphPersistenceService getPersistenceService() {
@@ -481,8 +491,8 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
             return;
         }
         ConfigObject configObject = parameterization.toConfigObject();
-        configObject.put("model" , model.getPackageName()+"."+model.getName());
-        configObject.put("package" , model.getPackageName());
+        configObject.put("model", model.getPackageName() + "." + model.getName());
+        configObject.put("package", model.getPackageName());
         FileStoreHandler.saveOutput(parameterization.getName() + ".groovy", configObject, UlcUtilities.getWindowAncestor(fModelRepositoryTree));
 
     }

@@ -13,6 +13,8 @@ import org.pillarone.riskanalytics.core.simulation.item.parameter.ParameterHolde
 import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraphImport
 import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities
 import org.pillarone.riskanalytics.graph.core.graph.model.*
+import models.core.CoreModel
+import org.pillarone.riskanalytics.core.model.Model
 
 /**
  *
@@ -40,7 +42,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
 
         // add nodes to specify the packets if graph model is associated with a composed component
         if (fRoot.graphElement instanceof ComposedComponentGraphModel) {
-            for (InPort p : ((ComposedComponentGraphModel)fRoot.graphElement).outerInPorts) {
+            for (InPort p: ((ComposedComponentGraphModel) fRoot.graphElement).outerInPorts) {
                 DataTreePacketNode packetNode = new DataTreePacketNode(p, fRoot)
                 packetNode.parentNode = fRoot
                 fRoot.addChild packetNode
@@ -183,14 +185,14 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
 
         int periodCount = fParametrization.periodCount
         List<ITableTreeNode> packetNodes = fRoot.children.findAll {node -> node instanceof DataTreePacketNode}.toList()
-        for (ITableTreeNode packetNode0 : packetNodes) {
+        for (ITableTreeNode packetNode0: packetNodes) {
             DataTreePacketNode packetNode = (DataTreePacketNode) packetNode0
-            for (int i = 0; i<periodCount;i++) {
+            for (int i = 0; i < periodCount; i++) {
                 final Packet packet = (Packet) packetNode.type.newInstance()
                 PacketParameter param = new PacketParameter()
-                param.path=packetNode.path
-                param.periodIndex=i
-                param.packetValue=packet
+                param.path = packetNode.path
+                param.periodIndex = i
+                param.packetValue = packet
                 ParameterHolder parameterHolder = new PacketHolder(param)
                 packetNode.parameters.add parameterHolder
                 parametrization.addParameter(parameterHolder)
@@ -258,8 +260,8 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
             DataTreeComponentNode treeNode = (DataTreeComponentNode) getDataTreeNode(node)
             String oldName = treeNode.name
             treeNode.name = newValue
-            String oldPath = treeNode.path.substring(0,treeNode.path.lastIndexOf(oldName))
-            String newPath = oldPath+newValue
+            String oldPath = treeNode.path.substring(0, treeNode.path.lastIndexOf(oldName))
+            String newPath = oldPath + newValue
             treeNode.path = newPath
             List<DataTreeParameterNode> leaves = getAllLeaves(treeNode)
             leaves.each { leaf ->
@@ -279,7 +281,9 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
     }
 
     void connectionAdded(Connection c) { }
+
     void connectionRemoved(Connection c) { }
+
     void outerPortAdded(Port p) {
         if (fRoot.graphElement instanceof ComposedComponentGraphModel) {
             DataTreePacketNode packetNode = new DataTreePacketNode(p, fRoot)
@@ -324,6 +328,13 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
                 printNode((IDataTreeNode) child, tab + "   ");
             }
         }
+    }
+
+    public void save() {
+        //the model doesn't exist, only on runtime
+        // set org.pillarone.riskanalytics.core.model.Model as default
+        fParametrization.setModelClass(Model.class)
+        fParametrization.save()
     }
 
     class PacketHolder extends ParameterHolder {
@@ -511,7 +522,7 @@ class DataTreePacketNode extends DataTreeComponentNode {
     DataTreePacketNode(Port port, DataTreeComponentNode root) {
         this.name = port.name
         this.parentNode = root
-        this.path = "provider_"+port.name+DataTableTreeModel.PATHSEP + "parmPacket"
+        this.path = "provider_" + port.name + DataTableTreeModel.PATHSEP + "parmPacket"
         graphElement = port
         type = port.getPacketType()
 
@@ -519,11 +530,12 @@ class DataTreePacketNode extends DataTreeComponentNode {
 
         Packet packet = (Packet) type.newInstance()
         Field[] fields = type.getDeclaredFields().findAll { field ->
-            !field.name.startsWith("\$") && !field.name.startsWith("_") && !field.name.startsWith("metaClass")}
-        for (Field field : fields) {
+            !field.name.startsWith("\$") && !field.name.startsWith("_") && !field.name.startsWith("metaClass")
+        }
+        for (Field field: fields) {
             Object value
             if (field.type.isPrimitive()) {
-                switch(field.type) {
+                switch (field.type) {
                     case Boolean.TYPE: value = Boolean.FALSE
                         break
                     case Integer.TYPE:
@@ -552,13 +564,13 @@ class DataTreePacketFieldNode extends DataTreeParameterNode {
     }
 
     Object getValueAt(int column) {
-        return column == 0 ? name : ((DataTreePacketNode)parent).parameters.get(column - 1).getBusinessObject()."$name"
+        return column == 0 ? name : ((DataTreePacketNode) parent).parameters.get(column - 1).getBusinessObject()."$name"
     }
 
     void setValueAt(Object value, int column) {
         if (column > 0) {
-            ParameterHolder holder = ((DataTreePacketNode)parent).parameters.get(column-1)
-            holder.getBusinessObject()."$name"=value
+            ParameterHolder holder = ((DataTreePacketNode) parent).parameters.get(column - 1)
+            holder.getBusinessObject()."$name" = value
         }
     }
 }

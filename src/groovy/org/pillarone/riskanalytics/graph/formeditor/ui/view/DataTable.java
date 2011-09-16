@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  *
  */
-public class DataTable extends ULCBoxPane implements ISelectionListener {
+public class DataTable extends ULCBoxPane implements ISelectionListener, ISaveListener {
 
     AbstractGraphModel fGraphModel;
     DataTableTreeModel fTableModel;
@@ -266,6 +266,9 @@ public class DataTable extends ULCBoxPane implements ISelectionListener {
         fTableTree.addTreeSelectionListener(treeSelectionListener);
     }
 
+    public void save() {
+       fTableModel.save();
+    }
 }
 
 class BasicCellRenderer extends DefaultTableTreeCellRenderer implements ITableTreeCellRenderer {

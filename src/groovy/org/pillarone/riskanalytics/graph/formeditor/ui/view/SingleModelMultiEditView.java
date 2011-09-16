@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class SingleModelMultiEditView extends AbstractBean implements IWatchList {
+public class SingleModelMultiEditView extends AbstractBean implements IWatchList, ISaveListener {
     private ApplicationContext fApplicationContext;
 
     private AbstractGraphModel fGraphModel;
@@ -54,7 +54,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
     private ITabListener tabListener;
 
     private IActionListener f9_pressed;
-
+    private List<ISaveListener> saveListeners = new ArrayList<ISaveListener>();
     private boolean readOnly = false;
 
     public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model, IGraphModelAdder adderInterface) {
@@ -338,6 +338,8 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
                         fFormEditorView.removeSelectionListener((ISelectionListener) component);
                         fVisualEditorView.removeSelectionListener((ISelectionListener) component);
                     }
+                    if (component instanceof ISaveListener)
+                        saveListeners.remove((ISaveListener)component);
                     event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
                     if (fDataSetSheets.getTabCount() > 0) {
                         event.getClosableTabbedPane().setSelectedIndex(0);
@@ -354,6 +356,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             fFormEditorView.addSelectionListener(dataTable);
             fVisualEditorView.addSelectionListener(dataTable);
             dataTable.addTreeSelectionListener(fVisualEditorView);
+            saveListeners.add(dataTable);
         } else {
             p.setName(name);
             dataTable = new DataTable(fGraphModel, p);
@@ -437,6 +440,12 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
 
     public void removeAllWatches() {
         fWatchesTable.getModel().removeAllWatches();
+    }
+
+    public void save() {
+       for(ISaveListener saveListener: saveListeners){
+           saveListener.save();
+       }
     }
 
     public Parameterization getSelectedParametrization() {
