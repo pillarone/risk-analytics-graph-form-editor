@@ -258,6 +258,8 @@ public class DataTable extends ULCBoxPane implements ISelectionListener, ISaveLi
         }
     }
 
+    public void nodeSelected(String path){}
+
     public void setSelectedConnections(List<Connection> selection) {
         //To change body of implemented methods use File | Settings | File Templates.
     }

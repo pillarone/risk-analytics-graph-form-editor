@@ -432,6 +432,8 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         }
     }
 
+    public void nodeSelected(String path){}
+
     public void setSelectedConnections(List<Connection> selection) {
         // Nothing to do here
     }

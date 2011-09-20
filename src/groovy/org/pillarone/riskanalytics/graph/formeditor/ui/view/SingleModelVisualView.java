@@ -787,6 +787,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         fULCGraph.getSelectionModel().addGraphSelectionListener(fGraphSelectionListener);
     }
 
+    public void nodeSelected(String path) {}
+
     public void setSelectedConnections(List<Connection> selection) {
         fULCGraph.getSelectionModel().removeGraphSelectionListener(fGraphSelectionListener);
         clearEdgeSelection();

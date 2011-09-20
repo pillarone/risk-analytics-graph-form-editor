@@ -3,6 +3,8 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
+import com.ulcjava.base.application.event.ITreeSelectionListener;
+import com.ulcjava.base.application.event.TreeSelectionEvent;
 import com.ulcjava.base.application.tree.*;
 import com.ulcjava.base.application.util.Dimension;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
@@ -12,16 +14,21 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.FilteringTr
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.ITreeFilter;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class AbstractComponentDefinitionTree extends ULCBoxPane implements ISearchListener {
 
     protected ITreeModel fTreeModel;
     protected ULCTree fTree;
     protected GraphModelEditor fParent; // TODO: this is somewhat ugly
+    List<ISelectionListener> fSelectionListeners;
 
     public AbstractComponentDefinitionTree(GraphModelEditor parent) {
         super();
         fParent = parent;
         fTreeModel = getTreeModel();
+        fSelectionListeners = new ArrayList<ISelectionListener>();
         createView();
     }
 
@@ -97,8 +104,23 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
         ULCScrollPane treeScrollPane = new ULCScrollPane(fTree);
         treeScrollPane.setMinimumSize(new Dimension(200, 600));
         this.add(ULCBoxPane.BOX_EXPAND_EXPAND, treeScrollPane);
-
+        addListeners();
         this.setVisible(true);
+    }
+
+    private void addListeners() {
+        if (fParent != null)
+            fSelectionListeners.add(fParent.getSelectionListener());
+        fTree.getSelectionModel().addTreeSelectionListener(new ITreeSelectionListener() {
+            public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
+                TypeTreeNode lastPathComponent = (TypeTreeNode) fTree.getSelectionModel().getSelectionPath().getLastPathComponent();
+                if (lastPathComponent != null) {
+                    for (ISelectionListener selectionListener : fSelectionListeners) {
+                        selectionListener.nodeSelected(lastPathComponent.getFullName());
+                    }
+                }
+            }
+        });
     }
 
     private class ShowComponentAction implements IActionListener {

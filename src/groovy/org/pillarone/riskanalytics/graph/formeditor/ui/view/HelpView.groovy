@@ -51,7 +51,7 @@ class HelpView implements ISelectionListener {
     }
 
     public void setSelectedComponents(List<ComponentNode> selectedNodes) {
-        ComponentNode lastNode = selectedNodes!=null && selectedNodes.size()>0 ? selectedNodes[-1] : null
+        ComponentNode lastNode = selectedNodes != null && selectedNodes.size() > 0 ? selectedNodes[-1] : null
         if (lastNode) {
             String propertyKey = lastNode.getType().getTypeClass().getName()
             String value = UIUtils.getPropertyValue(null, "COMPONENT_DEFINITION_HELP", "['$propertyKey']")
@@ -62,10 +62,17 @@ class HelpView implements ISelectionListener {
         }
     }
 
+    public void nodeSelected(String path) {
+        String value = UIUtils.getPropertyValue(null, "COMPONENT_DEFINITION_HELP", "['$path']")
+        value = "<div style='100%'>$value</div>"
+        String htmlText = HTMLUtilities.convertToHtml(value ? value : "")
+        label.setText(htmlText)
+    }
+
     public void setSelectedConnections(List<Connection> selectedConnections) {
         // nothing to do here
     }
-    
+
     public void applyFilter(IComponentNodeFilter filter) {
         // nothing to do here
     }
@@ -83,13 +90,13 @@ class HelpView implements ISelectionListener {
         String fullName = node.type.getTypeClass().getName()
         String type = node instanceof ComposedComponentNode ? "ComposedComponent" : "Component"
         List<Port> portList = node.getInPorts() + node.getOutPorts()
-        Map<String,Object> parameterMap = ParameterUtilities.getParameterObjects(node)
+        Map<String, Object> parameterMap = ParameterUtilities.getParameterObjects(node)
         String htmlTitle = "<b><h3> $title </h3></b>"
         String htmlCategories = "<h4>Categories: </h4>" + Arrays.toString(categoriesList as String[])
         String htmlClassName = "<h4>Class Name: </h4> <code> $fullName </code>"
         String htmlType = "<h4>Type: </h4><code> $type </code>"
         String htmlPortsList = "<h4>Ports: </h4> <ul>"
-        for (Port p : portList) {
+        for (Port p: portList) {
             String portName = p.getName()
             String packetInfo = p.getPacketType().getSimpleName()
             String packetCardinality = p.connectionCardinality ? ", ($p.connectionCardinality.from, $p.connectionCardinality.to )" : ""
@@ -97,7 +104,7 @@ class HelpView implements ISelectionListener {
         }
         htmlPortsList <<= "</ul>"
         String htmlParameterList = "<h4>Parameters: </h4> <ul>"
-        for (Map.Entry<String,Object> p : parameterMap) {
+        for (Map.Entry<String, Object> p: parameterMap) {
             String paramName = p.getKey()
             String paramType = p.getValue().getClass().getName()
             htmlParameterList <<= "<li><code> $paramName ( $paramType ) </code></li>"
@@ -105,7 +112,7 @@ class HelpView implements ISelectionListener {
         htmlParameterList <<= "</ul>"
         String htmlDescription = "<h4>Description: </h4>" + description
 
-        return htmlTitle + " " + htmlDescription + " " + htmlCategories + " " + htmlClassName + " "  + htmlType + " " + htmlPortsList + " " + htmlParameterList
+        return htmlTitle + " " + htmlDescription + " " + htmlCategories + " " + htmlClassName + " " + htmlType + " " + htmlPortsList + " " + htmlParameterList
     }
 }
 

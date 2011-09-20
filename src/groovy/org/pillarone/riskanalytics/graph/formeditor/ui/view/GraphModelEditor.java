@@ -66,6 +66,8 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
 
     private ModelRepositoryTree fModelRepositoryTree;
 
+    private HelpView fHelpView = new HelpView();
+
     private GraphPersistenceService fPersistenceService;
 
     private List<ISaveListener> saveListeners = new ArrayList<ISaveListener>();
@@ -120,7 +122,11 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         ULCBoxPane repositoryTreePane = new ULCBoxPane(true);
         repositoryTreePane.setPreferredSize(new Dimension(200, 200));
         fModelRepositoryTree = new ModelRepositoryTree(this);
-        repositoryTreePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, fModelRepositoryTree);
+        ULCTabbedPane tabbedPane = new ULCTabbedPane();
+        tabbedPane.addTab("Models",fModelRepositoryTree);
+        tabbedPane.addTab("Help", new ULCScrollPane(fHelpView.getContent()));
+//        repositoryTreePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, fModelRepositoryTree);
+        repositoryTreePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, tabbedPane);
 
         ULCSplitPane typeSelectionPane = new ULCSplitPane(ULCSplitPane.VERTICAL_SPLIT);
         typeSelectionPane.setPreferredSize(new Dimension(150, 600));
@@ -400,6 +406,10 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
             fPersistenceService = ctx.getBean(GraphPersistenceService.class);
         }
         return fPersistenceService;
+    }
+
+    ISelectionListener getSelectionListener(){
+        return fHelpView;
     }
 
     @Action

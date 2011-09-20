@@ -68,23 +68,15 @@ public class SingleModelTextView extends AbstractBean implements GraphModelViewa
     // Implementation of ISelectionListener
     /////////////////////////////////////////
 
-    public void applyFilter(IComponentNodeFilter filter) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
+    public void applyFilter(IComponentNodeFilter filter) {}
 
-    public void applyFilter(NodeNameFilter filter) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
+    public void applyFilter(NodeNameFilter filter) {}
 
-    public void setSelectedComponents(List<ComponentNode> selection) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
+    public void setSelectedComponents(List<ComponentNode> selection) {}
 
-    public void setSelectedConnections(List<Connection> selection) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
+    public void nodeSelected(String path){}
 
-    public void clearSelection() {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
+    public void setSelectedConnections(List<Connection> selection) {}
+
+    public void clearSelection() {}
 }
