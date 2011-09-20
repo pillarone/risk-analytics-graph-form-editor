@@ -305,6 +305,16 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     @Action
     public void removeAction() {
         Closure remove = {List<ComponentNode> nodes ->
+            //remove node watches
+            if (fWatchList != null) {
+                for (ComponentNode node: nodes) {
+                    for (OutPort p: node.getOutPorts()) {
+                        String removedWatchPort = GraphModelUtilities.getPath(p, fGraphModel);
+                        fWatchList.removeWatch(removedWatchPort);
+                    }
+                }
+            }
+            //remove component node
             for (ComponentNode node: nodes) {
                 fGraphModel.removeComponentNode(node)
             }
@@ -376,19 +386,19 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
                 it.setSelectedConnections(connections)
                 it.setSelectedComponents(connectedNodes)
             }
-        } catch(Exception ex) {
-            
+        } catch (Exception ex) {
+
         }
     }
 
     @Action
     public void clearSelectionAction() {
         try {
-        clearSelection();
-        for (ISelectionListener listener: fSelectionListeners) {
-            listener.clearSelection();
-        }
-        } catch(Exception ex) {
+            clearSelection();
+            for (ISelectionListener listener: fSelectionListeners) {
+                listener.clearSelection();
+            }
+        } catch (Exception ex) {
 
         }
     }
@@ -396,7 +406,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     @Action
     public void addSelectedToWatches() {
         List<Port> selectedPorts = this.getSelectedPorts();
-        for (Port graphPort : selectedPorts) {
+        for (Port graphPort: selectedPorts) {
             if (graphPort instanceof InPort) {
                 ULCAlert alert = new ULCAlert("In-Port selected.",
                         "Only out-ports can be watched.", "ok");
@@ -432,7 +442,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         }
     }
 
-    public void nodeSelected(String path){}
+    public void nodeSelected(String path) {}
 
     public void setSelectedConnections(List<Connection> selection) {
         // Nothing to do here
@@ -448,7 +458,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
 
     private ComponentNode getSelectedNode() {
         TreePath[] selected = getSelectedPaths();
-        if (selected.length > 0) {
+        if (selected && selected.length > 0) {
             TreePath selected0 = selected[0];
             if (selected0.getPath().length == 2) {
                 GraphElementNode node = (GraphElementNode) selected0.getPath()[1];

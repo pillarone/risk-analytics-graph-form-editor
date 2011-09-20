@@ -513,7 +513,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         ULCMenuItem createComposedComponentItem = new ULCMenuItem("create composed component");
         createComposedComponentItem.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                if (fAdderInterface==null) return;
+                if (fAdderInterface == null) return;
                 Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
                 Set<Edge> selectedEdges = fULCGraph.getSelectionModel().getSelectedEdges();
                 if (selectedVertices != null && selectedVertices.size() > 0) {
@@ -521,7 +521,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                     // add the vertices
                     for (Vertex v : selectedVertices) {
                         ComponentNode node = fNodesMap.get(v.getId());
-                        ComponentNode newNode = subModel.createComponentNode(node.getType(), "sub"+node.getName());
+                        ComponentNode newNode = subModel.createComponentNode(node.getType(), "sub" + node.getName());
                         newNode.setComment(node.getComment());
                     }
 
@@ -534,7 +534,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                         org.pillarone.riskanalytics.graph.core.graph.model.Port originalOutPort = connection.getFrom();
                         ComponentNode originalFromNode = originalOutPort.getComponentNode();
                         if (originalFromNode != null) {
-                            ComponentNode newFromNode = subModel.findNodeByName("sub"+originalFromNode.getName());
+                            ComponentNode newFromNode = subModel.findNodeByName("sub" + originalFromNode.getName());
                             if (newFromNode != null) {
                                 newFromPort = newFromNode.getPort(originalOutPort.getName());
                             }
@@ -543,7 +543,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                         org.pillarone.riskanalytics.graph.core.graph.model.Port originalInPort = connection.getTo();
                         ComponentNode originalToNode = originalInPort.getComponentNode();
                         if (originalToNode != null) {
-                            ComponentNode newToNode = subModel.findNodeByName("sub"+originalToNode.getName());
+                            ComponentNode newToNode = subModel.findNodeByName("sub" + originalToNode.getName());
                             if (newToNode != null) {
                                 newToPort = newToNode.getPort(originalInPort.getName());
                             }
@@ -787,7 +787,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         fULCGraph.getSelectionModel().addGraphSelectionListener(fGraphSelectionListener);
     }
 
-    public void nodeSelected(String path) {}
+    public void nodeSelected(String path) {
+    }
 
     public void setSelectedConnections(List<Connection> selection) {
         fULCGraph.getSelectionModel().removeGraphSelectionListener(fGraphSelectionListener);
@@ -973,7 +974,19 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         public void vertexRemoved(@NotNull Vertex vertex) {
             if (fNodesMap.containsKey(vertex.getId())) {
                 ComponentNode node = fNodesMap.get(vertex.getId());
+
+                removeNodeWatches(node);
                 fGraphModel.removeComponentNode(node);
+            }
+        }
+
+        private void removeNodeWatches(ComponentNode node) {
+            if (fWatchList != null) {
+                for (OutPort p : node.getOutPorts()) {
+                    String removedWatchPort = GraphModelUtilities.getPath(p, fGraphModel);
+                    if (removedWatchPort != null)
+                        fWatchList.removeWatch(removedWatchPort);
+                }
             }
         }
 

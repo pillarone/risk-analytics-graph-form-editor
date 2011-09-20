@@ -251,7 +251,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
                 }
             }
             fRoot.children.remove(treeNode)
-            structureChanged()
+             nodeStructureChanged(new TreePath([fRoot] as Object[]))
         }
     }
 
@@ -273,7 +273,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
                     }
                 }
             }
-            nodeChanged(new TreePath([fRoot, treeNode]), 0)
+            nodeChanged(new TreePath([fRoot, treeNode] as Object[]), 0)
         } else if (propertyName == "type") {
             nodeRemoved(node)
             nodeAdded(node)

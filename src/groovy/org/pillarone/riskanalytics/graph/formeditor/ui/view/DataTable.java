@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  *
  */
-public class DataTable extends ULCBoxPane implements ISelectionListener, ISaveListener {
+public class DataTable extends ULCBoxPane implements ISelectionListener, ISaveListener  {
 
     AbstractGraphModel fGraphModel;
     DataTableTreeModel fTableModel;
