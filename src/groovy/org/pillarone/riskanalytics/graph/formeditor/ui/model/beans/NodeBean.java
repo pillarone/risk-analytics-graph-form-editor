@@ -1,11 +1,14 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.model.beans;
 
 
+import java.awt.*;
+
 public class NodeBean {
     private String name;
     private String componentType;
     private String comment;
     private boolean starter;
+    private Rectangle position;
 
     public NodeBean() {
         super();
@@ -52,6 +55,14 @@ public class NodeBean {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public Rectangle getPosition() {
+        return position;
+    }
+
+    public void setPosition(Rectangle position) {
+        this.position = position;
     }
 
     public void reset() {
