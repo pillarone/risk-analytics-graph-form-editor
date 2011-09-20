@@ -100,6 +100,7 @@ public class NodeEditDialog extends ULCDialog {
                     ComponentDefinition definition = PaletteService.getInstance().getComponentDefinition(bean.getComponentType());
                     ComponentNode newNode = fGraphModel.createComponentNode(definition, bean.getName());
                     newNode.setComment(bean.getComment());
+                    newNode.setRectangle(bean.getPosition());
                 }
                 setVisible(false);
             }
@@ -112,7 +113,7 @@ public class NodeEditDialog extends ULCDialog {
                     }
                 }
                 return true;
-            }            
+            }
         };
         fBeanForm.addSaveActionListener(action);
         KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
