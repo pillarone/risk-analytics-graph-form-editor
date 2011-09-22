@@ -445,7 +445,13 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
     }
 
     public void removeWatch(String path) {
-        fWatchesTable.getModel().removeWatch(path);
+        if (fWatchesTable != null && fWatchesTable.getModel() != null)
+            fWatchesTable.getModel().removeWatch(path);
+    }
+
+    public void editWatch(String oldPath, String newPath) {
+        if (fWatchesTable != null && fWatchesTable.getModel() != null)
+            fWatchesTable.getModel().editWatch(oldPath, newPath);
     }
 
     public void removeAllWatches() {

@@ -19,6 +19,7 @@ public class NodeEditDialog extends ULCDialog {
     private ULCButton fCancel;
     private final AbstractGraphModel fGraphModel;
     private ComponentNode fEditedNode;
+    private IWatchList fWatchList;
 
     public NodeEditDialog(ULCWindow parent, AbstractGraphModel model) {
         super(parent);
@@ -75,6 +76,7 @@ public class NodeEditDialog extends ULCDialog {
                 NodeBean bean = fBeanForm.getModel().getBean();
                 if (fEditedNode != null) {
                     if (!fEditedNode.getName().equals(bean.getName())) {
+                        firePathChanged(fEditedNode.getName(), bean.getName());
                         fGraphModel.changeNodeProperty(fEditedNode, "name", fEditedNode.getName(), bean.getName());
                     }
                     if (!fEditedNode.getType().getTypeClass().getName().equals(bean.getComponentType())) {
@@ -136,6 +138,16 @@ public class NodeEditDialog extends ULCDialog {
 
     public BeanFormDialog<NodeFormModel> getBeanForm() {
         return fBeanForm;
+    }
+
+    public void setWatchList(IWatchList watchList) {
+        this.fWatchList = watchList;
+    }
+
+    public void firePathChanged(String oldPath, String newPath) {
+        if (fWatchList != null) {
+            fWatchList.editWatch(oldPath, newPath);
+        }
     }
 
 }

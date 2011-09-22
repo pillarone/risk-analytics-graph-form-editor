@@ -210,6 +210,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
             }
             dialog.getBeanForm().getModel().setEditedNode(selectedNode);
             dialog.setEditedNode(selectedNode);
+            dialog.setWatchList(fWatchList)
         }
     }
 

@@ -44,6 +44,17 @@ class WatchesTreeModel extends AbstractTableTreeModel implements ITableTreeModel
         nodesWereRemoved(new TreePath([fRoot] as Object[]), indices as int[], nodes as ITableTreeNode[])
     }
 
+    void editWatch(String oldPath, String newPath) {
+        if (fRoot && fRoot.children) {
+            Map watchesToEdit = fRoot.children.findAll {entry -> ((String) entry.key).startsWith(oldPath)}
+            watchesToEdit.keySet().each {String watchOldPath ->
+                String suffixPath = watchOldPath.substring(watchOldPath.indexOf(PATHSEP))
+                addWatch(newPath +suffixPath)
+                removeWatch(watchOldPath)
+            }
+        }
+    }
+
     public void removeAllWatches() {
         fRoot.children = [:]
         nodeStructureChanged(new TreePath([fRoot] as Object[]))

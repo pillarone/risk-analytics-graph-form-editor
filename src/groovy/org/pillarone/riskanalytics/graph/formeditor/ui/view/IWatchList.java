@@ -12,5 +12,7 @@ public interface IWatchList {
 
     public void removeWatch(String path);
 
+    public void editWatch(String oldPath, String newPath);
+
     public void removeAllWatches();
 }
