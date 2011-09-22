@@ -108,7 +108,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         fULCGraph.addGraphElementListener(new IGraphElementListener() {
 
             public void vertexGeometryChanged(Vertex vertex) {
-                final ComponentNode node = fGraphModel.findNodeByName(vertex.getTitle());
+                final ComponentNode node = fNodesMap.get(vertex.getId());
                 final Rectangle rectangle = vertex.getRectangle();
                 node.setRectangle(new java.awt.Rectangle(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight()));
             }
@@ -739,9 +739,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         List<Vertex> verticesToSelect = getVertices(selection);
         fULCGraph.getSelectionModel().selectElements(verticesToSelect);
         fULCGraph.getSelectionModel().addGraphSelectionListener(fGraphSelectionListener);
-    }
-
-    public void nodeSelected(String path) {
     }
 
     public void setSelectedConnections(List<Connection> selection) {

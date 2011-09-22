@@ -149,7 +149,6 @@ class CommentView implements ISelectionListener {
             descriptionPane.setSelectedComponent(htmlTextPane)
         }
     }
-    public void nodeSelected(String path){}
 
     private ComponentNode getSelectedTopLevelNode(List<ComponentNode> selectedNodes) {
         if (selectedNodes != null) {

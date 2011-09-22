@@ -134,8 +134,6 @@ public class SimulationResultTable extends ULCTableTree implements ISelectionLis
         }
     }
 
-    public void nodeSelected(String path){}
-
     public void setSelectedConnections(List<Connection> selection) {
     }
 }

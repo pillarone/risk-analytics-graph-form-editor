@@ -55,6 +55,9 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
 
     /* Context is needed to load resources (such as icons, etc).*/
     private ApplicationContext fContext;
+
+    private ULCSplitPane fContentView;
+
     /* The editor view.*/
     private ULCCloseableTabbedPane fEditorArea;
     /* Set of currently opened type defs - check that type defs does not already exist. */
@@ -65,8 +68,6 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
     private TypeImportDialog fTypeImportView;
 
     private ModelRepositoryTree fModelRepositoryTree;
-
-    private HelpView fHelpView = new HelpView();
 
     private GraphPersistenceService fPersistenceService;
 
@@ -79,6 +80,17 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         fContext = context;
         fEditedTypeDefinitions = new HashSet<TypeDefinitionBean>();
         fModelTabs = new HashMap<ULCComponent, SingleModelMultiEditView>();
+        initialize();
+
+        TypeDefinitionBean typeDef = new TypeDefinitionBean();
+        typeDef.setBaseType("Model");
+        typeDef.setPackageName("models");
+        typeDef.setName("untitled");
+
+        AbstractGraphModel model = new ModelGraphModel();
+        model.setPackageName("models");
+        model.setName("untitled");
+        addModelToView(model, typeDef, true);
     }
 
     /**
@@ -88,6 +100,10 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
      * @return model edit and palette view
      */
     public ULCComponent getContentView() {
+        return fContentView;
+    }
+
+    private void initialize() {
         ULCBoxPane modelEdit = new ULCBoxPane(true);
         modelEdit.setPreferredSize(new Dimension(600, 600));
         modelEdit.add(ULCBoxPane.BOX_EXPAND_BOTTOM, ULCFiller.createVerticalStrut(3));
@@ -124,7 +140,6 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         fModelRepositoryTree = new ModelRepositoryTree(this);
         ULCTabbedPane tabbedPane = new ULCTabbedPane();
         tabbedPane.addTab("Models",fModelRepositoryTree);
-        tabbedPane.addTab("Help", new ULCScrollPane(fHelpView.getContent()));
 //        repositoryTreePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, fModelRepositoryTree);
         repositoryTreePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, tabbedPane);
 
@@ -136,15 +151,13 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         typeSelectionPane.setDividerLocation(0.8);
         typeSelectionPane.setDividerSize(10);
 
-        ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setPreferredSize(new Dimension(800, 600));
-        splitPane.setLeftComponent(typeSelectionPane);
-        splitPane.setRightComponent(new ULCScrollPane(modelEdit));
-        splitPane.setOneTouchExpandable(true);
-        splitPane.setDividerLocation(0.3);
-        splitPane.setDividerSize(10);
-
-        return splitPane;
+        fContentView = new ULCSplitPane(ULCSplitPane.HORIZONTAL_SPLIT);
+        fContentView.setPreferredSize(new Dimension(800, 600));
+        fContentView.setLeftComponent(typeSelectionPane);
+        fContentView.setRightComponent(new ULCScrollPane(modelEdit));
+        fContentView.setOneTouchExpandable(true);
+        fContentView.setDividerLocation(0.3);
+        fContentView.setDividerSize(10);
     }
 
     private ULCBoxPane getPalettePane(TabularFilterView filterView) {
@@ -408,8 +421,9 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         return fPersistenceService;
     }
 
-    ISelectionListener getSelectionListener(){
-        return fHelpView;
+    IHelpViewable getHelpView(){
+        ULCComponent comp = fEditorArea.getSelectedComponent();
+        return comp != null ? fModelTabs.get(comp).getHelpView() : null;
     }
 
     @Action

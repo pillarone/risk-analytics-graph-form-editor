@@ -275,7 +275,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
 
         // watches --> will be added on demand
 
-        fLeftTabbedPane.addTab("Help", new ULCScrollPane(fHelpView.getContent()));
+        fLeftTabbedPane.addTab("Help", new ULCScrollPane(getHelpView().getMainComponent()));
         fRightTabbedPane.addTab("Comments", new ULCScrollPane(fCommentView.getContent()));
         fLeftTabbedPane.setSelectedIndex(0);
         fRightTabbedPane.setSelectedIndex(0);
@@ -297,6 +297,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         fFormEditorView.injectGraphModel(model);
         fTextEditorView.injectGraphModel(model);
 
+        fHelpView.injectGraphModel(model);
         fCommentView.setGraphModel(model);
 
         fFormEditorView.addSelectionListener(fVisualEditorView);
@@ -505,6 +506,14 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
                 alert.show();
             }
         }
+    }
+
+    public HelpView getHelpView() {
+        return fHelpView;
+    }
+
+    public void setHelpView(HelpView fHelpView) {
+        this.fHelpView = fHelpView;
     }
 
     private class DataNameDialog extends ULCDialog {
