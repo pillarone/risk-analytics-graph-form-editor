@@ -14,11 +14,10 @@ public interface ISelectionListener {
 
     public void applyFilter(IComponentNodeFilter filter);
 
+    // TODO: should be eliminated --> only used from within the TableTree-context.
     public void applyFilter(NodeNameFilter filter);
 
     public void setSelectedComponents(List<ComponentNode> selection);
-
-    public void nodeSelected(String path);
 
     public void setSelectedConnections(List<Connection> selection);
 

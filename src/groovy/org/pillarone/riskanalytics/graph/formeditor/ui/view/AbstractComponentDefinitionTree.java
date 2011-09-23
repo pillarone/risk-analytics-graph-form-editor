@@ -14,21 +14,16 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.FilteringTr
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.ITreeFilter;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public abstract class AbstractComponentDefinitionTree extends ULCBoxPane implements ISearchListener {
 
     protected ITreeModel fTreeModel;
     protected ULCTree fTree;
     protected GraphModelEditor fParent; // TODO: this is somewhat ugly
-    List<ISelectionListener> fSelectionListeners;
 
     public AbstractComponentDefinitionTree(GraphModelEditor parent) {
         super();
         fParent = parent;
         fTreeModel = getTreeModel();
-        fSelectionListeners = new ArrayList<ISelectionListener>();
         createView();
     }
 
@@ -109,14 +104,14 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
     }
 
     private void addListeners() {
-        if (fParent != null)
-            fSelectionListeners.add(fParent.getSelectionListener());
         fTree.getSelectionModel().addTreeSelectionListener(new ITreeSelectionListener() {
             public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
                 TypeTreeNode lastPathComponent = (TypeTreeNode) fTree.getSelectionModel().getSelectionPath().getLastPathComponent();
                 if (lastPathComponent != null) {
-                    for (ISelectionListener selectionListener : fSelectionListeners) {
-                        selectionListener.nodeSelected(lastPathComponent.getFullName());
+                    ComponentDefinition definition = PaletteService.getInstance().getComponentDefinition(lastPathComponent.getFullName());
+                    IHelpViewable helpView = fParent.getHelpView();
+                    if (helpView != null) {
+                        helpView.showHelp(definition);
                     }
                 }
             }

@@ -119,8 +119,6 @@ public class SingleModelFormView extends AbstractBean implements GraphModelViewa
         fNodesTable.setSelectedComponents(selection);
     }
 
-    public void nodeSelected(String path){}
-
     public void setSelectedConnections(List<Connection> selection) {
         fConnectionsTable.setSelectedConnections(selection);
     }

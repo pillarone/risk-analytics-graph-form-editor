@@ -182,8 +182,6 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
         // Nothing to do here
     }
 
-    public void nodeSelected(String path){}
-
     public void setSelectedConnections(List<Connection> selection) {
         setSelectedRows(getRowIndices(selection));
     }
