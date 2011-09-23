@@ -13,7 +13,6 @@ import com.ulcjava.base.application.tabletree.DefaultTableTreeModel;
 import com.ulcjava.base.application.tabletree.ULCTableTreeColumn;
 import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.Dimension;
-import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;

@@ -15,6 +15,7 @@ import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities
 import org.pillarone.riskanalytics.graph.core.graph.model.*
 import models.core.CoreModel
 import org.pillarone.riskanalytics.core.model.Model
+import org.pillarone.riskanalytics.graph.core.item.GraphParameterization
 
 /**
  *
@@ -331,10 +332,10 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
     }
 
     public void save() {
-        //the model doesn't exist, only on runtime
-        // set org.pillarone.riskanalytics.core.model.Model as default
-        fParametrization.setModelClass(Model.class)
-        fParametrization.save()
+        //p14 will be saved as GraphParameterization
+        // it contains no information about model
+        GraphParameterization graphParameterization = GraphParameterization.toGraphParameterization(fParametrization)
+        graphParameterization.save()
     }
 
     class PacketHolder extends ParameterHolder {
