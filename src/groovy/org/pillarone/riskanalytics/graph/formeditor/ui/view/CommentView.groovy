@@ -21,6 +21,7 @@ import com.ulcjava.base.application.event.KeyEvent
 import com.ulcjava.base.application.ULCComponent
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
+import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com, martin.melchior@fhnw.ch
@@ -49,7 +50,7 @@ class CommentView implements ISelectionListener {
     public void setGraphModel(AbstractGraphModel graphModel) {
         this.graphModel = graphModel
     }
-    
+
     private void init() {
         content = new ULCBoxPane(true)
         propertiesPane = new ResourceLinkHtmlPane()
@@ -73,22 +74,23 @@ class CommentView implements ISelectionListener {
         cancelButton.setEnabled false
 
         editButton.addActionListener(
-            new IActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    editableTextPane.setText(currentText)
-                    descriptionPane.setSelectedComponent(editableTextPane);
-                    editButton.setEnabled false
-                    okButton.setEnabled true
-                    cancelButton.setEnabled true
+                new IActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        editableTextPane.setText(currentText)
+                        descriptionPane.setSelectedComponent(editableTextPane);
+                        editButton.setEnabled false
+                        okButton.setEnabled true
+                        cancelButton.setEnabled true
+                    }
                 }
-            }
         )
         IActionListener okAction = new IActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 currentText = editableTextPane.getText()
                 currentNode.comment = currentText
                 String htmlText = "<div style='100%'> $currentText </div>"
-                htmlTextPane.setText(HTMLUtilities.convertToHtml(htmlText ? htmlText : ""))
+                String html = UIUtils.convertWikiToHtml(htmlText)
+                htmlTextPane.setText(html)
                 descriptionPane.setSelectedComponent(htmlTextPane);
                 editButton.setEnabled true
                 okButton.setEnabled false
@@ -124,11 +126,11 @@ class CommentView implements ISelectionListener {
         boolean isEditable = true
         if (!currentNode) {
             isEditable = false
-            currentNode = selectedNodes != null && selectedNodes.size()>0 ? selectedNodes[0] : null
+            currentNode = selectedNodes != null && selectedNodes.size() > 0 ? selectedNodes[0] : null
         }
         if (currentNode) {
             editButton.setEnabled(!readOnly && isEditable)
-            
+
             // properties pane
             String title = currentNode.getName()
             String fullName = currentNode.type.getTypeClass().getName()
@@ -137,22 +139,23 @@ class CommentView implements ISelectionListener {
             String htmlClassName = "<code> $fullName </code>"
             String text = "<p><div style='100%'>${htmlTitle + htmlClassName} </div></p> <br>"
 
-            propertiesPane.setText(HTMLUtilities.convertToHtml(text ? text : ""))
+            propertiesPane.setText(UIUtils.convertWikiToHtml(text))
 
             // description pane
             currentText = currentNode.comment
-            if (currentText == null || currentText=="") {
+            if (currentText == null || currentText == "") {
                 currentText = "No comments yet"
             }
             String htmlText = "<div style='100%'> $currentText </div>"
-            htmlTextPane.setText(HTMLUtilities.convertToHtml(htmlText ? htmlText : ""))
+            String html = UIUtils.convertWikiToHtml(htmlText)
+            htmlTextPane.setText(html)
             descriptionPane.setSelectedComponent(htmlTextPane)
         }
     }
 
     private ComponentNode getSelectedTopLevelNode(List<ComponentNode> selectedNodes) {
         if (selectedNodes != null) {
-            for (ComponentNode node : selectedNodes) {
+            for (ComponentNode node: selectedNodes) {
                 if (graphModel.getAllComponentNodes().contains(node)) {
                     return node
                 }
@@ -164,7 +167,7 @@ class CommentView implements ISelectionListener {
     public void setSelectedConnections(List<Connection> selectedConnections) {
         // nothing to do here
     }
-    
+
     public void applyFilter(IComponentNodeFilter filter) {
         // nothing to do here
     }

@@ -3,6 +3,9 @@ package org.pillarone.riskanalytics.graph.formeditor.util
 import com.ulcjava.base.application.util.ULCIcon
 import org.apache.commons.logging.Log
 import org.apache.commons.logging.LogFactory
+import be.devijver.wikipedia.Parser
+import org.springframework.web.util.HtmlUtils
+import com.ulcjava.base.application.util.HTMLUtilities
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com
@@ -33,5 +36,21 @@ class UIUtils {
             LOG.error(ex)
         }
         return res;
+    }
+
+    public static String convertWikiToHtml(String text) {
+        if (!text) return ""
+        String wiki = null
+        try {
+            // \n causes hiding of links
+            //workaround: replace all endline with html code
+            text = text.replaceAll("\n", "<br>")
+            java.io.StringWriter writer = new java.io.StringWriter();
+            (new Parser()).withVisitor(text, new HtmlVisitor(writer, null));
+            wiki = writer.toString()
+        } catch (Exception ex) {
+            wiki = text
+        }
+        return HTMLUtilities.convertToHtml(HtmlUtils.htmlUnescape(wiki))
     }
 }
