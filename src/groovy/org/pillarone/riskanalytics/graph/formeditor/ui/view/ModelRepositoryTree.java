@@ -101,6 +101,38 @@ public class ModelRepositoryTree extends ULCBoxPane {
         }
     }
 
+    private class RenameModelAction implements IActionListener {
+
+        GraphPersistenceService fPersistenceService;
+
+        public void actionPerformed(ActionEvent actionEvent) {
+            TreePath treePath = fTree.getSelectionModel().getSelectionPath();
+            Object selectedNode = treePath.getLastPathComponent();
+            if (selectedNode instanceof ModelRepositoryTreeNode) {
+                final String modelName = ((ModelRepositoryTreeNode) selectedNode).getName();
+                final String packageName = ((ModelRepositoryTreeNode) selectedNode).getPackageName();
+                try {
+                    final AbstractGraphModel graphModel = getPersistenceService().load(modelName, packageName);
+                    new ModelRenameDialog(graphModel, fTree, (ModelRepositoryTreeNode) selectedNode).setVisible(true);
+
+                } catch (Exception ex) {
+                    ULCAlert alert = new ULCAlert("Model could not be deleted", "Reason: " + ex.getMessage(), "ok");
+                    LOG.error("Model could not be deleted", ex);
+                    alert.show();
+                }
+            }
+
+        }
+
+        private GraphPersistenceService getPersistenceService() {
+            if (fPersistenceService == null) {
+                org.springframework.context.ApplicationContext ctx = ApplicationHolder.getApplication().getMainContext();
+                fPersistenceService = ctx.getBean(GraphPersistenceService.class);
+            }
+            return fPersistenceService;
+        }
+    }
+
     private class CellRenderer extends DefaultTreeCellRenderer {
         private ULCPopupMenu fNodePopUpMenu;
         private ULCMenuItem fShowComponentMenuItem;
@@ -116,6 +148,10 @@ public class ModelRepositoryTree extends ULCBoxPane {
             fDeleteMenuItem = new ULCMenuItem("delete");
             fDeleteMenuItem.addActionListener(new DeleteModelAction());
             fNodePopUpMenu.add(fDeleteMenuItem);
+            ULCMenuItem renameMenuItem = new ULCMenuItem("rename");
+            renameMenuItem.addActionListener(new RenameModelAction());
+            fNodePopUpMenu.add(renameMenuItem);
+
         }
 
         public IRendererComponent getTreeCellRendererComponent(ULCTree tree, Object node, boolean selected, boolean expanded, boolean leaf, boolean hasFocus) {

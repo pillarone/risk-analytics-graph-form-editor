@@ -7,9 +7,9 @@ import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 /**
  */
 public class ModelRepositoryTreeNode extends DefaultMutableTreeNode {
+
     String fName = null;
     String fPackageName = null;
-    static final String PATHSEP = "\\.";
 
     public ModelRepositoryTreeNode(String path, String name) {
         super(path);
@@ -24,7 +24,7 @@ public class ModelRepositoryTreeNode extends DefaultMutableTreeNode {
     }
 
     public String toString() {
-        return fName;
+        return fPackageName + "." + fName;
     }
 
     public String getName() {
@@ -33,5 +33,13 @@ public class ModelRepositoryTreeNode extends DefaultMutableTreeNode {
 
     public String getPackageName() {
         return fPackageName;
+    }
+
+    public void setName(String fName) {
+        this.fName = fName;
+    }
+
+    public void setPackageName(String fPackageName) {
+        this.fPackageName = fPackageName;
     }
 }
