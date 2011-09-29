@@ -107,7 +107,7 @@ public abstract class AbstractComponentDefinitionTree extends ULCBoxPane impleme
         fTree.getSelectionModel().addTreeSelectionListener(new ITreeSelectionListener() {
             public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
                 TypeTreeNode lastPathComponent = (TypeTreeNode) fTree.getSelectionModel().getSelectionPath().getLastPathComponent();
-                if (lastPathComponent != null) {
+                if (lastPathComponent != null && lastPathComponent.isLeaf()) {
                     ComponentDefinition definition = PaletteService.getInstance().getComponentDefinition(lastPathComponent.getFullName());
                     IHelpViewable helpView = fParent.getHelpView();
                     if (helpView != null) {
