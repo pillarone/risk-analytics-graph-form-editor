@@ -14,7 +14,6 @@ import com.ulcjava.base.application.tabletree.ULCTableTreeColumn
 import com.ulcjava.base.application.tree.TreePath
 import com.ulcjava.base.application.tree.ULCTreeSelectionModel
 import com.ulcjava.base.application.util.Dimension
-import com.ulcjava.base.application.util.KeyStroke
 import com.ulcjava.base.shared.UlcEventConstants
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.NoneComponentNodeFilter
@@ -23,12 +22,12 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.FilteringTableTreeModel
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.GraphElementNode
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodesTableTreeModel
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities
 import com.ulcjava.base.application.*
 import com.ulcjava.base.application.event.*
 import org.pillarone.riskanalytics.graph.core.graph.model.*
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
 
 /**
  *
@@ -37,6 +36,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
 
     AbstractGraphModel fGraphModel;
     FilteringTableTreeModel fTableModel;
+    TreePath fRootPath;
     ApplicationContext fApplicationContext;
     List<ISelectionListener> fSelectionListeners;
     boolean fExternalSelection;
@@ -56,6 +56,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         this.createDefaultColumnsFromModel()
         ClientContext.setModelUpdateMode(fTableModel, UlcEventConstants.SYNCHRONOUS_MODE)
 
+        fRootPath = new TreePath((GraphElementNode) fTableModel.getRoot())
         this.setShowGrid(true)
         int width = ClientContext.getScreenWidth()
         int height = ClientContext.getScreenHeight()
@@ -113,6 +114,20 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
                 } else {
                     fExternalSelection = false;
                 }
+            }
+        })
+
+        getModel().addTableTreeModelListener(new ITableTreeModelListener() {
+            void tableTreeStructureChanged(TableTreeModelEvent tableTreeModelEvent) {
+            }
+            void tableTreeNodeStructureChanged(TableTreeModelEvent tableTreeModelEvent) {
+            }
+            void tableTreeNodesInserted(TableTreeModelEvent tableTreeModelEvent) {
+                expandPath(fRootPath)
+            }
+            void tableTreeNodesRemoved(TableTreeModelEvent tableTreeModelEvent) {
+            }
+            void tableTreeNodesChanged(TableTreeModelEvent tableTreeModelEvent) {
             }
         })
     }
