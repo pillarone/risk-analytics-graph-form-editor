@@ -8,10 +8,12 @@ import com.ulcjava.base.application.ULCWindow;
 import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.util.KeyStroke;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
+import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.NodeFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
+import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 
 
 public class NodeEditDialog extends ULCDialog {
@@ -72,12 +74,15 @@ public class NodeEditDialog extends ULCDialog {
         // ok
         IActionListener action = new IActionListener() {
             public void actionPerformed(ActionEvent event) {
-                if (!validate()) return;
                 NodeBean bean = fBeanForm.getModel().getBean();
+                if (fBeanForm.getModel().hasErrors()) return;
                 if (fEditedNode != null) {
-                    if (!fEditedNode.getName().equals(bean.getName())) {
-                        firePathChanged(fEditedNode.getName(), bean.getName());
-                        fGraphModel.changeNodeProperty(fEditedNode, "name", fEditedNode.getName(), bean.getName());
+                    String technicalName = UIUtils.formatTechnicalName(bean.getName(), ComponentNode.class, fGraphModel instanceof ComposedComponentGraphModel);
+                    if (!fEditedNode.getName().equals(technicalName)) {
+                        String oldPath = GraphModelUtilities.getPath(fEditedNode, fGraphModel);
+                        String newPath = oldPath.substring(0, oldPath.lastIndexOf(fEditedNode.getName()))+technicalName;
+                        adjustWatches(oldPath, newPath);
+                        fGraphModel.changeNodeProperty(fEditedNode, "name", fEditedNode.getName(), technicalName);
                     }
                     if (!fEditedNode.getType().getTypeClass().getName().equals(bean.getComponentType())) {
                         ComponentDefinition newType = PaletteService.getInstance().getComponentDefinition(bean.getComponentType());
@@ -100,21 +105,12 @@ public class NodeEditDialog extends ULCDialog {
                     }
                 } else {
                     ComponentDefinition definition = PaletteService.getInstance().getComponentDefinition(bean.getComponentType());
-                    ComponentNode newNode = fGraphModel.createComponentNode(definition, bean.getName());
+                    String technicalName = UIUtils.formatTechnicalName(bean.getName(), ComponentNode.class, fGraphModel instanceof ComposedComponentGraphModel);
+                    ComponentNode newNode = fGraphModel.createComponentNode(definition, technicalName);
                     newNode.setComment(bean.getComment());
                     newNode.setRectangle(bean.getPosition());
                 }
                 setVisible(false);
-            }
-
-            private boolean validate() {
-                if (fBeanForm.getModel().hasErrors()) return false;
-                if (fGraphModel instanceof ComposedComponentGraphModel) {
-                    if (!fBeanForm.getModel().getBean().getName().startsWith("sub")) {
-                        return false;
-                    }
-                }
-                return true;
             }
         };
         fBeanForm.addSaveActionListener(action);
@@ -144,7 +140,7 @@ public class NodeEditDialog extends ULCDialog {
         this.fWatchList = watchList;
     }
 
-    public void firePathChanged(String oldPath, String newPath) {
+    public void adjustWatches(String oldPath, String newPath) {
         if (fWatchList != null) {
             fWatchList.editWatch(oldPath, newPath);
         }

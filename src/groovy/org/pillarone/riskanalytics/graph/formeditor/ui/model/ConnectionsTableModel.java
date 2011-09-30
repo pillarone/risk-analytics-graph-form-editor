@@ -7,8 +7,7 @@ import com.ulcjava.base.application.table.AbstractTableModel;
 import com.ulcjava.base.application.table.ITableModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.GraphElementNode;
-import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
+import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -100,9 +99,9 @@ public class ConnectionsTableModel extends AbstractTableModel implements ITableM
         Connection c = getFilteredConnectionList().get(row);
         switch (column) {
             case FROMID:
-                return GraphModelUtilities.getPortName(c.getFrom());
+                return UIUtils.getConnectionEntryName(c.getFrom());
             case TOID:
-                return GraphModelUtilities.getPortName(c.getTo());
+                return UIUtils.getConnectionEntryName(c.getTo());
             default:
                 return null;
         }

@@ -8,6 +8,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.Port;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ConnectionBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.ConnectionForm;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
+import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
 /**
  * Model underlying the input form ({@link ConnectionForm}) for connections.
@@ -36,8 +37,8 @@ public class ConnectionFormModel extends FormModel<ConnectionBean> {
             String from = bean.getFrom();
             String to = bean.getTo();
             if (from != null && to != null) {
-                Port pFrom = GraphModelUtilities.getPortFromName(from, fGraphModel);
-                Port pTo = GraphModelUtilities.getPortFromName(to, fGraphModel);
+                Port pFrom = UIUtils.getPortFromConnectionEntryName(from, fGraphModel, false);
+                Port pTo = UIUtils.getPortFromConnectionEntryName(to, fGraphModel, true);
                 if (pFrom == null || pTo == null
                         || !pTo.getPacketType().isAssignableFrom(pFrom.getPacketType())) {
                     ErrorObject error = new ErrorObject("Packet types do not match!", null);

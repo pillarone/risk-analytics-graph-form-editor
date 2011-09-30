@@ -6,6 +6,7 @@ import com.ulcjava.base.application.tabletree.ITableTreeModel
 import com.ulcjava.base.application.tabletree.AbstractTableTreeModel
 import java.util.Map.Entry
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities
+import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils
 
 /**
  *
@@ -63,7 +64,7 @@ class SimulationResultDataTreeModel extends AbstractTableTreeModel  implements I
             }
             throw new RuntimeException("Child not found.")
         }
-        Object getValueAt(int column) { return column==0 ? id : "" }
+        Object getValueAt(int column) { return column==0 ? UIUtils.formatDisplayName((String)id) : "" }
         boolean isLeaf() { return false }
         void addChild(def id, ITableTreeNode child) {
             children[id] = child
@@ -110,7 +111,7 @@ class SimulationResultDataTreeModel extends AbstractTableTreeModel  implements I
     }
 
     private ParentNode getNode(String path) {
-        String[] pathElements = path.split(GraphModelUtilities.PATHSEP)
+        String[] pathElements = GraphModelUtilities.getPathElements(path)
         ParentNode node = fRoot
         pathElements[0..-1].each { name ->
             node = getNode(node, name)

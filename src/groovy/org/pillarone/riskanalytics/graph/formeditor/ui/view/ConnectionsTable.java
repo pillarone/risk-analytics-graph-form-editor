@@ -16,6 +16,7 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ConnectionBea
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ReplicationBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
+import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -147,21 +148,23 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
             Connection selectedConnection = getSelectedConnections().get(0);
             if (!selectedConnection.isReplicatingConnection()) {
                 ConnectionEditDialog dialog = new ConnectionEditDialog(UlcUtilities.getWindowAncestor(this), fGraphModel);
+                dialog.setVisible(true);
                 ConnectionBean bean = dialog.getBeanForm().getModel().getBean();
-                bean.setFrom(GraphModelUtilities.getPortName(selectedConnection.getFrom()));
-                bean.setFrom(GraphModelUtilities.getPortName(selectedConnection.getTo()));
+                bean.setFrom(UIUtils.getConnectionEntryName(selectedConnection.getFrom()));
+                bean.setTo(UIUtils.getConnectionEntryName(selectedConnection.getTo()));
             } else {
                 ReplicationEditDialog dialog = new ReplicationEditDialog(UlcUtilities.getWindowAncestor(this), (ComposedComponentGraphModel) fGraphModel);
                 dialog.setVisible(true);
                 ReplicationBean bean = dialog.getBeanForm().getModel().getBean();
-                String fromPortName = GraphModelUtilities.getPortName(selectedConnection.getFrom());
-                String toPortName = GraphModelUtilities.getPortName(selectedConnection.getTo());
-                if (fromPortName.split(".").length == 1) {
-                    bean.setInner(toPortName);
-                    bean.setOuter(fromPortName);
+                String fromDisplayName = UIUtils.getConnectionEntryName(selectedConnection.getFrom());
+                String toDisplayName = UIUtils.getConnectionEntryName(selectedConnection.getTo());
+                boolean isReplicatingInConnection = selectedConnection.getFrom().isComposedComponentOuterPort();
+                if (isReplicatingInConnection) {
+                    bean.setInner(toDisplayName);
+                    bean.setOuter(fromDisplayName);
                 } else {
-                    bean.setInner(fromPortName);
-                    bean.setOuter(toPortName);
+                    bean.setInner(fromDisplayName);
+                    bean.setOuter(toDisplayName);
                 }
             }
         }

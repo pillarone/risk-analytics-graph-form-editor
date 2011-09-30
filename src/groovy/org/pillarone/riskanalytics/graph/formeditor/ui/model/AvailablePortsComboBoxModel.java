@@ -5,6 +5,7 @@ import com.ulcjava.base.application.event.IListDataListener;
 import com.ulcjava.base.application.event.ListDataEvent;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
+import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,15 +21,15 @@ public class AvailablePortsComboBoxModel implements IComboBoxModel {
     private AbstractGraphModel fGraphModel = null;
     private List<Port> availablePorts = null;
     private Port selectedPort = null;
-    private static Comparator<Port> PORTCOMPARATOR = null;
+    private static Comparator<Port> PORT_COMPARATOR = null;
     private int portsToInclude = ALL;
     private List<IListDataListener> fListDataListeners;
 
     static {
-        PORTCOMPARATOR = new Comparator<Port>() {
+        PORT_COMPARATOR = new Comparator<Port>() {
             public int compare(Port p1, Port p2) {
-                String port1Name = GraphModelUtilities.getPortName(p1);
-                String port2Name = GraphModelUtilities.getPortName(p2);
+                String port1Name = UIUtils.getConnectionEntryName(p1);
+                String port2Name = UIUtils.getConnectionEntryName(p2);
                 return port1Name.compareTo(port2Name);
             }
         };
@@ -59,7 +60,7 @@ public class AvailablePortsComboBoxModel implements IComboBoxModel {
     }
 
     public Object getElementAt(int index) {
-        return GraphModelUtilities.getPortName(availablePorts.get(index));
+        return UIUtils.getConnectionEntryName(availablePorts.get(index));
     }
 
     public void addListDataListener(IListDataListener listener) {
@@ -78,14 +79,20 @@ public class AvailablePortsComboBoxModel implements IComboBoxModel {
     public void setSelectedItem(Object anItem) {
         if (anItem instanceof String) {
             String name = (String) anItem;
-            selectedPort = GraphModelUtilities.getPortFromName(name, fGraphModel);
+            selectedPort = UIUtils.getPortFromConnectionEntryName(name, fGraphModel, true);
+            if (selectedPort == null) {
+                selectedPort = UIUtils.getPortFromConnectionEntryName(name, fGraphModel, false);
+            }
         } else if (anItem instanceof Port) {
             selectedPort = (Port) anItem;
         }
     }
 
     public Object getSelectedItem() {
-        return GraphModelUtilities.getPortName(selectedPort);
+        if (selectedPort != null) {
+            return UIUtils.getConnectionEntryName(selectedPort);
+        }
+        return null;
     }
 
     public Port getSelectedPort() {
@@ -156,7 +163,7 @@ public class AvailablePortsComboBoxModel implements IComboBoxModel {
 
     private static void sortPortList(List<Port> ports) {
         if (ports != null) {
-            Collections.sort(ports, PORTCOMPARATOR);
+            Collections.sort(ports, PORT_COMPARATOR);
         }
     }
 

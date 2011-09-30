@@ -143,12 +143,12 @@ class ProbeSimulationService extends SimulationRunner {
             List<PacketCollector> collectors = []
             component.outPorts?.each { outPort ->
                 PacketCollector collector = new ProbePacketCollector(fSimulationScope)
-                collector.path = path+":"+outPort.name
+                collector.path = path+GraphModelUtilities.PATHSEP+outPort.name
                 collectors << collector
             }
             if (component instanceof ComposedComponentNode) {
                 ((ComposedComponentNode)component).componentGraph.allComponentNodes.each { subComponent ->
-                    getCollectors(subComponent, path+":"+subComponent.name).each { collector ->
+                    getCollectors(subComponent, path+GraphModelUtilities.PATHSEP+subComponent.name).each { collector ->
                         collectors << collector
                     }
                 }
@@ -167,7 +167,7 @@ class ProbeSimulationService extends SimulationRunner {
         }
 
         public attachToModel(Model model, StructureInformation structureInformation) {
-            def pathElements = path.split("\\:")
+            def pathElements = path.split(GraphModelUtilities.PATHSEP_RESOLVE)
             def sender = model
             pathElements[0..-2].each {propertyName ->
                 if (sender.properties.containsKey(propertyName)) {

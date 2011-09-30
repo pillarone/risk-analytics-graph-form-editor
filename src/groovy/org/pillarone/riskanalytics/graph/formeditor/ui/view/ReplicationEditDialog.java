@@ -14,6 +14,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.Port;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ReplicationFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ReplicationBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
+import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
 
 public class ReplicationEditDialog extends ULCDialog {
@@ -53,13 +54,18 @@ public class ReplicationEditDialog extends ULCDialog {
             public void actionPerformed(ActionEvent event) {
                 if(fBeanForm.getModel().hasErrors()) return;
                 ReplicationBean bean = (ReplicationBean) fBeanForm.getModel().getBean();
-                Port inner = GraphModelUtilities.getPortFromName(bean.getInner(), fGraphModel);
+                Port inner = UIUtils.getPortFromConnectionEntryName(bean.getInner(), fGraphModel, true);
+                if (inner == null) {
+                    inner = UIUtils.getPortFromConnectionEntryName(bean.getInner(), fGraphModel, false);
+                }
                 Class<? extends Packet> packetClass = inner.getPacketType();
                 if (inner instanceof InPort) {
-                    Port replica = fGraphModel.createOuterInPort(packetClass, bean.getOuter());
+                    String technicalName = org.pillarone.riskanalytics.graph.core.graph.util.UIUtils.formatTechnicalPortName(bean.getOuter(), true);
+                    Port replica = fGraphModel.createOuterInPort(packetClass, technicalName);
                     fGraphModel.createConnection(replica, inner);
                 } else {
-                    Port replica = fGraphModel.createOuterOutPort(packetClass, bean.getOuter());
+                    String technicalName = org.pillarone.riskanalytics.graph.core.graph.util.UIUtils.formatTechnicalPortName(bean.getOuter(), false);
+                    Port replica = fGraphModel.createOuterOutPort(packetClass, technicalName);
                     fGraphModel.createConnection(inner, replica);
                 }
                 setVisible(false);

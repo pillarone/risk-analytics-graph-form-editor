@@ -4,7 +4,7 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.model.beans;
 import java.awt.*;
 
 public class NodeBean {
-    private String name;
+    private String name; // display name
     private String componentType;
     private String comment;
     private boolean starter;

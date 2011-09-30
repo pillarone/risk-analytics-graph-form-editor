@@ -4,6 +4,7 @@ import com.ulcjava.applicationframework.application.form.model.FormModel;
 import com.ulcjava.applicationframework.application.form.model.IValidator;
 import com.ulcjava.applicationframework.application.form.model.PropertyValidator;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
+import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.checkers.PropertySpellChecker;
 
@@ -35,7 +36,8 @@ public class PortNameFormModel extends FormModel<NameBean> {
      */
     @Override
     protected IValidator[] createValidators() {
-        return new IValidator[]{new PropertySpellChecker("name"), new AvailabilityChecker(), new PortTypeChecker()};
+        return new IValidator[]{new PropertySpellChecker("name"), new AvailabilityChecker()};
+        // return new IValidator[]{new PropertySpellChecker("name"), new AvailabilityChecker(), new PortTypeChecker()};
     }
 
     /**
@@ -52,21 +54,23 @@ public class PortNameFormModel extends FormModel<NameBean> {
         /**
          */
         public String validateValue(String value) {
+            String technicalName = UIUtils.formatTechnicalPortName(value, true);
             for (InPort p : fGraphModel.getOuterInPorts()) {
-                if (p.getName().equals(value)) {
-                    return "Name already " + value + " already exists.";
+                if (p.getName().equals(technicalName)) {
+                    return "Name already exists.";
                 }
             }
+            technicalName = UIUtils.formatTechnicalPortName(value, false);
             for (OutPort p : fGraphModel.getOuterOutPorts()) {
-                if (p.getName().equals(value)) {
-                    return "Name already " + value + " already exists.";
+                if (p.getName().equals(technicalName)) {
+                    return "Name already exists.";
                 }
             }
             return null;
         }
     }
 
-    private class PortTypeChecker extends PropertyValidator<String> {
+/*    private class PortTypeChecker extends PropertyValidator<String> {
 
         public PortTypeChecker() {
             super("name");
@@ -79,5 +83,5 @@ public class PortNameFormModel extends FormModel<NameBean> {
                 return "Not valid Name";
             return null;
         }
-    }
+    }*/
 }

@@ -14,6 +14,12 @@ import aTest.BTestComponent
 
 
 class ComponentTypeTreeTests extends AbstractSimpleStandaloneTestCase {
+    @Override
+    protected void setUp() {
+        super.setUp()    //To change body of overridden methods use File | Settings | File Templates.
+    }
+
+
 
     void start() {
 

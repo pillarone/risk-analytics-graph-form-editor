@@ -8,6 +8,7 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.SimpleTab
 import org.pillarone.riskanalytics.graph.core.graph.model.*
 import org.pillarone.riskanalytics.graph.formeditor.examples.*
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodesTableTreeModel
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.FilteringTableTreeModel
 
 class NodesTableTreeModelTest extends GroovyTestCase {
 
@@ -63,9 +64,9 @@ class NodesTableTreeModelTest extends GroovyTestCase {
         assertTrue root.childCount == 5
         SimpleTableTreeNode ccNode = root.getChildByName("cc")
 
-        SimpleTableTreeNode c1 = ccNode.getChildByName("Component1")
+        SimpleTableTreeNode c1 = ccNode.getChildByName("subComponent1")
         assert c1.childCount == 4
-        SimpleTableTreeNode c2 = ccNode.getChildByName("Component2")
+        SimpleTableTreeNode c2 = ccNode.getChildByName("subComponent2")
         assert c2.childCount == 4
 
         tableModel.removeChild(root, freqNode)
@@ -74,27 +75,20 @@ class NodesTableTreeModelTest extends GroovyTestCase {
         assertTrue root.getIndex(freqNode)==-1
     }
 
-    // TODO once the GraphModelChangeListener has been re-organized...
     /*public void testWithListener() {
         ModelGraphModel model = getModel()
         NodesTableTreeModel tableModel = new NodesTableTreeModel(null, model)
-        model.addGraphModelChangeListener tableModel
+        FilteringTableTreeModel filteringTableModel = new FilteringTableTreeModel(tableModel, null)
 
+        GraphElementNode root = filteringTableModel.getRoot()
         ComponentNode cc = model.createComponentNode(new ComponentDefinition(typeClass: TestComposedComponent.class), "cc")
-        tableModel.addChild(root, cc)
         assertTrue root.childCount == 5
         SimpleTableTreeNode ccNode = root.getChildByName("cc")
 
-        SimpleTableTreeNode c1 = ccNode.getChildByName("Component1")
+        SimpleTableTreeNode c1 = ccNode.getChildByName("subComponent1")
         assert c1.childCount == 4
-        SimpleTableTreeNode c2 = ccNode.getChildByName("Component2")
+        SimpleTableTreeNode c2 = ccNode.getChildByName("subComponent2")
         assert c2.childCount == 4
-
-        tableModel.removeChild(root, freqNode)
-        assertTrue root.childCount==4
-        assertFalse root.children.contains(freqNode)
-        assertTrue root.getIndex(freqNode)==-1
-
     }*/
 
 }

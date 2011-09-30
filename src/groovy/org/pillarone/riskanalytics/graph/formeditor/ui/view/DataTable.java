@@ -38,6 +38,7 @@ public class DataTable extends ULCBoxPane implements ISelectionListener, ISaveLi
         fGraphModel.addGraphModelChangeListener(fTableModel);
         createView();
         addCellEditorsAndRenderers();
+        ClientContext.setModelUpdateMode(fTableModel, UlcEventConstants.SYNCHRONOUS_MODE);
     }
 
     public DataTable(AbstractGraphModel model, Parameterization parametrization) {
@@ -47,6 +48,7 @@ public class DataTable extends ULCBoxPane implements ISelectionListener, ISaveLi
         fGraphModel.addGraphModelChangeListener(fTableModel);
         createView();
         addCellEditorsAndRenderers();
+        ClientContext.setModelUpdateMode(fTableModel, UlcEventConstants.SYNCHRONOUS_MODE);
     }
 
     public void createView() {

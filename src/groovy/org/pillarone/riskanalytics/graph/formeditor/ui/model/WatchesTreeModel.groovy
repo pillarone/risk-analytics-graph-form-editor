@@ -6,13 +6,13 @@ import com.ulcjava.base.application.tabletree.ITableTreeNode
 import com.ulcjava.base.application.tree.TreePath
 import java.util.Map.Entry
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.IWatchList
+import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils
 
 /**
  *
  */
 class WatchesTreeModel extends AbstractTableTreeModel implements ITableTreeModel, IWatchList {
 
-    private static final String PATHSEP = ':'
     private ParentNode fRoot
     private List<String> fPeriodLabels
 
@@ -48,8 +48,8 @@ class WatchesTreeModel extends AbstractTableTreeModel implements ITableTreeModel
         if (fRoot && fRoot.children) {
             Map watchesToEdit = fRoot.children.findAll {entry -> ((String) entry.key).startsWith(oldPath)}
             watchesToEdit.keySet().each {String watchOldPath ->
-                String suffixPath = watchOldPath.substring(watchOldPath.indexOf(PATHSEP))
-                addWatch(newPath +suffixPath)
+                String suffixPath = watchOldPath.substring(oldPath.length())
+                addWatch(newPath + suffixPath)
                 removeWatch(watchOldPath)
             }
         }
@@ -112,11 +112,13 @@ class WatchesTreeModel extends AbstractTableTreeModel implements ITableTreeModel
 
     class ParentNode implements ITableTreeNode {
         def id
+        String displayName
         Map<Object, ITableTreeNode> children = [:]
         ParentNode parent;
 
         ParentNode(def nodeName, ParentNode parent) {
             this.id = nodeName
+            this.displayName = UIUtils.getWatchesDisplayName((String)nodeName)
             this.parent = parent
         }
 
@@ -137,7 +139,7 @@ class WatchesTreeModel extends AbstractTableTreeModel implements ITableTreeModel
             throw new RuntimeException("Child not found.")
         }
 
-        Object getValueAt(int column) { return column == 0 ? id : "" }
+        Object getValueAt(int column) { return column == 0 ? displayName : "" }
 
         boolean isLeaf() { return false }
 

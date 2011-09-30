@@ -16,13 +16,15 @@ import org.pillarone.riskanalytics.graph.core.graph.model.*
 import models.core.CoreModel
 import org.pillarone.riskanalytics.core.model.Model
 import org.pillarone.riskanalytics.graph.core.item.GraphParameterization
+import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils
+import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities
 
 /**
  *
  */
 class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelChangeListener {
 
-    static final String PATHSEP = ':'
+    static final String PATHSEP = GraphModelUtilities.PATHSEP
     private DataTreeComponentNode fRoot
     private Parameterization fParametrization
 
@@ -261,9 +263,11 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
             DataTreeComponentNode treeNode = (DataTreeComponentNode) getDataTreeNode(node)
             String oldName = treeNode.name
             treeNode.name = newValue
-            String oldPath = treeNode.path.substring(0, treeNode.path.lastIndexOf(oldName))
-            String newPath = oldPath + newValue
+            String oldPath = treeNode.path
+            String prefix = treeNode.path.substring(0, treeNode.path.lastIndexOf(oldName))
+            String newPath = prefix + newValue
             treeNode.path = newPath
+            treeNode.displayName = UIUtils.formatDisplayName(treeNode.name)
             List<DataTreeParameterNode> leaves = getAllLeaves(treeNode)
             leaves.each { leaf ->
                 String leafPath = leaf.path
@@ -274,7 +278,7 @@ class DataTableTreeModel extends AbstractTableTreeModel implements IGraphModelCh
                     }
                 }
             }
-            nodeChanged(new TreePath([fRoot, treeNode] as Object[]), 0)
+            nodeChanged(new TreePath([fRoot, treeNode] as Object[]))
         } else if (propertyName == "type") {
             nodeRemoved(node)
             nodeAdded(node)
@@ -400,6 +404,7 @@ public interface IDataTreeNode extends IMutableTableTreeNode {
 class DataTreeParameterNode implements IDataTreeNode {
     String path
     String name
+    String displayName
     DataTreeComponentNode parentNode
     Object paramObject
     Class type
@@ -407,6 +412,7 @@ class DataTreeParameterNode implements IDataTreeNode {
 
     DataTreeParameterNode(String path, Object paramObject, DataTreeComponentNode parent) {
         this.name = path.substring(path.lastIndexOf(DataTableTreeModel.PATHSEP) + 1)
+        this.displayName = UIUtils.formatDisplayName(this.name)
         this.path = path
         this.parentNode = parent
         this.paramObject = paramObject
@@ -438,7 +444,7 @@ class DataTreeParameterNode implements IDataTreeNode {
 
     int getIndex(ITableTreeNode child) { throw new IndexOutOfBoundsException("No children attached to this data node in the data tree.") }
 
-    Object getValueAt(int column) { return column == 0 ? name : parameters.get(column - 1).getBusinessObject() }
+    Object getValueAt(int column) { return column == 0 ? displayName : parameters.get(column - 1).getBusinessObject() }
 
     void setValueAt(Object value, int column) {
         if (column > 0) {
@@ -455,6 +461,7 @@ class DataTreeParameterNode implements IDataTreeNode {
 class DataTreeComponentNode implements IDataTreeNode {
     String path
     String name
+    String displayName
     DataTreeComponentNode parentNode
     GraphElement graphElement
     List<IDataTreeNode> children = []
@@ -464,6 +471,7 @@ class DataTreeComponentNode implements IDataTreeNode {
 
     DataTreeComponentNode(GraphElement node, DataTreeComponentNode parent, String parentPath) {
         this.name = node.name
+        this.displayName = UIUtils.formatDisplayName(this.name)
         this.parentNode = parent
         this.path = parent == null ? "" : (parentPath.size() == 0 ? "" : parentPath + DataTableTreeModel.PATHSEP) + node.name
         graphElement = node
@@ -503,7 +511,7 @@ class DataTreeComponentNode implements IDataTreeNode {
 
     int getIndex(ITableTreeNode child) { return children.indexOf(child) }
 
-    Object getValueAt(int column) { return column == 0 ? name : "" }
+    Object getValueAt(int column) { return column == 0 ? displayName : "" }
 
     void setValueAt(Object o, int i) {
         throw new RuntimeException("Value of a non-leaf node cannot be changed.")
@@ -522,6 +530,7 @@ class DataTreePacketNode extends DataTreeComponentNode {
 
     DataTreePacketNode(Port port, DataTreeComponentNode root) {
         this.name = port.name
+        this.displayName = UIUtils.formatDisplayName(this.name)
         this.parentNode = root
         this.path = "provider_" + port.name + DataTableTreeModel.PATHSEP + "parmPacket"
         graphElement = port
@@ -560,12 +569,13 @@ class DataTreePacketFieldNode extends DataTreeParameterNode {
     DataTreePacketFieldNode(String fieldName, String packetPath, Object paramObject, DataTreePacketNode parent) {
         super(packetPath + DataTableTreeModel.PATHSEP + fieldName, paramObject, parent)
         this.name = fieldName
+        this.displayName = UIUtils.formatDisplayName(this.name)
         this.paramObject = paramObject
         this.type = paramObject.class
     }
 
     Object getValueAt(int column) {
-        return column == 0 ? name : ((DataTreePacketNode) parent).parameters.get(column - 1).getBusinessObject()."$name"
+        return column == 0 ? displayName : ((DataTreePacketNode) parent).parameters.get(column - 1).getBusinessObject()."$name"
     }
 
     void setValueAt(Object value, int column) {

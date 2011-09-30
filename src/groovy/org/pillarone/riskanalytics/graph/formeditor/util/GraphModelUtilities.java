@@ -17,6 +17,7 @@ import java.util.*;
 public class GraphModelUtilities {
 
     public static final String PATHSEP = ":";
+    public static final String PATHSEP_RESOLVE = "\\:";
 
     /**
      * Replace the given component node in the given model by a new component node with given name and type.
@@ -199,6 +200,14 @@ public class GraphModelUtilities {
             return path;
         }
         return null;
+    }
+
+    public static String[] getPathElements(String path) {
+        String[] pathElements = path.split(PATHSEP_RESOLVE);
+        for (int i = 0; i < pathElements.length; i++) {
+            pathElements[i] = pathElements[i].trim();
+        }
+        return pathElements;
     }
 
     public static List<GraphElement> getModelTreePath(GraphElement element, final AbstractGraphModel model) {

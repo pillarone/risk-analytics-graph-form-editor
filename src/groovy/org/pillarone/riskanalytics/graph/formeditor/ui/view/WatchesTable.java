@@ -1,21 +1,14 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 import com.ulcjava.base.application.*;
-import com.ulcjava.base.application.datatype.IDataType;
-import com.ulcjava.base.application.datatype.ULCNumberDataType;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.tabletree.*;
+import com.ulcjava.base.application.tabletree.DefaultTableTreeCellRenderer;
+import com.ulcjava.base.application.tabletree.ULCTableTreeColumn;
 import com.ulcjava.base.application.tree.TreePath;
-import com.ulcjava.base.application.util.Color;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.shared.UlcEventConstants;
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.IDataTreeNode;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.WatchesTreeModel;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  *
@@ -68,7 +61,7 @@ public class WatchesTable extends ULCBoxPane {
                 TreePath[] selectedPaths = fTableTree.getSelectedPaths();
                 for (TreePath treePath : selectedPaths) {
                     if (treePath.getPathCount()==2) {
-                        String path = (String) ((ITableTreeNode) treePath.getLastPathComponent()).getValueAt(0);
+                        String path = (String) ((WatchesTreeModel.ParentNode) treePath.getLastPathComponent()).getId();
                         fTableModel.removeWatch(path);
                     }
                 }

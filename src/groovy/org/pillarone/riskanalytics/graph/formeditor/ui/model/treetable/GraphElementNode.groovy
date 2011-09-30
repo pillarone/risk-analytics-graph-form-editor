@@ -15,7 +15,6 @@ import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange
 class GraphElementNode extends SimpleTableTreeNode {
 
     GraphElement element
-    String name
     String type
     String info
     boolean isVisible
@@ -34,7 +33,7 @@ class GraphElementNode extends SimpleTableTreeNode {
     public Object getValueAt(int column) {
         switch (column) {
             case NodesTableTreeModel.NAMEID:
-                return this.name
+                return this.displayName
             case NodesTableTreeModel.TYPEID:
                 return this.type
             case NodesTableTreeModel.INFOID:
@@ -45,9 +44,6 @@ class GraphElementNode extends SimpleTableTreeNode {
     }
 
     public void updateColumnValues() {
-        // name
-        this.name = element.getDisplayName()
-
         // type
         switch (element) {
             case AbstractGraphModel:

@@ -127,7 +127,7 @@ class ModelFactory {
                 // create a provider component for that
                 for (InPort port : ccGraphModel.outerInPorts) {
                     String ppPath = "provider_"+port.name
-                    List params = parameterization.getParameters(ppPath+":parmPacket")
+                    List params = parameterization.getParameters(ppPath+GraphModelUtilities.PATHSEP+"parmPacket")
                     if ( params!= null && params.size()>0) {
                         PacketProvider provider = new PacketProvider()
                         packetProviders.put(ppPath, provider)

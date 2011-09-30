@@ -3,6 +3,7 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable
 import com.ulcjava.base.application.tabletree.IMutableTableTreeNode
 import com.ulcjava.base.application.tabletree.ITableTreeNode
 import org.pillarone.riskanalytics.core.simulation.item.parameter.comment.Comment
+import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils
 /**
  * Copied from RiskAnalyticsApplication - can be replaced once this is available in a separate, accessible plug-in
  * Commented out references to the I18NUtils and ComponentUtils.
@@ -52,17 +53,10 @@ class SimpleTableTreeNode implements IMutableTableTreeNode {
     }
 
     public String getDisplayName() {
-        if (cachedDisplayName != null)
-            return cachedDisplayName
-        String value = name
-        String displayNameValue = null //lookUp(value, "")
-        if (displayNameValue == null)
-            // displayNameValue = org.pillarone.riskanalytics.application.ui.util.I18NUtils.formatDisplayName(value)
-            displayNameValue = value
-        if (displayNameValue != null) {
-            cachedDisplayName = displayNameValue
+        if (cachedDisplayName == null)  {
+            cachedDisplayName = UIUtils.formatDisplayName(name)
         }
-        return displayNameValue
+        return cachedDisplayName
 
     }
 

@@ -28,6 +28,7 @@ import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities
 import com.ulcjava.base.application.*
 import com.ulcjava.base.application.event.*
 import org.pillarone.riskanalytics.graph.core.graph.model.*
+import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils
 
 /**
  *
@@ -217,7 +218,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
             dialog.setModal(true)
             dialog.setVisible(true)
             NodeBean bean = dialog.getBeanForm().getModel().getBean();
-            bean.setName(selectedNode.getName());
+            bean.setName(UIUtils.formatDisplayName(selectedNode.getName()));
             bean.setComponentType(selectedNode.getType().getTypeClass().getName());
             bean.setComment(selectedNode.getComment());
             if (fGraphModel instanceof ModelGraphModel) {
@@ -225,7 +226,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
             }
             dialog.getBeanForm().getModel().setEditedNode(selectedNode);
             dialog.setEditedNode(selectedNode);
-            dialog.setWatchList(fWatchList)
+            dialog.setWatchList(fWatchList) // todo eliminate this by rather using the IGraphModelChangeListener
         }
     }
 
@@ -311,7 +312,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
                     PortNameDialog dialog = new PortNameDialog(UlcUtilities.getWindowAncestor(this), ccGraphModel, p)
                     dialog.setModal(true);
                     NameBean bean = dialog.getBeanForm().getModel().getBean();
-                    bean.setName(p.getName());
+                    bean.setName(UIUtils.formatDisplayName(p.getName()));
                     dialog.setVisible(true)
                 }
             }
@@ -325,8 +326,8 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
             if (fWatchList != null) {
                 for (ComponentNode node: nodes) {
                     for (OutPort p: node.getOutPorts()) {
-                        String removedWatchPort = GraphModelUtilities.getPath(p, fGraphModel);
-                        fWatchList.removeWatch(removedWatchPort);
+                        String pathOfWatchToRemove = GraphModelUtilities.getPath(p, fGraphModel);
+                        fWatchList.removeWatch(pathOfWatchToRemove);
                     }
                 }
             }

@@ -5,6 +5,8 @@ import com.ulcjava.applicationframework.application.form.model.IValidator;
 import com.ulcjava.applicationframework.application.form.model.PropertyValidator;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
+import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.checkers.PropertySpellChecker;
 
@@ -69,16 +71,17 @@ public class NodeFormModel extends FormModel<NodeBean> {
          * hence can already occur in the given graph model.
          */
         public String validateValue(String value) {
+            String technicalName = UIUtils.formatTechnicalName(value, ComponentNode.class, fGraphModel instanceof ComposedComponentGraphModel);
             if (fEditedNode == null) {
                 for (ComponentNode n : fGraphModel.getAllComponentNodes()) {
-                    if (n.getName().equals(value)) {
-                        return "Name already " + value + " already exists.";
+                    if (n.getName().equals(technicalName)) {
+                        return "Name already exists.";
                     }
                 }
             } else {
                 for (ComponentNode n : fGraphModel.getAllComponentNodes()) {
-                    if (n != fEditedNode && n.getName().equals(value)) {
-                        return "Name already " + value + " already exists.";
+                    if (n != fEditedNode && n.getName().equals(technicalName)) {
+                        return "Name already exists.";
                     }
                 }
             }

@@ -8,6 +8,7 @@ import com.ulcjava.base.application.ULCWindow;
 import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.util.KeyStroke;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
+import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ConnectionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.PortNameFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ConnectionBean;
@@ -60,7 +61,7 @@ public class PortNameDialog extends ULCDialog {
                 Class packetType = fPort.getPacketType();
                 Port replicate = isInPort ? new InPort() : new OutPort();
                 replicate.setPacketType(packetType);
-                replicate.setName(bean.getName());
+                replicate.setName(UIUtils.formatTechnicalName(bean.getName(), Port.class, false));
                 replicate.setComposedComponentOuterPort(true);
                 fGraphModel.addOuterPort(replicate);
                 if (isInPort) {
@@ -73,8 +74,8 @@ public class PortNameDialog extends ULCDialog {
 
             private boolean validate() {
                 if (fBeanForm.getModel().hasErrors()) return false;
-                if (Port.IN_PORT_PREFIX.equals(fBeanForm.getModel().getBean().getName())) return false;
-                if (Port.OUT_PORT_PREFIX.equals(fBeanForm.getModel().getBean().getName())) return false;
+                //if (Port.IN_PORT_PREFIX.equals(fBeanForm.getModel().getBean().getName())) return false;
+                //if (Port.OUT_PORT_PREFIX.equals(fBeanForm.getModel().getBean().getName())) return false;
                 return true;
             }
         };

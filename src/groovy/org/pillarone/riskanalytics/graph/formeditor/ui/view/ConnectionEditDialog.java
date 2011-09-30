@@ -12,6 +12,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.Port;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ConnectionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ConnectionBean;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
+import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
 
 public class ConnectionEditDialog extends ULCDialog {
@@ -51,8 +52,8 @@ public class ConnectionEditDialog extends ULCDialog {
         fBeanForm.addSaveActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 ConnectionBean bean = (ConnectionBean) fBeanForm.getModel().getBean();
-                Port from = GraphModelUtilities.getPortFromName(bean.getFrom(), fGraphModel);
-                Port to = GraphModelUtilities.getPortFromName(bean.getTo(), fGraphModel);
+                Port from = UIUtils.getPortFromConnectionEntryName(bean.getFrom(), fGraphModel, false);
+                Port to = UIUtils.getPortFromConnectionEntryName(bean.getTo(), fGraphModel, true);
                 if (from.allowedToConnectTo(to)) {
                     fGraphModel.createConnection(from, to);
                     setVisible(false);

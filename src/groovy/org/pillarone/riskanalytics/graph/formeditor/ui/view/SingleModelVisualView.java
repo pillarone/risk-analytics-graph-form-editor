@@ -108,9 +108,11 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         fULCGraph.addGraphElementListener(new IGraphElementListener() {
 
             public void vertexGeometryChanged(Vertex vertex) {
-                final ComponentNode node = fNodesMap.get(vertex.getId());
-                final Rectangle rectangle = vertex.getRectangle();
-                node.setRectangle(new java.awt.Rectangle(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight()));
+                if (fRootVertex == null || !vertex.getId().equals(fRootVertex.getId())) {
+                    final ComponentNode node = fNodesMap.get(vertex.getId());
+                    final Rectangle rectangle = vertex.getRectangle();
+                    node.setRectangle(new java.awt.Rectangle(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight()));
+                }
             }
 
             public void edgeGeometryChanged(Edge edge) {
@@ -408,7 +410,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             dialog.setModal(true);
             dialog.setVisible(true);
             NodeBean bean = dialog.getBeanForm().getModel().getBean();
-            bean.setName(node.getName());
+            bean.setName(UIUtils.formatDisplayName(node.getName()));
             bean.setComponentType(node.getType().getTypeClass().getName());
             bean.setComment(node.getComment());
             if (fGraphModel instanceof ModelGraphModel) {
@@ -416,6 +418,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             }
             dialog.getBeanForm().getModel().setEditedNode(node);
             dialog.setEditedNode(node);
+            dialog.setWatchList(fWatchList); // todo eliminate this by rather using the IGraphModelChangeListener
         }
     }
 
@@ -447,7 +450,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 PortNameDialog dialog = new PortNameDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), ccGraphModel, graphPort);
                 dialog.setModal(true);
                 NameBean bean = dialog.getBeanForm().getModel().getBean();
-                bean.setName(graphPort.getPrefix());
+                bean.setName(UIUtils.formatDisplayName(graphPort.getName()));
                 dialog.setVisible(true);
             }
         }
@@ -538,7 +541,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                     // add the vertices
                     for (Vertex v : selectedVertices) {
                         ComponentNode node = fNodesMap.get(v.getId());
-                        ComponentNode newNode = subModel.createComponentNode(node.getType(), "sub" + node.getName());
+                        String nameInSubComponent = UIUtils.transformToSubComponentName(node.getName());
+                        ComponentNode newNode = subModel.createComponentNode(node.getType(), nameInSubComponent);
                         newNode.setComment(node.getComment());
                     }
 
@@ -551,7 +555,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                         org.pillarone.riskanalytics.graph.core.graph.model.Port originalOutPort = connection.getFrom();
                         ComponentNode originalFromNode = originalOutPort.getComponentNode();
                         if (originalFromNode != null) {
-                            ComponentNode newFromNode = subModel.findNodeByName("sub" + originalFromNode.getName());
+                            String subComponentName = UIUtils.transformToSubComponentName(originalFromNode.getName());
+                            ComponentNode newFromNode = subModel.findNodeByName(subComponentName);
                             if (newFromNode != null) {
                                 newFromPort = newFromNode.getPort(originalOutPort.getName());
                             }
@@ -560,7 +565,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                         org.pillarone.riskanalytics.graph.core.graph.model.Port originalInPort = connection.getTo();
                         ComponentNode originalToNode = originalInPort.getComponentNode();
                         if (originalToNode != null) {
-                            ComponentNode newToNode = subModel.findNodeByName("sub" + originalToNode.getName());
+                            String subComponentName = UIUtils.transformToSubComponentName(originalToNode.getName());
+                            ComponentNode newToNode = subModel.findNodeByName(subComponentName);
                             if (newToNode != null) {
                                 newToPort = newToNode.getPort(originalInPort.getName());
                             }
@@ -642,21 +648,19 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 System.out.println("No node to given vertex found: " + vertex.getTitle());
                 return null;
             }
-            String name = (ulcPort.getType().equals(PortType.IN) ? "in" : "out") + ulcPort.getTitle();
-            name = name.replaceAll(" ", "");
+            String name = UIUtils.formatTechnicalPortName(ulcPort.getTitle(), ulcPort.getType().equals(PortType.IN));
             return node.getPort(name);
         } else {
             ComposedComponentGraphModel ccModel = (ComposedComponentGraphModel) fGraphModel;
             if (ulcPort.getType().equals(PortType.REPLICATE_IN)) {
-                String name = "in" + ulcPort.getTitle();
-                name = name.replaceAll(" ", "");
+                String name = UIUtils.formatTechnicalPortName(ulcPort.getTitle(), true);
                 for (InPort graphPort : ccModel.getOuterInPorts()) {
                     if (graphPort.getName().equalsIgnoreCase(name)) {
                         return graphPort;
                     }
                 }
             } else if (ulcPort.getType().equals(PortType.REPLICATE_OUT)) {
-                String name = "out" + ulcPort.getTitle();
+                String name = UIUtils.formatTechnicalPortName(ulcPort.getTitle(), false);
                 for (OutPort graphPort : ccModel.getOuterOutPorts()) {
                     if (graphPort.getName().equalsIgnoreCase(name)) {
                         return graphPort;
@@ -879,8 +883,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         Iterator<Port> it = fRootVertex.getPorts().iterator();
         while (ulcPort == null && it.hasNext()) {
             Port p0 = it.next();
-            String name = (p0.getType().equals(PortType.REPLICATE_IN) ? "in" : "out") + p0.getTitle();
-            name = name.replaceAll(" ", "");
+            String name = UIUtils.formatTechnicalPortName(p0.getTitle(), p0.getType().equals(PortType.REPLICATE_IN));
             if (p.getName().equalsIgnoreCase(name)) {
                 ulcPort = p0;
             }
@@ -927,17 +930,17 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             if (fNodesMap.containsKey(vertex.getId())) {
                 ComponentNode node = fNodesMap.get(vertex.getId());
 
-                removeNodeWatches(node);
+                removeWatches(node);
                 fGraphModel.removeComponentNode(node);
             }
         }
 
-        private void removeNodeWatches(ComponentNode node) {
+        private void removeWatches(ComponentNode node) {
             if (fWatchList != null) {
                 for (OutPort p : node.getOutPorts()) {
-                    String removedWatchPort = GraphModelUtilities.getPath(p, fGraphModel);
-                    if (removedWatchPort != null)
-                        fWatchList.removeWatch(removedWatchPort);
+                    String pathOfWatchToRemove = GraphModelUtilities.getPath(p, fGraphModel);
+                    if (pathOfWatchToRemove != null)
+                        fWatchList.removeWatch(pathOfWatchToRemove);
                 }
             }
         }

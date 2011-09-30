@@ -74,9 +74,9 @@ class GraphElementTreeBuilderTest extends GroovyTestCase {
         SimpleTableTreeNode cc = root.getChildByName("cc")
         assert cc.childCount == 6
 
-        SimpleTableTreeNode c1 = cc.getChildByName("Component1")
+        SimpleTableTreeNode c1 = cc.getChildByName("subComponent1")
         assert c1.childCount == 4
-        SimpleTableTreeNode c2 = cc.getChildByName("Component2")
+        SimpleTableTreeNode c2 = cc.getChildByName("subComponent2")
         assert c2.childCount == 4
 
     }
@@ -103,7 +103,7 @@ class GraphElementTreeBuilderTest extends GroovyTestCase {
 
         SimpleTableTreeNode outFreq = root.getChildByName("frequency")
         assert outFreq.childCount == 0
-        SimpleTableTreeNode extClaims = root.getChildByName("external claims")
+        SimpleTableTreeNode extClaims = root.getChildByName("externalClaims")
         assert extClaims.childCount == 0
 
     }

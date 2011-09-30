@@ -56,10 +56,10 @@ class ParameterUtilities {
             if (key.startsWith("components")) {
                 String path = key - "components."
                 path = path.replace(".",":")
-                String lastElement = path.substring(path.lastIndexOf(":")+1)
+                String lastElement = path.substring(path.lastIndexOf(GraphModelUtilities.PATHSEP)+1)
                 try {
                     period = Integer.parseInt(lastElement)
-                    path = path.substring(0,path.lastIndexOf(":"))
+                    path = path.substring(0,path.lastIndexOf(GraphModelUtilities.PATHSEP))
                     ParameterHolder holder = ParameterHolderFactory.getHolder(path, period, value)
                     parametrization.addParameter(holder)
                 } catch (Exception ex) {
