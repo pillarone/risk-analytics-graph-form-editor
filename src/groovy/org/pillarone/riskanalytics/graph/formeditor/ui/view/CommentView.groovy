@@ -1,27 +1,15 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view
 
-import com.ulcjava.base.application.ULCBoxPane
-import com.ulcjava.base.application.ULCFiller
-import com.ulcjava.base.application.util.Color
-import com.ulcjava.base.application.util.HTMLUtilities
+import com.ulcjava.base.application.event.ActionEvent
+import com.ulcjava.base.application.event.IActionListener
+import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
-import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils
-import com.ulcjava.base.application.ULCTextArea
-import com.ulcjava.base.application.ULCCardPane
-import com.ulcjava.base.application.ULCRadioButton
-import com.ulcjava.base.application.ULCButton
-import com.ulcjava.base.application.event.IActionListener
-import com.ulcjava.base.application.event.ActionEvent
-import com.ulcjava.base.application.BorderFactory
-import com.ulcjava.base.application.ULCButtonGroup
-import com.ulcjava.base.application.util.KeyStroke
-import com.ulcjava.base.application.event.KeyEvent
-import com.ulcjava.base.application.ULCComponent
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
+import com.ulcjava.base.application.*
 import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils
+import com.ulcjava.base.application.util.HTMLUtilities
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com, martin.melchior@fhnw.ch
@@ -29,7 +17,7 @@ import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils
 class CommentView implements ISelectionListener {
 
     ULCBoxPane content
-    ResourceLinkHtmlPane propertiesPane
+    ULCHtmlPane propertiesPane
     ULCBoxPane buttonPane
     ULCCardPane descriptionPane
     ResourceLinkHtmlPane htmlTextPane
@@ -53,7 +41,7 @@ class CommentView implements ISelectionListener {
 
     private void init() {
         content = new ULCBoxPane(true)
-        propertiesPane = new ResourceLinkHtmlPane()
+        propertiesPane = new ULCHtmlPane()
 
         descriptionPane = new ULCCardPane()
         descriptionPane.setBorder(BorderFactory.createTitledBorder("Comment"))
@@ -132,22 +120,19 @@ class CommentView implements ISelectionListener {
             editButton.setEnabled(!readOnly && isEditable)
 
             // properties pane
-            String title = currentNode.getName()
-            String fullName = currentNode.type.getTypeClass().getName()
-            //String htmlLink = "<a href='resourceKey:'$fullName > $title </a>"
-            String htmlTitle = "<b><h3> $title </h3></b>"
-            String htmlClassName = "<code> $fullName </code>"
-            String text = "<p><div style='100%'>${htmlTitle + htmlClassName} </div></p> <br>"
-
-            propertiesPane.setText(UIUtils.convertWikiToHtml(text))
+            String title = org.pillarone.riskanalytics.graph.core.graph.util.UIUtils.formatDisplayName(currentNode.getName())
+            //String fullName = currentNode.type.getTypeClass().getName()
+            String text = "<<h3> $title </h3>"
+            propertiesPane.setText(HTMLUtilities.convertToHtml(text))
 
             // description pane
             currentText = currentNode.comment
             if (currentText == null || currentText == "") {
                 currentText = "No comments yet"
             }
-            String htmlText = "<div style='100%'> $currentText </div>"
-            String html = UIUtils.convertWikiToHtml(htmlText)
+            String htmlText = "$currentText"
+            // String html = UIUtils.convertWikiToHtml(htmlText)
+            String html = HTMLUtilities.convertToHtml(htmlText)
             htmlTextPane.setText(html)
             descriptionPane.setSelectedComponent(htmlTextPane)
         }
