@@ -11,6 +11,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.GraphElement
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
+import com.ulcjava.base.application.ULCLabel
 
 /**
  *
@@ -55,12 +56,14 @@ class BreadCrumbsModelSelector extends ULCBoxPane {
 
     private void showCurrentPath() {
         clearBreadCrumbs()
+        boolean isFirst = true
         for (GraphElement el : currentPath) {
             ULCButton label = null
             if (!cachedLabels.containsKey (el)) {
                 label = new ULCButton()
                 label.setText(el.displayName)
                 label.setFont(LABELFONT)
+                label.setBorderPainted(false)
                 final GraphElement elm = el
                 label.addActionListener(new IActionListener() {
                     void actionPerformed(ActionEvent actionEvent) {
@@ -74,6 +77,13 @@ class BreadCrumbsModelSelector extends ULCBoxPane {
                 cachedLabels[el] = label
             } else {
                 label = cachedLabels[el]
+            }
+            if (!isFirst) {
+                ULCLabel sep = new ULCLabel(" > ")
+                sep.setFont(LABELFONT)
+                breadcrumbPane.add(sep)
+            } else {
+                isFirst = false
             }
             breadcrumbPane.add label
         }

@@ -24,6 +24,7 @@ import com.ulcjava.base.application.ULCHtmlPane
 import com.ulcjava.base.application.event.IHyperlinkListener
 import com.ulcjava.base.application.event.HyperlinkEvent
 import com.ulcjava.base.application.ClientContext
+import com.ulcjava.base.application.ULCTextField
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com, martin.melchior@fhnw.ch
@@ -31,8 +32,6 @@ import com.ulcjava.base.application.ClientContext
 class HelpView implements ISelectionListener, IHelpViewable {
 
     ULCBoxPane mainComponent
-    ULCBoxPane titleBar
-    ULCLabel title
     BreadCrumbsModelSelector modelPathSelector
     ULCCardPane contentArea
     HelpHtmlPane htmlTextPane
@@ -63,9 +62,6 @@ class HelpView implements ISelectionListener, IHelpViewable {
 
     private void initComponents() {
         mainComponent = new ULCBoxPane(true)
-        titleBar = new ULCBoxPane(false)
-        title = new ULCLabel()
-        title.setFont( new Font("SansSerif", Font.BOLD, 14))
         modelPathSelector = new BreadCrumbsModelSelector()
         contentArea = new ULCCardPane()
 
@@ -99,11 +95,11 @@ class HelpView implements ISelectionListener, IHelpViewable {
             public void actionPerformed(ActionEvent actionEvent) {
                 graphModel.helpText = editableTextPane.getText()
                 modelHelpEntry = createHelpEntry(graphModel)
-
+                viewEntry(modelHelpEntry, true)
                 contentArea.setSelectedComponent(htmlTextPane);
-                String text = modelHelpEntry.description + " " + modelHelpEntry.autoText
+                /*String text = modelHelpEntry.description + " " + modelHelpEntry.autoText
                 htmlTextPane.setText(HTMLUtilities.convertToHtml("<div style='100%'> $text </div>"))
-                contentArea.setSelectedComponent(htmlTextPane);
+                contentArea.setSelectedComponent(htmlTextPane);*/
                 editButton.setEnabled true
                 okButton.setEnabled false
                 cancelButton.setEnabled false
@@ -128,12 +124,9 @@ class HelpView implements ISelectionListener, IHelpViewable {
     }
 
     private void layoutComponents() {
-        titleBar.add(ULCBoxPane.BOX_LEFT_CENTER, title)
-        titleBar.add(ULCBoxPane.BOX_EXPAND_CENTER, new ULCFiller())
         if (modelPathSelector) {
-            titleBar.add(ULCBoxPane.BOX_RIGHT_CENTER, modelPathSelector)
+            mainComponent.add(ULCBoxPane.BOX_LEFT_CENTER, modelPathSelector)
         }
-        mainComponent.add(ULCBoxPane.BOX_EXPAND_TOP, titleBar)
         mainComponent.add(ULCBoxPane.BOX_EXPAND_EXPAND, contentArea)
         mainComponent.add(ULCBoxPane.BOX_LEFT_BOTTOM, buttonPane)
     }
@@ -200,12 +193,12 @@ class HelpView implements ISelectionListener, IHelpViewable {
     }
 
     private void viewEntry(HelpEntry entry, boolean showContext) {
-        title.setText(entry.title)
         if (modelPathSelector) {
             modelPathSelector.setVisible(showContext)
         }
-        String text = entry.description + " " + entry.autoText
-        htmlTextPane.setText(HTMLUtilities.convertToHtml("<div style='100%'> $text </div>"))
+        String text = "<h3>$entry.title</h3>"
+        text <<= (entry.description != null ? entry.description : "No description yet. \n") + " " + entry.autoText
+        htmlTextPane.setText(HTMLUtilities.convertToHtml("<div style='width:100%'> $text </div>"))
         contentArea.setSelectedComponent(htmlTextPane);
         editButton.setEnabled(entry.isEditable)
     }
