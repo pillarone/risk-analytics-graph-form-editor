@@ -371,6 +371,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             p.setName(name);
             dataTable = new DataTable(fGraphModel, p);
         }
+        dataTable.getTableTree().getViewPortTableTree().addActionListener(new DataTable.MDPTabStarter(fDataSetSheets));
         fDataSetSheets.addTab(name, dataTable);
         fDataSetSheets.setSelectedIndex(fDataSetSheets.getTabCount() - 1);
         fLeftTabbedPane.setSelectedIndex(fLeftTabbedPane.indexOfTab("Parameters"));
@@ -468,7 +469,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
     public Parameterization getSelectedParametrization() {
         ULCComponent comp = fDataSetSheets != null ? fDataSetSheets.getSelectedComponent() : null;
         if (comp != null) {
-            return ((DataTable) fDataSetSheets.getSelectedComponent()).getModel().getParametrization();
+            return ((DataTable) fDataSetSheets.getSelectedComponent()).getParameterization();
         }
         return null;
     }

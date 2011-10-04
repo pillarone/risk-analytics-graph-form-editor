@@ -11,6 +11,7 @@ import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import aTest.ATestComponent
 import aTest.BTestComponent
+import org.pillarone.riskanalytics.application.example.component.ExampleComposedComponent
 
 
 class ComponentCategoryTreeTests extends AbstractSimpleStandaloneTestCase {
@@ -37,7 +38,7 @@ class ComponentCategoryTreeTests extends AbstractSimpleStandaloneTestCase {
         tree.doExpandRow(4)
 
         final Object others = model.getChild(root, 3)
-        assertEquals ExampleDynamicComponent.simpleName, model.getChild(others, 0).getValueAt(0)
+        assertEquals ExampleComposedComponent.simpleName, model.getChild(others, 0).getValueAt(0)
 
         runVoidCommand(new ServerSideCommand() {
 

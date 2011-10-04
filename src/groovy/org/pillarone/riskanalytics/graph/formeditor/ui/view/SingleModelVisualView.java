@@ -31,6 +31,8 @@ import com.ulcjava.base.application.tree.TreePath;
 import com.ulcjava.base.application.util.KeyStroke;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jetbrains.annotations.NotNull;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
@@ -51,6 +53,9 @@ import org.pillarone.riskanalytics.graph.formeditor.util.VisualSceneUtilities;
 import java.util.*;
 
 public class SingleModelVisualView extends AbstractBean implements GraphModelViewable, ISelectionListener, ITreeSelectionListener {
+
+    private static final Log LOG = LogFactory.getLog(SingleModelVisualView.class);
+
     private ApplicationContext fApplicationContext;
 
     private AbstractGraphModel fGraphModel;
