@@ -18,6 +18,7 @@ import com.canoo.ulc.graph.model.Vertex;
 import com.canoo.ulc.graph.shared.PortConstraint;
 import com.canoo.ulc.graph.shared.PortType;
 import com.canoo.ulc.graph.shared.StyleType;
+import com.canoo.ulc.slideinpanel.application.view.ULCSlideInPanel;
 import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.Action;
 import com.ulcjava.applicationframework.application.ApplicationActionMap;
@@ -28,9 +29,15 @@ import com.ulcjava.base.application.dnd.DnDTreeData;
 import com.ulcjava.base.application.dnd.Transferable;
 import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.tree.TreePath;
+import com.ulcjava.base.application.util.Color;
+import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.KeyStroke;
 import com.ulcjava.base.application.util.Point;
 import com.ulcjava.base.application.util.Rectangle;
+import com.ulcjava.base.server.ComponentPaint;
+import com.ulcjava.base.server.GradientPaint;
+import com.ulcjava.base.server.RadialGradientPaint;
+import com.ulcjava.base.server.animation.ULCAnimator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jetbrains.annotations.NotNull;
@@ -242,37 +249,34 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             }
         });
 
-        // ULCBoxPane content = new ULCBoxPane(2, 1);
-        // content.add(ULCBoxPane.BOX_EXPAND_EXPAND, fULCGraphComponent);
+        ULCBorderLayoutPane layoutPane = new ULCBorderLayoutPane();
 
-        ULCDesktopPane content = new ULCDesktopPane();
-        ULCInternalFrame graphFrame = new ULCInternalFrame();
-        graphFrame.add(fULCGraphComponent);
-        graphFrame.setMaximum(true);
-        graphFrame.setWindowDecorationStyle(ULCRootPane.NONE);
-        graphFrame.setBorder(BorderFactory.createEmptyBorder());
-        graphFrame.putClientProperty("JInternalFrame.isPalette", Boolean.TRUE);
-        graphFrame.setIcon(false);
-        graphFrame.setVisible(true);
+        ULCBoxPane content = new ULCBoxPane();
+        content.add(ULCBoxPane.BOX_EXPAND_EXPAND, fULCGraphComponent);
 
-        ULCGraphOutline satelliteView = new ULCGraphOutline(fULCGraphComponent);
-        ULCInternalFrame satelliteFrame = new ULCInternalFrame();
-        satelliteFrame.add(satelliteView);
-        satelliteFrame.setResizable(true);
-        satelliteFrame.setBounds(1205, 375, 200, 120);
-        satelliteFrame.setWindowDecorationStyle(ULCRootPane.NONE);
-        satelliteFrame.putClientProperty("JInternalFrame.isPalette", Boolean.TRUE);
-        satelliteFrame.setBorder(BorderFactory.createEmptyBorder());
-        satelliteFrame.setIcon(false);
-        satelliteFrame.setVisible(true);
+        layoutPane.add(content);
 
-        content.add(graphFrame);
-        content.setLayer(graphFrame, 0);
-        content.add(satelliteFrame);
-        content.setLayer(satelliteFrame, 1);
+        ULCBorderLayoutPane outlinePane = new ULCBorderLayoutPane();
+        outlinePane.setPreferredSize(new Dimension(200,200));
+        outlinePane.add(new ULCGraphOutline(fULCGraphComponent));
+
+        new ULCSlideInPanel.Builder(GridBagConstraints.NORTHWEST, layoutPane, outlinePane)
+                .borderColor(Color.blue)
+                .borderWidth(1)
+                .hasRoundedCorners(true)
+                .handleWidth(15)
+                .handlePaints(new ComponentPaint[]{
+                        new GradientPaint(new Color(255, 255, 255, 127), new Color(255, 255, 255, 40), GradientPaint.Orientation.VERTICAL),
+                        new RadialGradientPaint(90, 25, new Color(255, 255, 255, 255), -40, 25, new Color(255, 255, 255, 0))
+                })
+                .translucency(0.95f)
+                .easing(ULCAnimator.Easing.EASE_IN_OUT)
+                .duration(250)
+                .build();
+
 
         fMainView = new ULCBoxPane(1, 1, 2, 2);
-        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, content);
+        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, layoutPane);
 
         fULCGraph.upload();
         fULCGraphComponent.upload();

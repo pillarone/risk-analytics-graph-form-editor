@@ -60,6 +60,7 @@ grails.project.dependency.resolution = {
         compile group: 'canoo', name: 'ulc-standalone-client', version: ulcVersion
 
         compile group: 'canoo', name: 'ULCGraph-client', version: "0.7.1"
+        compile group: 'canoo', name: 'SlideInPanel-client', version: "0.1-SNAPSHOT"
         compile group: 'jgraphx', name: 'jgraphx', version: "1.7.1.0"
 
     }
