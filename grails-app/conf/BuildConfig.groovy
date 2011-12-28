@@ -28,7 +28,7 @@ grails.project.dependency.resolution = {
     mavenRepo "https://repository.intuitive-collaboration.com/nexus/content/repositories/pillarone-public/"
     mavenRepo "https://ci.canoo.com/nexus/content/groups/public"
 
-    String ulcVersion = "ria-suite-u2"
+    String ulcVersion = "ria-suite-u2-P1-2"
 
     plugins {
         runtime ":background-thread:1.3"
@@ -44,8 +44,8 @@ grails.project.dependency.resolution = {
         test ":code-coverage:1.2.4"
 
         if (appName == "RiskAnalyticsGraphFormEditor") {
-            runtime "org.pillarone:risk-analytics-core:1.4-BETA-7.1-kti"
-            runtime "org.pillarone:risk-analytics-application:1.4-BETA-8.2-kti"
+            runtime "org.pillarone:risk-analytics-core:1.4-RC-2-kti"
+            runtime "org.pillarone:risk-analytics-application:1.4-RC-2.5-kti"
             runtime("org.pillarone:risk-analytics-graph-core:0.7.6") { transitive = false }
         }
 

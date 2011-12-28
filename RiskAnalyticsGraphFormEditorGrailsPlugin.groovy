@@ -1,4 +1,6 @@
 import org.pillarone.riskanalytics.core.util.ResourceBundleRegistry
+import org.pillarone.riskanalytics.graph.formeditor.application.GraphEditorComponentCreator
+import org.pillarone.riskanalytics.application.ui.extension.WindowRegistry
 
 class RiskAnalyticsGraphFormEditorGrailsPlugin {
     // the plugin version
@@ -39,6 +41,7 @@ Brief description of the plugin.
 
     def doWithApplicationContext = { applicationContext ->
         ResourceBundleRegistry.addBundle("COMPONENT_DEFINITION_HELP","org.pillarone.riskanalytics.graph.formeditor.examples.componentDefinitionHelp")
+        WindowRegistry.registerWindow("Graph", new GraphEditorComponentCreator())
     }
 
     def onChange = { event ->
