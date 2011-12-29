@@ -48,6 +48,8 @@ batchCron = "0 0/10 * * * ?"
 // When the number of iterations exceed this number and one or more SingleValueCollectingModeStrategy is used,
 iterationCountThresholdForWarningWhenUsingSingleCollector = 999
 
+visualBuilderEnabled = true
+
 environments {
 
     development {

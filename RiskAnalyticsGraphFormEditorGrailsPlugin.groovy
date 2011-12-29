@@ -1,6 +1,7 @@
+import org.codehaus.groovy.grails.commons.ConfigurationHolder
+import org.pillarone.riskanalytics.application.ui.extension.WindowRegistry
 import org.pillarone.riskanalytics.core.util.ResourceBundleRegistry
 import org.pillarone.riskanalytics.graph.formeditor.application.GraphEditorComponentCreator
-import org.pillarone.riskanalytics.application.ui.extension.WindowRegistry
 
 class RiskAnalyticsGraphFormEditorGrailsPlugin {
     // the plugin version
@@ -40,8 +41,16 @@ Brief description of the plugin.
     }
 
     def doWithApplicationContext = { applicationContext ->
-        ResourceBundleRegistry.addBundle("COMPONENT_DEFINITION_HELP","org.pillarone.riskanalytics.graph.formeditor.examples.componentDefinitionHelp")
-        WindowRegistry.registerWindow("Graph", new GraphEditorComponentCreator())
+        ResourceBundleRegistry.addBundle("COMPONENT_DEFINITION_HELP", "org.pillarone.riskanalytics.graph.formeditor.examples.componentDefinitionHelp")
+
+        boolean visualBuilderEnabled = false
+        if (ConfigurationHolder.config.containsKey("visualBuilderEnabled")) {
+            visualBuilderEnabled = ConfigurationHolder.config.visualBuilderEnabled
+        }
+
+        if (visualBuilderEnabled) {
+            WindowRegistry.registerWindow("Graph", new GraphEditorComponentCreator())
+        }
     }
 
     def onChange = { event ->
