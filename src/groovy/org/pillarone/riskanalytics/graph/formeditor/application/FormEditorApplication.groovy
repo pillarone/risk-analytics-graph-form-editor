@@ -1,7 +1,6 @@
 package org.pillarone.riskanalytics.graph.formeditor.application
 
 import com.ulcjava.applicationframework.application.SingleFrameApplication
-import com.ulcjava.base.application.util.Dimension
 import org.pillarone.riskanalytics.graph.formeditor.ui.view.GraphModelEditor
 import com.ulcjava.base.application.*
 
