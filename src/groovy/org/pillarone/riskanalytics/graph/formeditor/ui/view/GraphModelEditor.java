@@ -458,7 +458,14 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
     }
 
     public ULCToolBar getToolBar() {
-        return new ToolBarFactory(getActionMap()).createToolBar("newModelAction", "importModelAction", "saveModelAction", "exportModelToGroovyAction", "exportModelToApplicationAction", "createParametersAction", "importParametersAction", "exportParametersAction", "simulateAction");
+        ULCToolBar designerToolBar = new ToolBarFactory(getActionMap()).createToolBar("newModelAction", "importModelAction", "saveModelAction",
+                "exportModelToGroovyAction", "createParametersAction",
+                "importParametersAction", "exportParametersAction", "simulateAction", "exportModelToApplicationAction");
+        // inserting separators shifts later items therefore the numbers look strange
+        designerToolBar.add(new ULCToolBar.ULCSeparator(), 4);
+        designerToolBar.add(new ULCToolBar.ULCSeparator(), 8);
+        designerToolBar.add(new ULCToolBar.ULCSeparator(), 10);
+        return designerToolBar;
     }
 
     @Action
