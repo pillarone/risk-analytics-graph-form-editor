@@ -38,6 +38,11 @@ class ModelFactory {
                 for (ComponentNode node : graphModel.allComponentNodes) {
                     Class componentClazz = node.type.typeClass
                     Component comp = componentClazz.newInstance()
+                    // this is required as initAllComponents() is not working as the components don't exist as property within the ModelFactory
+                    allComponents << comp
+                    if (comp instanceof ComposedComponent) {
+                        allComposedComponents << comp
+                    }
                     this.metaClass."$node.name"=comp
                     setComponentNames(comp, node)
                 }
