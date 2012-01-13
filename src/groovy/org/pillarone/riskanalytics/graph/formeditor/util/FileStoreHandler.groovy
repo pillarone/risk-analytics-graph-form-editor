@@ -35,7 +35,9 @@ class FileStoreHandler {
             }
 
             public void onFailure(int reason, String description) {
-                new ULCAlert(ancestor, "Export failed", description, "ok").show();
+                if (reason == IFileStoreHandler.FAILED) {
+                    new ULCAlert(ancestor, "Export failed", description, "ok").show();
+                }
             }
         };
         ClientContext.chooseFile(chooser, config, ancestor);
@@ -73,8 +75,6 @@ class FileStoreHandler {
                 try {
                     BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(outputStream));
                     writer.write(configObject, bw);
-                    configObject.remove("model");
-                    configObject.remove("package");
                 } catch (Throwable t) {
                     LOG.error("Export failed: " + t.getMessage(), t);
                 } finally {
@@ -96,7 +96,8 @@ class FileStoreHandler {
 class GParameterWriter extends ParameterWriter {
     @Override
     void write(ConfigObject configObject, BufferedWriter writer) {
-        writer.append(configObject.package.toString()).append("\n\n")
+        writer.append('package ').append(configObject.package.toString()).append("\n\n")
+        configObject.remove('package')
         printConfigObject("", configObject, writer, false, -1)
         writer.flush()
     }
