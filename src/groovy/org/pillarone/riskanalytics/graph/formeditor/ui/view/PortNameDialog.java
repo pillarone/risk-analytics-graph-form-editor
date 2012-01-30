@@ -61,7 +61,7 @@ public class PortNameDialog extends ULCDialog {
                 Class packetType = fPort.getPacketType();
                 Port replicate = isInPort ? new InPort() : new OutPort();
                 replicate.setPacketType(packetType);
-                replicate.setName(UIUtils.formatTechnicalName(bean.getName(), Port.class, false));
+                replicate.setName(UIUtils.formatTechnicalName(bean.getName(), replicate.getClass(), false));
                 replicate.setComposedComponentOuterPort(true);
                 fGraphModel.addOuterPort(replicate);
                 if (isInPort) {
