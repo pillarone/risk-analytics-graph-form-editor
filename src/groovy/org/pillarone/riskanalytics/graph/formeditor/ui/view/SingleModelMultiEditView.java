@@ -90,6 +90,16 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         fMainView.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    public void setReadOnly() {
+        this.readOnly = true;
+        fFormEditorView.setReadOnly();
+        fVisualEditorView.setReadOnly();
+    }
+
     public void createView(boolean isModel) {
         fMainView = new ULCBoxPane(true, 1);
 

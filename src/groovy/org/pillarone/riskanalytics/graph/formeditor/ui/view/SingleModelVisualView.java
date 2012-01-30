@@ -83,8 +83,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     private ULCBoxPane fMainView;
 
     private IGraphModelAdder fAdderInterface;
-
-
+    private IGraphComponentListener graphComponentListener;
     private boolean readOnly = false;
 
     public SingleModelVisualView(ApplicationContext ctx, boolean isModel) {
@@ -99,69 +98,20 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         fSelectionListeners = new ArrayList<ISelectionListener>();
     }
 
+    public void setReadOnly() {
+        readOnly = true;
+        fULCGraphComponent.setComponentPopupMenu(createPopupMenu());
+        fULCGraphComponent.setStructureChangeable(false);
+    }
+
     public void setAdderInterface(IGraphModelAdder adder) {
         fAdderInterface = adder;
     }
 
-    protected void createView(boolean isModel) {
-        if (isModel) {
-            fULCGraph = new ULCGraph();
-            fULCGraph.setPortDiameter(12);
-        } else {
-            fRootVertex = new Vertex("root" + System.currentTimeMillis() + Math.random());
-            fRootVertex.setRectangle(new Rectangle(5, 5, 1200, 500));
-            try {
-                fULCGraph = new ULCGraph(fRootVertex);
-            } catch (DuplicateIdException ex) {
-
-            }
-        }
-        fULCGraph.addGraphListener(new ULCGraphListener());
-        fULCGraph.addGraphElementListener(new IGraphElementListener() {
-
-            public void vertexGeometryChanged(Vertex vertex) {
-                if (fRootVertex == null || !vertex.getId().equals(fRootVertex.getId())) {
-                    final ComponentNode node = fNodesMap.get(vertex.getId());
-                    final Rectangle rectangle = vertex.getRectangle();
-                    node.setRectangle(new java.awt.Rectangle(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight()));
-                }
-            }
-
-            public void edgeGeometryChanged(Edge edge) {
-                Connection c = fConnectionsMap.get(edge.getId());
-                List<java.awt.Point> points = new ArrayList<java.awt.Point>();
-                for (com.canoo.ulc.graph.model.Point point : edge.getControlPoints()) {
-                    points.add(new java.awt.Point((int) point.getX(), (int) point.getY()));
-                }
-                c.setControlPoints(points);
-            }
-        });
-
-        fGraphSelectionListener = new IGraphSelectionListener() {
-            public void selectionChanged() {
-                Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
-                List<ComponentNode> selectedNodes = new ArrayList<ComponentNode>();
-                for (Vertex v : selectedVertices) {
-                    selectedNodes.add(fNodesMap.get(v.getId()));
-                }
-                Set<Edge> selectedEdges = fULCGraph.getSelectionModel().getSelectedEdges();
-                List<Connection> selectedConnections = new ArrayList<Connection>();
-                for (Edge e : selectedEdges) {
-                    selectedConnections.add(fConnectionsMap.get(e.getId()));
-                }
-                for (ISelectionListener listener : fSelectionListeners) {
-                    listener.setSelectedComponents(selectedNodes);
-                    listener.setSelectedConnections(selectedConnections);
-                }
-            }
-        };
-        fULCGraph.getSelectionModel().addGraphSelectionListener(fGraphSelectionListener);
-
-        fULCGraphComponent = new ULCGraphComponent(fULCGraph);
-        fULCGraphComponent.setStructureChangeable(!readOnly);
-        fULCGraphComponent.addListener(new IGraphComponentListener() {
+    protected IGraphComponentListener getGraphComponentListener(final boolean readOnly) {
+        return new IGraphComponentListener() {
             public void doubleClickOnElement(com.canoo.ulc.graph.model.GraphElement inElement) {
-                if (inElement instanceof Vertex && fNodesMap.containsKey(inElement.getId())) {
+                if (!readOnly && inElement instanceof Vertex && fNodesMap.containsKey(inElement.getId())) {
                     ComponentNode node = fNodesMap.get(inElement.getId());
                     modifyNodeAction(node);
                 }
@@ -171,7 +121,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 if (!vertex.getInnerElements().isEmpty()) {
                     return;
                 }
-
                 ComponentNode node = fNodesMap.get(vertex.getId());
                 if (node instanceof ComposedComponentNode) {
                     Map<ComponentNode, Vertex> nodesMap = new HashMap<ComponentNode, Vertex>();
@@ -247,7 +196,68 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 }
                 return null;
             }
+        };
+
+    }
+
+    protected void createView(boolean isModel) {
+        if (isModel) {
+            fULCGraph = new ULCGraph();
+            fULCGraph.setPortDiameter(12);
+        } else {
+            fRootVertex = new Vertex("root" + System.currentTimeMillis() + Math.random());
+            fRootVertex.setRectangle(new Rectangle(5, 5, 1200, 500));
+            try {
+                fULCGraph = new ULCGraph(fRootVertex);
+            } catch (DuplicateIdException ex) {
+
+            }
+        }
+        fULCGraph.addGraphListener(new ULCGraphListener());
+        fULCGraph.addGraphElementListener(new IGraphElementListener() {
+
+            public void vertexGeometryChanged(Vertex vertex) {
+                if (fRootVertex == null || !vertex.getId().equals(fRootVertex.getId())) {
+                    final ComponentNode node = fNodesMap.get(vertex.getId());
+                    final Rectangle rectangle = vertex.getRectangle();
+                    node.setRectangle(new java.awt.Rectangle(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight()));
+                }
+            }
+
+            public void edgeGeometryChanged(Edge edge) {
+                Connection c = fConnectionsMap.get(edge.getId());
+                List<java.awt.Point> points = new ArrayList<java.awt.Point>();
+                for (com.canoo.ulc.graph.model.Point point : edge.getControlPoints()) {
+                    points.add(new java.awt.Point((int) point.getX(), (int) point.getY()));
+                }
+                c.setControlPoints(points);
+            }
         });
+
+        fGraphSelectionListener = new IGraphSelectionListener() {
+            public void selectionChanged() {
+                Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
+                List<ComponentNode> selectedNodes = new ArrayList<ComponentNode>();
+                for (Vertex v : selectedVertices) {
+                    selectedNodes.add(fNodesMap.get(v.getId()));
+                }
+                Set<Edge> selectedEdges = fULCGraph.getSelectionModel().getSelectedEdges();
+                List<Connection> selectedConnections = new ArrayList<Connection>();
+                for (Edge e : selectedEdges) {
+                    selectedConnections.add(fConnectionsMap.get(e.getId()));
+                }
+                for (ISelectionListener listener : fSelectionListeners) {
+                    listener.setSelectedComponents(selectedNodes);
+                    listener.setSelectedConnections(selectedConnections);
+                }
+            }
+        };
+        fULCGraph.getSelectionModel().addGraphSelectionListener(fGraphSelectionListener);
+
+        fULCGraphComponent = new ULCGraphComponent(fULCGraph);
+        fULCGraphComponent.setStructureChangeable(!readOnly);
+        graphComponentListener = getGraphComponentListener(readOnly);
+        fULCGraphComponent.addListener(graphComponentListener);
 
         ULCBorderLayoutPane layoutPane = new ULCBorderLayoutPane();
 
@@ -257,7 +267,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         layoutPane.add(content);
 
         ULCBorderLayoutPane outlinePane = new ULCBorderLayoutPane();
-        outlinePane.setPreferredSize(new Dimension(200,200));
+        outlinePane.setPreferredSize(new Dimension(200, 200));
         outlinePane.add(new ULCGraphOutline(fULCGraphComponent));
 
         new ULCSlideInPanel.Builder(GridBagConstraints.NORTHWEST, layoutPane, outlinePane)
@@ -414,7 +424,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
     @Action
     public void modifyNodeAction(ComponentNode node) {
-        if (node != null) {
+        if (!readOnly && node != null) {
             NodeEditDialog dialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), fGraphModel);
             dialog.setModal(true);
             dialog.setVisible(true);
@@ -597,7 +607,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         });
         popupMenu.add(createComposedComponentItem);
 
-        if (fGraphModel instanceof ComposedComponentGraphModel) {
+        if (!this.readOnly && fGraphModel instanceof ComposedComponentGraphModel) {
             ULCMenuItem replicatePortItem = new ULCMenuItem("replicate port");
             replicatePortItem.addActionListener(actionMap.get("replicatePortAction"));
             popupMenu.add(replicatePortItem);

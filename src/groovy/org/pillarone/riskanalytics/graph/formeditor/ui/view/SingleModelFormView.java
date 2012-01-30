@@ -38,6 +38,13 @@ public class SingleModelFormView extends AbstractBean implements GraphModelViewa
         createView();
     }
 
+    public void setReadOnly() {
+        this.readOnly = true;
+        fNodesTable.setReadOnly();
+        fConnectionsTable.setReadOnly();
+
+    }
+
     public void createView() {
         fMainView = new ULCBoxPane(true, 1);
 

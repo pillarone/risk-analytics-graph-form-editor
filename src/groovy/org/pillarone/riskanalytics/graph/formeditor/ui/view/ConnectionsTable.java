@@ -75,6 +75,12 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
         });
     }
 
+    public void setReadOnly() {
+        this.readOnly = true;
+        this.setComponentPopupMenu(null);
+        createContextMenu();
+    }
+
     public void addSelectionListener(ISelectionListener selectionListener) {
         fSelectionListeners.add(selectionListener);
     }
@@ -143,6 +149,8 @@ public class ConnectionsTable extends ULCTable implements ISelectionListener {
 
     @Action
     public void modifyConnectionAction() {
+        if (readOnly) return;
+
         int[] selectedRows = getSelectedRows();
         if (selectedRows != null && selectedRows.length==1) {
             Connection selectedConnection = getSelectedConnections().get(0);

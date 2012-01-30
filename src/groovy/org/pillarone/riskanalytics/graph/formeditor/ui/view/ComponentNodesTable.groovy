@@ -80,6 +80,13 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         };
     }
 
+    public setReadOnly() {
+        this.readOnly = true;
+        this.setTransferHandler(null);
+        this.setComponentPopupMenu(null);
+        createContextMenu();
+    }
+
     private void setRenderer() {
         DefaultTableTreeCellRenderer defaultTableTreeCellRenderer = new DefaultTableTreeCellRenderer()
         InfoTableTreeCellRenderer infoTableTreeCellRenderer = new InfoTableTreeCellRenderer()
@@ -100,13 +107,12 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     }
 
     private void addListeners() {
-        if (!readOnly) {
-            addActionListener(new IActionListener() {
-                public void actionPerformed(ActionEvent event) {
-                    modifyNodeAction();
-                }
-            })
-        }
+        addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                modifyNodeAction()
+            }
+        })
+
         getSelectionModel().addTreeSelectionListener(new ITreeSelectionListener() {
             public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
                 if (!fExternalSelection) {
@@ -212,6 +218,8 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
 
     @Action
     public void modifyNodeAction() {
+        if (readOnly) return
+
         ComponentNode selectedNode = getSelectedNode();
         if (selectedNode != null) {
             NodeEditDialog dialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(this), fGraphModel)

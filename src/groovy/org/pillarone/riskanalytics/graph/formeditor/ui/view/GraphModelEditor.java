@@ -403,7 +403,14 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
 
     @Action
     public void saveModelAction() {
-        AbstractGraphModel model = getSelectedModel();
+        SingleModelMultiEditView view = fModelTabs.get(fEditorArea.getSelectedComponent());
+        if (view.isReadOnly()) {
+            ULCAlert alert = new ULCAlert("Model is read only - cannot be saved.", "read-only models cannot be saved.", "ok");
+            alert.show();
+            return;
+        }
+
+        AbstractGraphModel model = view.getGraphModel();
         if (!fModelRepositoryTree.getTreeModel().containsModel(model)) {
             fModelRepositoryTree.getTreeModel().addNode(model);
         }
@@ -442,7 +449,10 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
 
     @Action
     public void exportModelToApplicationAction() {
-        AbstractGraphModel model = getSelectedModel();
+        SingleModelMultiEditView view = fModelTabs.get(fEditorArea.getSelectedComponent());
+        view.setReadOnly();
+
+        AbstractGraphModel model = view.getGraphModel();
         try {
             GraphModelUtilities.exportToApplication(model);
         } catch (Exception ex) {
@@ -450,7 +460,6 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
             alert.show();
             LOG.error("Model could not be deployed", ex);
         }
-
     }
 
     protected ApplicationActionMap getActionMap() {
