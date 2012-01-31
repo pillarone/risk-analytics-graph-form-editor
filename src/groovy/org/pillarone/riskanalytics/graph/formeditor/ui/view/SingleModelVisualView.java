@@ -29,11 +29,7 @@ import com.ulcjava.base.application.dnd.DnDTreeData;
 import com.ulcjava.base.application.dnd.Transferable;
 import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.tree.TreePath;
-import com.ulcjava.base.application.util.Color;
-import com.ulcjava.base.application.util.Dimension;
-import com.ulcjava.base.application.util.KeyStroke;
-import com.ulcjava.base.application.util.Point;
-import com.ulcjava.base.application.util.Rectangle;
+import com.ulcjava.base.application.util.*;
 import com.ulcjava.base.server.ComponentPaint;
 import com.ulcjava.base.server.GradientPaint;
 import com.ulcjava.base.server.RadialGradientPaint;
@@ -451,10 +447,10 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
     @Action
     public void replicatePortAction() {
-        ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel;
+        final ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel;
         Set<Port> selectedPorts = fULCGraph.getSelectionModel().getSelectedPorts();
         for (Port port : selectedPorts) {
-            org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort = getGraphPort(port);
+            final org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort = getGraphPort(port);
             if (graphPort == null) {
                 ULCAlert alert = new ULCAlert("Port not replicated.",
                         "Port " + port.getTitle() + " cannot be replicated.", "ok");
@@ -462,19 +458,31 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                 return;
             }
             if (ccGraphModel.isReplicated(graphPort)) {
-                ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(fULCGraphComponent), "Port already replicated.",
-                        "Port is already replicated.", "ok");
+                final ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(fULCGraphComponent), // parent window
+                        "Port is already replicated.", // window title
+                        "Do you want to introduce another replicating port?", "Yes", "No");
+                alert.addWindowListener(new IWindowListener() {
+                    public void windowClosing(WindowEvent event) {
+                        if (alert.getValue().equals("Yes")) {
+                            showPortNameDialog(graphPort);
+                        }
+                    }
+                });
                 alert.show();
             } else {
-                PortNameDialog dialog = new PortNameDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), ccGraphModel, graphPort);
-                dialog.setModal(true);
-                NameBean bean = dialog.getBeanForm().getModel().getBean();
-                bean.setName(UIUtils.formatDisplayName(graphPort.getName()));
-                dialog.setVisible(true);
+                showPortNameDialog(graphPort);
             }
         }
     }
 
+    private void showPortNameDialog(org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort) {
+        PortNameDialog dialog = new PortNameDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), (ComposedComponentGraphModel) fGraphModel, graphPort);
+        dialog.setModal(true);
+        NameBean bean = dialog.getBeanForm().getModel().getBean();
+        bean.setName(UIUtils.formatDisplayName(graphPort.getName()));
+        dialog.setVisible(true);        
+    }
+    
     @Action
     public void removePortAction() {
         ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel;

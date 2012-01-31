@@ -17,6 +17,7 @@ import com.ulcjava.base.application.util.Dimension
 import com.ulcjava.base.shared.UlcEventConstants
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.NoneComponentNodeFilter
+import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode
@@ -28,7 +29,6 @@ import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities
 import com.ulcjava.base.application.*
 import com.ulcjava.base.application.event.*
 import org.pillarone.riskanalytics.graph.core.graph.model.*
-import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils
 
 /**
  *
@@ -308,23 +308,34 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     public void replicateSelectedPortAction() {
         int[] selectedRows = this.getSelectedRows()
         if (selectedRows != null && selectedRows.length > 0) {
-            List<Port> ports = getSelectedPorts()
-            if (ports != null && ports.size() == 1) {
-                Port p = ports.get(0);
-                ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel
-                if (ccGraphModel.isReplicated(p)) {
-                    ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(this), "Port already replicated.",
-                            "Port is already replicated.", "ok")
-                    alert.show()
+            ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel
+            List<Port> selectedPorts = getSelectedPorts()
+            for (Port graphPort : selectedPorts) {
+                if (ccGraphModel.isReplicated(graphPort)) {
+                    final ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(this), // parent window
+                            "Port is already replicated.", // window title
+                            "Do you want to introduce another replicating port?", "Yes", "No");
+                    alert.addWindowListener(new IWindowListener() {
+                        public void windowClosing(WindowEvent event) {
+                            if (alert.getValue().equals("Yes")) {
+                                showPortNameDialog(graphPort);
+                            }
+                        }
+                    });
+                    alert.show();
                 } else {
-                    PortNameDialog dialog = new PortNameDialog(UlcUtilities.getWindowAncestor(this), ccGraphModel, p)
-                    dialog.setModal(true);
-                    NameBean bean = dialog.getBeanForm().getModel().getBean();
-                    bean.setName(UIUtils.formatDisplayName(p.getName()));
-                    dialog.setVisible(true)
+                    showPortNameDialog(graphPort);
                 }
             }
         }
+    }
+
+    private void showPortNameDialog(Port graphPort) {
+        PortNameDialog dialog = new PortNameDialog(UlcUtilities.getWindowAncestor(this), (ComposedComponentGraphModel) fGraphModel, graphPort);
+        dialog.setModal(true);
+        NameBean bean = dialog.getBeanForm().getModel().getBean();
+        bean.setName(UIUtils.formatDisplayName(graphPort.getName()));
+        dialog.setVisible(true);
     }
 
     @Action
