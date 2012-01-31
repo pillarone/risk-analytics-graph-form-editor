@@ -10,16 +10,21 @@ import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.core.components.ComposedComponent
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode
-import java.lang.reflect.Method
+
 import org.pillarone.riskanalytics.graph.core.graph.model.InPort
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
-import org.pillarone.riskanalytics.core.simulation.item.Parameterization
-import org.pillarone.riskanalytics.core.packets.Packet
+
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 
 /**
  */
 class ModelFactory {
+
+    /**
+     * Provides a StochasticModel in form of a
+     * @param graphModel
+     * @return
+     */
 
     public StochasticModel getModelInstance(final ModelGraphModel graphModel) {
 
@@ -102,9 +107,21 @@ class ModelFactory {
         return model
     }
 
-
-    public StochasticModel getComposedComponentTestModel(final ComposedComponentGraphModel ccGraphModel,
-                                                         final Parameterization parameterization) {
+    /**
+     * Provides a test model for composed components in form of a StochasticModel - given a ComposedComponentGraphModel and a parametrization.
+     * This model consists of all the inner components of the ComposedComponent under test
+     * and additional helper components that feed the replicating in ports. Hence, teh inner components
+     * of the ComposedComponent under test and the helper components appear at the same hierarchy level
+     * of the test model. Actually, it would be nicer to use design a test model consisting of the
+     * new ComposedComponent and the helper components that are connected to the replicating ports.
+     * This would require that the ComposedComponent already can be instantiated as Component's.
+     * However, this is not as easy as it sound since the ComposedComponent only exists at the design level
+     * (ComposedComponentGraphModel) and not as a deployed ComposedComponent-class.
+     * @param ccGraphModel
+     * @param parameterization
+     * @return
+     */
+    public StochasticModel getComposedComponentTestModel(final ComposedComponentGraphModel ccGraphModel) {
 
         StochasticModel model = new StochasticModel() {
 
@@ -131,13 +148,10 @@ class ModelFactory {
                 // check whether there is mock data included in the parametrization associated with these ports
                 // create a provider component for that
                 for (InPort port : ccGraphModel.outerInPorts) {
-                    String ppPath = "provider_"+port.name
-                    List params = parameterization.getParameters(ppPath+GraphModelUtilities.PATHSEP+"parmPacket")
-                    if ( params!= null && params.size()>0) {
-                        PacketProvider provider = new PacketProvider()
-                        packetProviders.put(ppPath, provider)
-                        this.metaClass."$ppPath" = provider
-                    }
+                    PacketProvider provider = new PacketProvider(port.packetType, port.name)
+                    String ppPath = provider.name
+                    packetProviders.put(ppPath, provider)
+                    this.metaClass."$ppPath" = provider
                 }
             }
 
@@ -165,7 +179,7 @@ class ModelFactory {
                         sender.allOutputTransmitter << transmitter
                         receiver.allInputTransmitter << transmitter
                     } else if (ccGraphModel.outerInPorts.contains(connection.from)){
-                        String ppPath = "provider_"+connection.from.name
+                        String ppPath = PacketProvider.getPacketProviderPath(connection.from.name)
                         if (packetProviders.containsKey(ppPath)) {
                             PacketProvider sender = packetProviders.get(ppPath)
                             PacketList source = sender.outPacket
@@ -256,16 +270,5 @@ class ModelFactory {
             }
         }
         return startComponents
-    }
-}
-
-class PacketProvider extends Component {
-
-    private Packet parmPacket = new Packet();
-
-    public PacketList<Packet> outPacket = new PacketList<Packet>();
-
-    protected void doCalculation() {
-        outPacket.add(parmPacket)
     }
 }

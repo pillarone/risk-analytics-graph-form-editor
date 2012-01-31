@@ -42,7 +42,7 @@ class ProbeSimulationService extends SimulationRunner {
         if (graphModel instanceof ModelGraphModel) {
             model = factory.getModelInstance((ModelGraphModel) graphModel)
         } else {
-            model = factory.getComposedComponentTestModel((ComposedComponentGraphModel) graphModel, parametrization)
+            model = factory.getComposedComponentTestModel((ComposedComponentGraphModel) graphModel)
         }
 
         // create a simulation object for the probing

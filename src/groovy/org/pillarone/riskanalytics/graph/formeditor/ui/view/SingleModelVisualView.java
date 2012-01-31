@@ -41,13 +41,13 @@ import com.ulcjava.base.server.animation.ULCAnimator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jetbrains.annotations.NotNull;
+import org.pillarone.riskanalytics.application.ui.base.model.ComponentTableTreeNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.NoneComponentNodeFilter;
 import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange;
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataTreeComponentNode;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
@@ -787,11 +787,14 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
     public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
         Object o = treeSelectionEvent.getPath().getLastPathComponent();
-        if (o instanceof DataTreeComponentNode) {
+        if (o instanceof ComponentTableTreeNode) {
             List selectedItems = new ArrayList();
             clearSelection();
             fULCGraph.getSelectionModel().clearSelection();
-            selectedItems.add((((DataTreeComponentNode) o).getGraphElement()));
+            ComponentTableTreeNode treeNode = (ComponentTableTreeNode) o;
+            String componentName = treeNode.getComponent().getName();
+            ComponentNode graphNode = fGraphModel.findNodeByName(componentName);
+            selectedItems.add(graphNode);
             setSelectedComponents(selectedItems);
         }
     }

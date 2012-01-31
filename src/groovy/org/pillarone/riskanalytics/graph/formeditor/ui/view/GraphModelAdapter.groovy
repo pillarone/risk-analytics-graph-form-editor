@@ -4,6 +4,10 @@ import org.pillarone.riskanalytics.core.model.StochasticModel
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.core.components.Component
+import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
+import org.pillarone.riskanalytics.graph.formeditor.util.PacketProvider
+import org.pillarone.riskanalytics.core.packets.Packet
+import org.pillarone.riskanalytics.graph.core.graph.model.InPort
 
 
 class GraphModelAdapter extends StochasticModel {
@@ -18,6 +22,14 @@ class GraphModelAdapter extends StochasticModel {
             final Component instance = node.type.typeClass.newInstance()
             instance.name = node.name
             components.put(node.name, instance)
+        }
+
+        if (graphModel instanceof ComposedComponentGraphModel) {
+            ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel)graphModel
+            for (InPort port : ccGraphModel.outerInPorts) {
+                PacketProvider provider = new PacketProvider(port.packetType, port.name)
+                components.put(provider.name, provider)
+            }
         }
     }
 
