@@ -6,12 +6,10 @@ import com.ulcjava.base.shared.ErrorObject;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.Port;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ConnectionBean;
-import org.pillarone.riskanalytics.graph.formeditor.ui.view.ConnectionForm;
-import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
 /**
- * Model underlying the input form ({@link ConnectionForm}) for connections.
+ * Model underlying the input form ({@link org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.ConnectionForm}) for connections.
  * Is based on the generic {@link FormModel} specified for the {@link org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ConnectionBean}
  * introduced particularly for that purpose.
  *

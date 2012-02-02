@@ -2,14 +2,15 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view
 
 import com.ulcjava.base.application.event.ActionEvent
 import com.ulcjava.base.application.event.IActionListener
+import com.ulcjava.base.application.util.HTMLUtilities
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
+import org.pillarone.riskanalytics.graph.formeditor.ui.ISelectionListener
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
-import com.ulcjava.base.application.*
 import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils
-import com.ulcjava.base.application.util.HTMLUtilities
+import com.ulcjava.base.application.*
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com, martin.melchior@fhnw.ch

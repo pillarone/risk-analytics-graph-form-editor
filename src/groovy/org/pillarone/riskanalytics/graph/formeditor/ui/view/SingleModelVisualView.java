@@ -44,29 +44,34 @@ import org.pillarone.riskanalytics.graph.core.graph.model.filters.NoneComponentN
 import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange;
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
+import org.pillarone.riskanalytics.graph.formeditor.ui.*;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.NodeEditDialog;
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.PortNameDialog;
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.TypeDefinitionDialog;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.VisualSceneUtilities;
 
 import java.util.*;
 
-public class SingleModelVisualView extends AbstractBean implements GraphModelViewable, ISelectionListener, ITreeSelectionListener {
+public class SingleModelVisualView extends AbstractBean implements GraphModelViewable, ISelectionListener, ITreeSelectionListener, IModelRenameListener {
 
     private static final Log LOG = LogFactory.getLog(SingleModelVisualView.class);
 
     private ApplicationContext fApplicationContext;
 
     private AbstractGraphModel fGraphModel;
-    Map<String, ComponentNode> fNodesMap;
-    Map<Vertex, ComponentNode> fNodesToBeAdded;
-    Map<String, Connection> fConnectionsMap;
-    List<Connection> fConnectionsToBeAdded;
-    IWatchList fWatchList;
+
+    Map<String, ComponentNode> fNodesMap; // map with the the ulc vertex id's as keys and the graph model ComponentNode's as values.
+    Map<Vertex, ComponentNode> fNodesToBeAdded; // map with nodes to be added to the ulc graph - before its graph/layout is refreshed
+    Map<String, Connection> fConnectionsMap; // map with the ulc edge id's as keys and the graph model Connection's as values.
+    List<Connection> fConnectionsToBeAdded; // map with edge's to be added to the ulc graph - before its graph/layout is refreshed
+    IWatchList fWatchList; // instance of the watch list shared across the different views.
 
     List<ISelectionListener> fSelectionListeners;
     IGraphSelectionListener fGraphSelectionListener;
@@ -75,16 +80,10 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     private ULCGraphComponent fULCGraphComponent;
     Vertex fRootVertex;
     Point fCurrentPosition;
-
     private ULCBoxPane fMainView;
 
-    private IGraphModelAdder fAdderInterface;
-    private IGraphComponentListener graphComponentListener;
+    private IGraphModelHandler graphModelHandler; // some weak reference to the parent pane so that parts of a graph can be copied to a new tab.
     private boolean readOnly = false;
-
-    public SingleModelVisualView(ApplicationContext ctx, boolean isModel) {
-        this(ctx, isModel, false);
-    }
 
     public SingleModelVisualView(ApplicationContext ctx, boolean isModel, boolean readOnly) {
         this.readOnly = readOnly;
@@ -94,16 +93,550 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         fSelectionListeners = new ArrayList<ISelectionListener>();
     }
 
+    /**
+     * For read only models the popup menu looks different. Furthermore, DnD should be disabled.
+     */
     public void setReadOnly() {
         readOnly = true;
-        fULCGraphComponent.setComponentPopupMenu(createPopupMenu());
+        fULCGraphComponent.setComponentPopupMenu(createContextMenu());
         fULCGraphComponent.setStructureChangeable(false);
     }
 
-    public void setAdderInterface(IGraphModelAdder adder) {
-        fAdderInterface = adder;
+    /**
+     * Keeps some sort of weak reference on the parent to allow adding a new model to the tabbed pane
+     * that contains all the models being viewed or edited. This is needed for instance when creating
+     * a new model from a selection of components and connections.
+     * @param handler
+     */
+    public void setGraphModelHandler(IGraphModelHandler handler) {
+        graphModelHandler = handler;
     }
 
+    private void createView(boolean isModel) {
+        // initialize the components
+        if (isModel) {
+            fULCGraph = new ULCGraph();
+            fULCGraph.setPortDiameter(12);
+        } else {
+            fRootVertex = new Vertex("root" + System.currentTimeMillis() + Math.random());
+            fRootVertex.setRectangle(new Rectangle(5, 5, 1200, 500));
+            try {
+                fULCGraph = new ULCGraph(fRootVertex);
+            } catch (DuplicateIdException ex) {
+
+            }
+        }
+        fULCGraphComponent = new ULCGraphComponent(fULCGraph);
+        fULCGraphComponent.setStructureChangeable(!readOnly);
+        ULCBorderLayoutPane layoutPane = new ULCBorderLayoutPane();
+        ULCBoxPane content = new ULCBoxPane();
+        ULCBorderLayoutPane outlinePane = new ULCBorderLayoutPane();
+        outlinePane.setPreferredSize(new Dimension(200, 200));
+        new ULCSlideInPanel.Builder(GridBagConstraints.NORTHWEST, layoutPane, outlinePane)
+                .borderColor(Color.blue)
+                .borderWidth(1)
+                .hasRoundedCorners(true)
+                .handleWidth(15)
+                .handlePaints(new ComponentPaint[]{
+                        new GradientPaint(new Color(255, 255, 255, 127), new Color(255, 255, 255, 40), GradientPaint.Orientation.VERTICAL),
+                        new RadialGradientPaint(90, 25, new Color(255, 255, 255, 255), -40, 25, new Color(255, 255, 255, 0))
+                })
+                .translucency(0.95f)
+                .easing(ULCAnimator.Easing.EASE_IN_OUT)
+                .duration(250)
+                .build();
+
+        fMainView = new ULCBoxPane(1, 1, 2, 2);
+        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, layoutPane);
+
+        // layout
+        content.add(ULCBoxPane.BOX_EXPAND_EXPAND, fULCGraphComponent);
+        layoutPane.add(content);
+        outlinePane.add(new ULCGraphOutline(fULCGraphComponent));
+
+        // listeners
+        fULCGraph.addGraphListener(new ULCGraphListener());
+        fULCGraph.addGraphElementListener(new IGraphElementListener() {
+            public void vertexGeometryChanged(Vertex vertex) {
+                if (fRootVertex == null || !vertex.getId().equals(fRootVertex.getId())) {
+                    final ComponentNode node = fNodesMap.get(vertex.getId());
+                    final Rectangle rectangle = vertex.getRectangle();
+                    node.setRectangle(new java.awt.Rectangle(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight()));
+                }
+            }
+
+            public void edgeGeometryChanged(Edge edge) {
+                Connection c = fConnectionsMap.get(edge.getId());
+                List<java.awt.Point> points = new ArrayList<java.awt.Point>();
+                for (com.canoo.ulc.graph.model.Point point : edge.getControlPoints()) {
+                    points.add(new java.awt.Point((int) point.getX(), (int) point.getY()));
+                }
+                c.setControlPoints(points);
+            }
+        });
+        fGraphSelectionListener = new IGraphSelectionListener() {
+            public void selectionChanged() {
+                Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
+                List<ComponentNode> selectedNodes = new ArrayList<ComponentNode>();
+                for (Vertex v : selectedVertices) {
+                    selectedNodes.add(fNodesMap.get(v.getId()));
+                }
+                Set<Edge> selectedEdges = fULCGraph.getSelectionModel().getSelectedEdges();
+                List<Connection> selectedConnections = new ArrayList<Connection>();
+                for (Edge e : selectedEdges) {
+                    selectedConnections.add(fConnectionsMap.get(e.getId()));
+                }
+                for (ISelectionListener listener : fSelectionListeners) {
+                    listener.setSelectedComponents(selectedNodes);
+                    listener.setSelectedConnections(selectedConnections);
+                }
+            }
+        };
+        fULCGraph.getSelectionModel().addGraphSelectionListener(fGraphSelectionListener);
+        IGraphComponentListener graphComponentListener = getGraphComponentListener(readOnly);
+        fULCGraphComponent.addListener(graphComponentListener);
+
+        // upload
+        fULCGraph.upload();
+        fULCGraphComponent.upload();
+    }
+
+    /**
+     * Show the dialog to specify a port name when replicating port in composed components.
+     *
+     * @param graphPort
+     */
+    private void showPortNameDialog(org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort) {
+        PortNameDialog dialog = new PortNameDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), (ComposedComponentGraphModel) fGraphModel, graphPort);
+        dialog.setModal(true);
+        NameBean bean = dialog.getBeanForm().getModel().getBean();
+        bean.setName(UIUtils.formatDisplayName(graphPort.getName()));
+        dialog.setVisible(true);
+    }
+
+    /**
+     * Show type definition dialog that is called when selecting the "create composed component" entry in the context menu.
+     * Applies to ComposedComponentGraphModel's only.
+     * @param model
+     */
+    private void showTypeDefinitionDialog(final ComposedComponentGraphModel model) {
+        // TODO -> avoid creating a type definition that already exists.
+        final TypeDefinitionDialog fTypeDefView = new TypeDefinitionDialog(UlcUtilities.getWindowAncestor(this.fMainView), new HashSet<TypeDefinitionBean>());
+        fTypeDefView.getBeanForm().getModel().getBean().setBaseType(TypeDefinitionBean.COMPOSED_COMPONENT);
+        IActionListener newComposedComponentListener = new IActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                TypeDefinitionFormModel typeDefinitionFormModel = fTypeDefView.getBeanForm().getModel();
+                if (typeDefinitionFormModel.hasErrors()) return;
+                TypeDefinitionBean typeDef = typeDefinitionFormModel.getBean();
+                if (typeDef.getBaseType().equals(TypeDefinitionBean.MODEL)) return;
+                model.setPackageName(typeDef.getPackageName());
+                model.setName(typeDef.getName());
+                graphModelHandler.addModel(model, typeDef, true);
+                fTypeDefView.setVisible(false);
+            }
+        };
+        fTypeDefView.getBeanForm().addSaveActionListener(newComposedComponentListener);
+        KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
+        fTypeDefView.getTypeDefinitionForm().registerKeyboardAction(enter, newComposedComponentListener);
+        fTypeDefView.getTypeDefinitionForm().addKeyListener();
+        fTypeDefView.setVisible(true);
+        ULCComponent nameTextField = fTypeDefView.getTypeDefinitionForm().getComponent("name");
+        if (nameTextField != null)
+            nameTextField.requestFocus();
+
+    }
+
+
+    /**
+     * Creates the popup menu. Note that for composed components additional entries for replicating ports are shown
+     * provided that the model is not "read-only".
+     * @return
+     */
+    private ULCPopupMenu createContextMenu() {
+        ULCPopupMenu popupMenu = new ULCPopupMenu();
+
+        ULCMenuItem modelRenameItem = new ULCMenuItem("rename model");
+        ULCMenuItem showInNewTabItem = new ULCMenuItem("show in new tab");
+        ULCMenuItem createComposedComponentItem = new ULCMenuItem("create composed component");
+        ULCMenuItem replicatePortItem = new ULCMenuItem("replicate port");
+        ULCMenuItem removeReplicatedPortItem = new ULCMenuItem("remove port");
+        ULCMenuItem addToWatchesItem = new ULCMenuItem("add to watches");
+        ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear all selections");
+
+        popupMenu.add(modelRenameItem);
+        popupMenu.add(showInNewTabItem);
+        popupMenu.add(createComposedComponentItem);
+        if (!this.readOnly && fGraphModel instanceof ComposedComponentGraphModel) {
+            popupMenu.add(replicatePortItem);
+            popupMenu.add(removeReplicatedPortItem);
+        }
+        popupMenu.add(addToWatchesItem);
+        popupMenu.addSeparator();
+        popupMenu.add(clearSelectionsItem);
+
+        ApplicationActionMap actionMap = fApplicationContext.getActionMap(this);
+        modelRenameItem.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                graphModelHandler.renameModel(fGraphModel);
+            }
+        });
+        showInNewTabItem.addActionListener(actionMap.get("showInNewTab"));
+        createComposedComponentItem.addActionListener(actionMap.get("createComposedComponent"));
+        if (!this.readOnly && fGraphModel instanceof ComposedComponentGraphModel) {
+            replicatePortItem.addActionListener(actionMap.get("replicatePortAction"));
+            removeReplicatedPortItem.addActionListener(actionMap.get("removePortAction"));
+        }
+        addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));
+        clearSelectionsItem.addActionListener(actionMap.get("clearSelectionsAction"));
+
+        return popupMenu;
+    }
+
+
+    /**
+     * Adds the vertices and edges to the ulc graph, possibly using persisted layout information (available in the node.getRectangle(...))
+     * At the same time, the entries in fNodesToBeAdded and fConnectionsToBeAdded are moved to fModesMap and fConnectionsMap, respectively.
+     * At the end, fNodesToBeAdded and fConnectionsToBeAdded are reset.
+     * Should be called when bringing this view to visible (bringing the associated card to the front).
+     */
+    private void updateULCGraph() {
+        int nodesToAdd = fNodesToBeAdded.size();
+        int connectionsToAdd = fConnectionsToBeAdded.size();
+        if (nodesToAdd == 0 && connectionsToAdd == 0) {
+            return;
+        }
+
+        Vertex[] vertices = new Vertex[nodesToAdd];
+        int i = 0;
+        for (Vertex v : fNodesToBeAdded.keySet()) {
+            ComponentNode node = fNodesToBeAdded.get(v);
+            final java.awt.Rectangle rectangle = node.getRectangle();
+            if (rectangle != null) {
+                v.setRectangle(new Rectangle((int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight()));
+            }
+            fNodesMap.put(v.getId(), node);
+            vertices[i++] = v;
+        }
+        try {
+            fULCGraph.addVertex(vertices);
+            for (Vertex v : vertices) {
+                fULCGraphComponent.autoAdjustVertexSize(v);
+            }
+        } catch (Exception ex) {
+            System.out.println("Problem occurred while adding a vertex to ULC graph: \n" + ex.getMessage());
+        }
+        fNodesToBeAdded = new LinkedHashMap<Vertex, ComponentNode>();
+
+        // construct and add edges associated with the connections registered for inclusion
+        // note that the edges can be created only after all the vertices are available.
+        Edge[] edges = new Edge[connectionsToAdd];
+        i = 0;
+        for (Connection c : fConnectionsToBeAdded) {
+            Port outPort = getULCPort(c.getFrom());
+            Port inPort = getULCPort(c.getTo());
+            String id = "conn_" + System.currentTimeMillis() + "_" + Math.random();
+            Edge e = new Edge(id, outPort, inPort);
+            final List<java.awt.Point> controlPoints = c.getControlPoints();
+            if (controlPoints != null && !controlPoints.isEmpty()) {
+                List<com.canoo.ulc.graph.model.Point> points = new ArrayList<com.canoo.ulc.graph.model.Point>(controlPoints.size());
+                for (java.awt.Point point : controlPoints) {
+                    points.add(new com.canoo.ulc.graph.model.Point(point.getX(), point.getY()));
+                }
+                e.setControlPoints(points);
+            }
+            fConnectionsMap.put(e.getId(), c);
+            edges[i++] = e;
+        }
+        try {
+            fULCGraph.addEdge(edges);
+        } catch (Exception ex) {
+            System.out.println("Problem occurred while adding an edge to ULC graph: \n" + ex.getMessage());
+        }
+        fConnectionsToBeAdded = new ArrayList<Connection>();
+    }
+
+    /**
+     * Allow to refresh the layout from the outside.
+     */
+    public void refreshLayout() {
+        fULCGraphComponent.layout();
+    }
+
+    /////////////////////////////////////////
+    // Implementation of GraphModelViewable
+    /////////////////////////////////////////
+
+    public ULCBoxPane getView() {
+        return fMainView;
+    }
+
+    public void setVisible(boolean visible) {
+        fMainView.setVisible(visible);
+        if (visible && fGraphModel != null) {
+            updateULCGraph();
+        }
+    }
+
+    public void injectGraphModel(AbstractGraphModel model) {
+        fGraphModel = model;
+        fGraphModel.addGraphModelChangeListener(new GraphModelListener());
+
+        // in case we have a composed component (and a root vertex): set title and add existing outer ports
+        if (model instanceof ComposedComponentGraphModel && fRootVertex != null) {
+            // title
+            fRootVertex.setTitle(fGraphModel.getName());
+
+            // outer ports
+            ComposedComponentGraphModel ccModel = (ComposedComponentGraphModel) model;
+            for (InPort graphModelPort : ccModel.getOuterInPorts()) {
+                addOuterPort(graphModelPort);
+            }
+            for (OutPort graphModelPort : ccModel.getOuterOutPorts()) {
+                addOuterPort(graphModelPort);
+            }
+        }
+
+        fNodesMap = new LinkedHashMap<String, ComponentNode>();
+        fNodesToBeAdded = new LinkedHashMap<Vertex, ComponentNode>();
+        for (ComponentNode node : model.getAllComponentNodes()) {
+            Vertex vertex = VisualSceneUtilities.createVertex(null, node);
+            String title = UIUtils.formatDisplayName(node.getName());
+            vertex.setTitle(title);
+            fNodesToBeAdded.put(vertex, node);
+        }
+
+        fConnectionsMap = new LinkedHashMap<String, Connection>();
+        fConnectionsToBeAdded = new ArrayList<Connection>();
+        for (Connection c : model.getAllConnections()) {
+            fConnectionsToBeAdded.add(c);
+        }
+
+        if (fMainView.isVisible()) {
+            updateULCGraph();
+        }
+
+        // this can be created only now - since now we know whether we have a Model or a ComposedComponent
+        fULCGraphComponent.setComponentPopupMenu(createContextMenu());
+
+    }
+
+    /**
+     * Set the reference to the watch list so that it can be modified by selecting ports and context menu actions.
+     * @param watchList
+     */
+    public void setWatchList(IWatchList watchList) {
+        fWatchList = watchList;
+    }
+
+    @Action
+    public void newNodeAction() {
+        NodeEditDialog dialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), fGraphModel);
+        dialog.setModal(true);
+        dialog.setVisible(true);
+    }
+
+    @Action
+    public void modifyNodeAction(ComponentNode node) {
+        if (!readOnly && node != null) {
+            NodeEditDialog dialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), fGraphModel);
+            dialog.setModal(true);
+            dialog.setVisible(true);
+            NodeBean bean = dialog.getBeanForm().getModel().getBean();
+            bean.setName(UIUtils.formatDisplayName(node.getName()));
+            bean.setComponentType(node.getType().getTypeClass().getName());
+            bean.setComment(node.getComment());
+            if (fGraphModel instanceof ModelGraphModel) {
+                bean.setStarter(((ModelGraphModel) fGraphModel).getStartComponents().contains(node));
+            }
+            dialog.getBeanForm().getModel().setEditedNode(node);
+            dialog.setEditedNode(node);
+            dialog.setWatchList(fWatchList); // todo eliminate this by rather using the IGraphModelChangeListener
+        }
+    }
+
+    @Action
+    public void clearSelectionAction() {
+        clearSelection();
+        for (ISelectionListener listener : fSelectionListeners) {
+            listener.clearSelection();
+        }
+    }
+
+    @Action
+    public void replicatePortAction() {
+        final ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel;
+        Set<Port> selectedPorts = fULCGraph.getSelectionModel().getSelectedPorts();
+        for (Port port : selectedPorts) {
+            final org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort = getGraphPort(port);
+            if (graphPort == null) {
+                ULCAlert alert = new ULCAlert("Port not replicated.",
+                        "Port " + port.getTitle() + " cannot be replicated.", "ok");
+                alert.show();
+                return;
+            }
+            if (ccGraphModel.isReplicated(graphPort)) {
+                final ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(fULCGraphComponent), // parent window
+                        "Port is already replicated.", // window title
+                        "Do you want to introduce another replicating port?", "Yes", "No");
+                alert.addWindowListener(new IWindowListener() {
+                    public void windowClosing(WindowEvent event) {
+                        if (alert.getValue().equals("Yes")) {
+                            showPortNameDialog(graphPort);
+                        }
+                    }
+                });
+                alert.show();
+            } else {
+                showPortNameDialog(graphPort);
+            }
+        }
+    }
+
+    @Action
+    public void removePortAction() {
+        ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel;
+        Set<Port> selectedPorts = fULCGraph.getSelectionModel().getSelectedPorts();
+        List<org.pillarone.riskanalytics.graph.core.graph.model.Port> selectedOuterPorts = new ArrayList<org.pillarone.riskanalytics.graph.core.graph.model.Port>();
+        for (Port port : selectedPorts) {
+            org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort = getGraphPort(port);
+            if (graphPort != null && graphPort.isComposedComponentOuterPort()) {
+                selectedOuterPorts.add(graphPort);
+            }
+        }
+        if (selectedOuterPorts.size() > 0) {
+            for (org.pillarone.riskanalytics.graph.core.graph.model.Port p : selectedOuterPorts) {
+                ccGraphModel.removeOuterPort(p);
+            }
+        } else {
+            ULCAlert alert = new ULCAlert("Port not removed.", "Inner ports cannot be removed.", "ok");
+            alert.show();
+        }
+    }
+
+    /**
+     * Declare the selected port as being watched; add the associated model path the watch list.
+     */
+    @Action
+    public void addSelectedToWatches() {
+        Set<Port> selectedPorts = fULCGraph.getSelectionModel().getSelectedPorts();
+        for (Port port : selectedPorts) {
+            org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort = getGraphPort(port);
+            if (graphPort == null) {
+                ULCAlert alert = new ULCAlert("No watches added.",
+                        "Port " + port.getTitle() + " cannot be identified.", "ok");
+                alert.show();
+                return;
+            } else if (graphPort instanceof InPort) {
+                ULCAlert alert = new ULCAlert("In-Port selected.",
+                        "Only out-ports can be watched.", "ok");
+                alert.show();
+                return;
+            }
+            String path = GraphModelUtilities.getPath(graphPort, fGraphModel);
+            fWatchList.addWatch(path);
+        }
+    }
+
+    /**
+     * Checks for selected components and connections and includes a copy of those into a new
+     * ComposedComponentGraphModel. Then, the type definition dialog is shown to enter a name,
+     * and the result is included in a new tab (under the specified name).
+     */
+    @Action
+    public void createComposedComponent() {
+        if (graphModelHandler == null) return;
+        Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
+        Set<Edge> selectedEdges = fULCGraph.getSelectionModel().getSelectedEdges();
+        if (selectedVertices != null && selectedVertices.size() > 0) {
+            ComposedComponentGraphModel subModel = new ComposedComponentGraphModel();
+            // add the vertices
+            for (Vertex v : selectedVertices) {
+                ComponentNode node = fNodesMap.get(v.getId());
+                String nameInSubComponent = UIUtils.transformToSubComponentName(node.getName());
+                ComponentNode newNode = subModel.createComponentNode(node.getType(), nameInSubComponent);
+                newNode.setComment(node.getComment());
+            }
+
+            // add the connections:
+            for (Edge e : selectedEdges) {
+                Connection connection = fConnectionsMap.get(e.getId());
+                org.pillarone.riskanalytics.graph.core.graph.model.Port newFromPort = null;
+                org.pillarone.riskanalytics.graph.core.graph.model.Port newToPort = null;
+
+                org.pillarone.riskanalytics.graph.core.graph.model.Port originalOutPort = connection.getFrom();
+                ComponentNode originalFromNode = originalOutPort.getComponentNode();
+                if (originalFromNode != null) {
+                    String subComponentName = UIUtils.transformToSubComponentName(originalFromNode.getName());
+                    ComponentNode newFromNode = subModel.findNodeByName(subComponentName);
+                    if (newFromNode != null) {
+                        newFromPort = newFromNode.getPort(originalOutPort.getName());
+                    }
+                }
+
+                org.pillarone.riskanalytics.graph.core.graph.model.Port originalInPort = connection.getTo();
+                ComponentNode originalToNode = originalInPort.getComponentNode();
+                if (originalToNode != null) {
+                    String subComponentName = UIUtils.transformToSubComponentName(originalToNode.getName());
+                    ComponentNode newToNode = subModel.findNodeByName(subComponentName);
+                    if (newToNode != null) {
+                        newToPort = newToNode.getPort(originalInPort.getName());
+                    }
+                }
+
+                if (newFromPort != null && newToPort != null) {
+                    Connection c = subModel.createConnection(newFromPort, newToPort);
+                }
+            }
+
+            // open the new type definition dialog to enter name and package name
+            showTypeDefinitionDialog(subModel);
+
+        } else {
+            ULCAlert alert = new ULCAlert("No composed component created.", "Select nodes and connections in the existing model!.", "ok");
+            alert.show();
+        }
+    }
+
+    @Action
+    public void showInNewTab() {
+        Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
+        if (selectedVertices != null && selectedVertices.size() > 0) {
+            Vertex vertex = selectedVertices.iterator().next();
+            ComponentNode node = fNodesMap.get(vertex.getId());
+            if (node instanceof ComposedComponentNode && graphModelHandler != null) {
+                AbstractGraphModel subModel = ((ComposedComponentNode) node).getComponentGraph();
+                ComponentDefinition subType = node.getType();
+                TypeDefinitionBean typeBean = new TypeDefinitionBean();
+                typeBean.setName(subType.getSimpleName());
+                typeBean.setPackageName(subModel.getPackageName());
+                typeBean.setBaseType(TypeDefinitionBean.COMPOSED_COMPONENT);
+                graphModelHandler.addModel(subModel, typeBean, false);
+            } else {
+                ULCAlert alert = new ULCAlert("No Model shown", "Nothing to show here since only a simple component.", "ok");
+                alert.show();
+            }
+        }
+    }
+
+    /**
+     * Removes for the given component node all (out) ports from the watches.
+     * @param node
+     */
+    private void removeFromWatches(ComponentNode node) {
+        if (fWatchList != null) {
+            for (OutPort p : node.getOutPorts()) {
+                String pathOfWatchToRemove = GraphModelUtilities.getPath(p, fGraphModel);
+                if (pathOfWatchToRemove != null)
+                    fWatchList.removeWatch(pathOfWatchToRemove);
+            }
+        }
+    }
+
+    /**
+     * Creates a IGraphComponentListener which reacts on double click events and expand events on ComposedComponent's.
+     * @param readOnly
+     * @return
+     */
     protected IGraphComponentListener getGraphComponentListener(final boolean readOnly) {
         return new IGraphComponentListener() {
             public void doubleClickOnElement(com.canoo.ulc.graph.model.GraphElement inElement) {
@@ -196,543 +729,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
 
     }
 
-    protected void createView(boolean isModel) {
-        if (isModel) {
-            fULCGraph = new ULCGraph();
-            fULCGraph.setPortDiameter(12);
-        } else {
-            fRootVertex = new Vertex("root" + System.currentTimeMillis() + Math.random());
-            fRootVertex.setRectangle(new Rectangle(5, 5, 1200, 500));
-            try {
-                fULCGraph = new ULCGraph(fRootVertex);
-            } catch (DuplicateIdException ex) {
-
-            }
-        }
-        fULCGraph.addGraphListener(new ULCGraphListener());
-        fULCGraph.addGraphElementListener(new IGraphElementListener() {
-
-            public void vertexGeometryChanged(Vertex vertex) {
-                if (fRootVertex == null || !vertex.getId().equals(fRootVertex.getId())) {
-                    final ComponentNode node = fNodesMap.get(vertex.getId());
-                    final Rectangle rectangle = vertex.getRectangle();
-                    node.setRectangle(new java.awt.Rectangle(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight()));
-                }
-            }
-
-            public void edgeGeometryChanged(Edge edge) {
-                Connection c = fConnectionsMap.get(edge.getId());
-                List<java.awt.Point> points = new ArrayList<java.awt.Point>();
-                for (com.canoo.ulc.graph.model.Point point : edge.getControlPoints()) {
-                    points.add(new java.awt.Point((int) point.getX(), (int) point.getY()));
-                }
-                c.setControlPoints(points);
-            }
-        });
-
-        fGraphSelectionListener = new IGraphSelectionListener() {
-            public void selectionChanged() {
-                Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
-                List<ComponentNode> selectedNodes = new ArrayList<ComponentNode>();
-                for (Vertex v : selectedVertices) {
-                    selectedNodes.add(fNodesMap.get(v.getId()));
-                }
-                Set<Edge> selectedEdges = fULCGraph.getSelectionModel().getSelectedEdges();
-                List<Connection> selectedConnections = new ArrayList<Connection>();
-                for (Edge e : selectedEdges) {
-                    selectedConnections.add(fConnectionsMap.get(e.getId()));
-                }
-                for (ISelectionListener listener : fSelectionListeners) {
-                    listener.setSelectedComponents(selectedNodes);
-                    listener.setSelectedConnections(selectedConnections);
-                }
-            }
-        };
-        fULCGraph.getSelectionModel().addGraphSelectionListener(fGraphSelectionListener);
-
-        fULCGraphComponent = new ULCGraphComponent(fULCGraph);
-        fULCGraphComponent.setStructureChangeable(!readOnly);
-        graphComponentListener = getGraphComponentListener(readOnly);
-        fULCGraphComponent.addListener(graphComponentListener);
-
-        ULCBorderLayoutPane layoutPane = new ULCBorderLayoutPane();
-
-        ULCBoxPane content = new ULCBoxPane();
-        content.add(ULCBoxPane.BOX_EXPAND_EXPAND, fULCGraphComponent);
-
-        layoutPane.add(content);
-
-        ULCBorderLayoutPane outlinePane = new ULCBorderLayoutPane();
-        outlinePane.setPreferredSize(new Dimension(200, 200));
-        outlinePane.add(new ULCGraphOutline(fULCGraphComponent));
-
-        new ULCSlideInPanel.Builder(GridBagConstraints.NORTHWEST, layoutPane, outlinePane)
-                .borderColor(Color.blue)
-                .borderWidth(1)
-                .hasRoundedCorners(true)
-                .handleWidth(15)
-                .handlePaints(new ComponentPaint[]{
-                        new GradientPaint(new Color(255, 255, 255, 127), new Color(255, 255, 255, 40), GradientPaint.Orientation.VERTICAL),
-                        new RadialGradientPaint(90, 25, new Color(255, 255, 255, 255), -40, 25, new Color(255, 255, 255, 0))
-                })
-                .translucency(0.95f)
-                .easing(ULCAnimator.Easing.EASE_IN_OUT)
-                .duration(250)
-                .build();
-
-
-        fMainView = new ULCBoxPane(1, 1, 2, 2);
-        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, layoutPane);
-
-        fULCGraph.upload();
-        fULCGraphComponent.upload();
-    }
-
-    public ULCBoxPane getView() {
-        return fMainView;
-    }
-
-    public ULCGraph getULCGraph() {
-        return fULCGraph;
-    }
-
-    public ULCGraphComponent getULCGraphComponent() {
-        return fULCGraphComponent;
-    }
-
-    public void setVisible(boolean visible) {
-        fMainView.setVisible(visible);
-        if (visible && fGraphModel != null) {
-            updateULCGraph();
-        }
-    }
-
-    public void injectGraphModel(AbstractGraphModel model) {
-        fGraphModel = model;
-        fGraphModel.addGraphModelChangeListener(new GraphModelListener());
-
-        // in case we have a composed component (and a root vertex): set title and add existing outer ports
-        if (model instanceof ComposedComponentGraphModel && fRootVertex != null) {
-            // title
-            fRootVertex.setTitle(fGraphModel.getName());
-
-            // outer ports
-            ComposedComponentGraphModel ccModel = (ComposedComponentGraphModel) model;
-            for (InPort graphModelPort : ccModel.getOuterInPorts()) {
-                addOuterPort(graphModelPort);
-            }
-            for (OutPort graphModelPort : ccModel.getOuterOutPorts()) {
-                addOuterPort(graphModelPort);
-            }
-        }
-
-        fNodesMap = new LinkedHashMap<String, ComponentNode>();
-        fNodesToBeAdded = new LinkedHashMap<Vertex, ComponentNode>();
-        for (ComponentNode node : model.getAllComponentNodes()) {
-            Vertex vertex = VisualSceneUtilities.createVertex(null, node);
-            String title = UIUtils.formatDisplayName(node.getName());
-            vertex.setTitle(title);
-            fNodesToBeAdded.put(vertex, node);
-        }
-
-        fConnectionsMap = new LinkedHashMap<String, Connection>();
-        fConnectionsToBeAdded = new ArrayList<Connection>();
-        for (Connection c : model.getAllConnections()) {
-            fConnectionsToBeAdded.add(c);
-        }
-
-        if (fMainView.isVisible()) {
-            updateULCGraph();
-        }
-
-        // this can be created only now - since now we know whether we have a Model or a ComposedComponent
-        fULCGraphComponent.setComponentPopupMenu(createPopupMenu());
-
-    }
-
-    private void updateULCGraph() {
-        int nodesToAdd = fNodesToBeAdded.size();
-        int connectionsToAdd = fConnectionsToBeAdded.size();
-        if (nodesToAdd == 0 && connectionsToAdd == 0) {
-            return;
-        }
-
-        Vertex[] vertices = new Vertex[nodesToAdd];
-        int i = 0;
-        for (Vertex v : fNodesToBeAdded.keySet()) {
-            ComponentNode node = fNodesToBeAdded.get(v);
-            final java.awt.Rectangle rectangle = node.getRectangle();
-            if (rectangle != null) {
-                v.setRectangle(new Rectangle((int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight()));
-            }
-            fNodesMap.put(v.getId(), node);
-            vertices[i++] = v;
-        }
-        try {
-            fULCGraph.addVertex(vertices);
-            for (Vertex v : vertices) {
-                fULCGraphComponent.autoAdjustVertexSize(v);
-            }
-        } catch (Exception ex) {
-            System.out.println("Problem occurred while adding a vertex to ULC graph: \n" + ex.getMessage());
-        }
-        fNodesToBeAdded = new LinkedHashMap<Vertex, ComponentNode>();
-
-        // construct and add edges associated with the connections registered for inclusion
-        // note that the edges can be created only after all the vertices are available.
-        Edge[] edges = new Edge[connectionsToAdd];
-        i = 0;
-        for (Connection c : fConnectionsToBeAdded) {
-            Port outPort = getULCPort(c.getFrom());
-            Port inPort = getULCPort(c.getTo());
-            String id = "conn_" + System.currentTimeMillis() + "_" + Math.random();
-            Edge e = new Edge(id, outPort, inPort);
-            final List<java.awt.Point> controlPoints = c.getControlPoints();
-            if (controlPoints != null && !controlPoints.isEmpty()) {
-                List<com.canoo.ulc.graph.model.Point> points = new ArrayList<com.canoo.ulc.graph.model.Point>(controlPoints.size());
-                for (java.awt.Point point : controlPoints) {
-                    points.add(new com.canoo.ulc.graph.model.Point(point.getX(), point.getY()));
-                }
-                e.setControlPoints(points);
-            }
-            fConnectionsMap.put(e.getId(), c);
-            edges[i++] = e;
-        }
-        try {
-            fULCGraph.addEdge(edges);
-        } catch (Exception ex) {
-            System.out.println("Problem occurred while adding an edge to ULC graph: \n" + ex.getMessage());
-        }
-        fConnectionsToBeAdded = new ArrayList<Connection>();
-    }
-
-    public void setWatchList(IWatchList watchList) {
-        fWatchList = watchList;
-    }
-
-
-    @Action
-    public void newNodeAction() {
-        NodeEditDialog dialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), fGraphModel);
-        dialog.setModal(true);
-        dialog.setVisible(true);
-    }
-
-    @Action
-    public void modifyNodeAction(ComponentNode node) {
-        if (!readOnly && node != null) {
-            NodeEditDialog dialog = new NodeEditDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), fGraphModel);
-            dialog.setModal(true);
-            dialog.setVisible(true);
-            NodeBean bean = dialog.getBeanForm().getModel().getBean();
-            bean.setName(UIUtils.formatDisplayName(node.getName()));
-            bean.setComponentType(node.getType().getTypeClass().getName());
-            bean.setComment(node.getComment());
-            if (fGraphModel instanceof ModelGraphModel) {
-                bean.setStarter(((ModelGraphModel) fGraphModel).getStartComponents().contains(node));
-            }
-            dialog.getBeanForm().getModel().setEditedNode(node);
-            dialog.setEditedNode(node);
-            dialog.setWatchList(fWatchList); // todo eliminate this by rather using the IGraphModelChangeListener
-        }
-    }
-
-    @Action
-    public void clearSelectionAction() {
-        clearSelection();
-        for (ISelectionListener listener : fSelectionListeners) {
-            listener.clearSelection();
-        }
-    }
-
-    @Action
-    public void replicatePortAction() {
-        final ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel;
-        Set<Port> selectedPorts = fULCGraph.getSelectionModel().getSelectedPorts();
-        for (Port port : selectedPorts) {
-            final org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort = getGraphPort(port);
-            if (graphPort == null) {
-                ULCAlert alert = new ULCAlert("Port not replicated.",
-                        "Port " + port.getTitle() + " cannot be replicated.", "ok");
-                alert.show();
-                return;
-            }
-            if (ccGraphModel.isReplicated(graphPort)) {
-                final ULCAlert alert = new ULCAlert(UlcUtilities.getWindowAncestor(fULCGraphComponent), // parent window
-                        "Port is already replicated.", // window title
-                        "Do you want to introduce another replicating port?", "Yes", "No");
-                alert.addWindowListener(new IWindowListener() {
-                    public void windowClosing(WindowEvent event) {
-                        if (alert.getValue().equals("Yes")) {
-                            showPortNameDialog(graphPort);
-                        }
-                    }
-                });
-                alert.show();
-            } else {
-                showPortNameDialog(graphPort);
-            }
-        }
-    }
-
-    private void showPortNameDialog(org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort) {
-        PortNameDialog dialog = new PortNameDialog(UlcUtilities.getWindowAncestor(fULCGraphComponent), (ComposedComponentGraphModel) fGraphModel, graphPort);
-        dialog.setModal(true);
-        NameBean bean = dialog.getBeanForm().getModel().getBean();
-        bean.setName(UIUtils.formatDisplayName(graphPort.getName()));
-        dialog.setVisible(true);        
-    }
-    
-    @Action
-    public void removePortAction() {
-        ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) fGraphModel;
-        Set<Port> selectedPorts = fULCGraph.getSelectionModel().getSelectedPorts();
-        List<org.pillarone.riskanalytics.graph.core.graph.model.Port> selectedOuterPorts = new ArrayList<org.pillarone.riskanalytics.graph.core.graph.model.Port>();
-        for (Port port : selectedPorts) {
-            org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort = getGraphPort(port);
-            if (graphPort != null && graphPort.isComposedComponentOuterPort()) {
-                selectedOuterPorts.add(graphPort);
-            }
-        }
-        if (selectedOuterPorts.size() > 0) {
-            for (org.pillarone.riskanalytics.graph.core.graph.model.Port p : selectedOuterPorts) {
-                ccGraphModel.removeOuterPort(p);
-            }
-        } else {
-            ULCAlert alert = new ULCAlert("Port not removed.", "Inner ports cannot be removed.", "ok");
-            alert.show();
-        }
-    }
-
-    @Action
-    public void addSelectedToWatches() {
-        Set<Port> selectedPorts = fULCGraph.getSelectionModel().getSelectedPorts();
-        for (Port port : selectedPorts) {
-            org.pillarone.riskanalytics.graph.core.graph.model.Port graphPort = getGraphPort(port);
-            if (graphPort == null) {
-                ULCAlert alert = new ULCAlert("No watches added.",
-                        "Port " + port.getTitle() + " cannot be identified.", "ok");
-                alert.show();
-                return;
-            } else if (graphPort instanceof InPort) {
-                ULCAlert alert = new ULCAlert("In-Port selected.",
-                        "Only out-ports can be watched.", "ok");
-                alert.show();
-                return;
-            }
-            String path = GraphModelUtilities.getPath(graphPort, fGraphModel);
-            fWatchList.addWatch(path);
-        }
-    }
-
-    private ULCPopupMenu createPopupMenu() {
-        ULCPopupMenu popupMenu = new ULCPopupMenu();
-        ApplicationActionMap actionMap = fApplicationContext.getActionMap(this);
-
-        /*ULCMenuItem addNodeItem = new ULCMenuItem("add node");
-        addNodeItem.addActionListener(actionMap.get("addNodeAction"));
-        popupMenu.add(addNodeItem);*/
-
-        ULCMenuItem showInNewTabItem = new ULCMenuItem("show in new tab");
-        showInNewTabItem.addActionListener(new IActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
-                if (selectedVertices != null && selectedVertices.size() > 0) {
-                    Vertex vertex = selectedVertices.iterator().next();
-                    ComponentNode node = fNodesMap.get(vertex.getId());
-                    if (node instanceof ComposedComponentNode && fAdderInterface != null) {
-                        AbstractGraphModel subModel = ((ComposedComponentNode) node).getComponentGraph();
-                        ComponentDefinition subType = node.getType();
-                        TypeDefinitionBean typeBean = new TypeDefinitionBean();
-                        typeBean.setName(subType.getSimpleName());
-                        typeBean.setPackageName(subModel.getPackageName());
-                        typeBean.setBaseType("ComposedComponent");
-                        fAdderInterface.addModelToView(subModel, typeBean, false);
-                    } else {
-                        ULCAlert alert = new ULCAlert("No Model shown", "Nothing to show here since only a simple component.", "ok");
-                        alert.show();
-                    }
-                }
-            }
-        });
-        popupMenu.add(showInNewTabItem);
-
-        ULCMenuItem createComposedComponentItem = new ULCMenuItem("create composed component");
-        createComposedComponentItem.addActionListener(new IActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                if (fAdderInterface == null) return;
-                Set<Vertex> selectedVertices = fULCGraph.getSelectionModel().getSelectedVertices();
-                Set<Edge> selectedEdges = fULCGraph.getSelectionModel().getSelectedEdges();
-                if (selectedVertices != null && selectedVertices.size() > 0) {
-                    ComposedComponentGraphModel subModel = new ComposedComponentGraphModel();
-                    // add the vertices
-                    for (Vertex v : selectedVertices) {
-                        ComponentNode node = fNodesMap.get(v.getId());
-                        String nameInSubComponent = UIUtils.transformToSubComponentName(node.getName());
-                        ComponentNode newNode = subModel.createComponentNode(node.getType(), nameInSubComponent);
-                        newNode.setComment(node.getComment());
-                    }
-
-                    // add the connections:
-                    for (Edge e : selectedEdges) {
-                        Connection connection = fConnectionsMap.get(e.getId());
-                        org.pillarone.riskanalytics.graph.core.graph.model.Port newFromPort = null;
-                        org.pillarone.riskanalytics.graph.core.graph.model.Port newToPort = null;
-
-                        org.pillarone.riskanalytics.graph.core.graph.model.Port originalOutPort = connection.getFrom();
-                        ComponentNode originalFromNode = originalOutPort.getComponentNode();
-                        if (originalFromNode != null) {
-                            String subComponentName = UIUtils.transformToSubComponentName(originalFromNode.getName());
-                            ComponentNode newFromNode = subModel.findNodeByName(subComponentName);
-                            if (newFromNode != null) {
-                                newFromPort = newFromNode.getPort(originalOutPort.getName());
-                            }
-                        }
-
-                        org.pillarone.riskanalytics.graph.core.graph.model.Port originalInPort = connection.getTo();
-                        ComponentNode originalToNode = originalInPort.getComponentNode();
-                        if (originalToNode != null) {
-                            String subComponentName = UIUtils.transformToSubComponentName(originalToNode.getName());
-                            ComponentNode newToNode = subModel.findNodeByName(subComponentName);
-                            if (newToNode != null) {
-                                newToPort = newToNode.getPort(originalInPort.getName());
-                            }
-                        }
-
-                        if (newFromPort != null && newToPort != null) {
-                            Connection c = subModel.createConnection(newFromPort, newToPort);
-                        }
-                    }
-
-                    // open the new type definition dialog to enter name and package name
-                    showTypeDefinitionDialog(subModel);
-
-                } else {
-                    ULCAlert alert = new ULCAlert("No composed component created.", "Select nodes and connections in the existing model!.", "ok");
-                    alert.show();
-                }
-            }
-        });
-        popupMenu.add(createComposedComponentItem);
-
-        if (!this.readOnly && fGraphModel instanceof ComposedComponentGraphModel) {
-            ULCMenuItem replicatePortItem = new ULCMenuItem("replicate port");
-            replicatePortItem.addActionListener(actionMap.get("replicatePortAction"));
-            popupMenu.add(replicatePortItem);
-
-            ULCMenuItem removeReplicatedPortItem = new ULCMenuItem("remove port");
-            removeReplicatedPortItem.addActionListener(actionMap.get("removePortAction"));
-            popupMenu.add(removeReplicatedPortItem);
-        }
-
-        ULCMenuItem addToWatchesItem = new ULCMenuItem("add to watches");
-        addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));
-        popupMenu.add(addToWatchesItem);
-
-
-        popupMenu.addSeparator();
-
-        ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear all selections");
-        clearSelectionsItem.addActionListener(actionMap.get("clearSelectionsAction"));
-        popupMenu.add(clearSelectionsItem);
-
-
-        return popupMenu;
-    }
-
-    private void showTypeDefinitionDialog(final ComposedComponentGraphModel model) {
-        // TODO -> avoid creating a type definition that already exists.
-        final TypeDefinitionDialog fTypeDefView = new TypeDefinitionDialog(UlcUtilities.getWindowAncestor(this.fMainView), new HashSet<TypeDefinitionBean>());
-        fTypeDefView.getBeanForm().getModel().getBean().setBaseType("Composed Component");
-        IActionListener newComposedComponentListener = new IActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                TypeDefinitionFormModel typeDefinitionFormModel = fTypeDefView.getBeanForm().getModel();
-                if (typeDefinitionFormModel.hasErrors()) return;
-                TypeDefinitionBean typeDef = typeDefinitionFormModel.getBean();
-                if (typeDef.getBaseType().equals("Model")) return;
-                model.setPackageName(typeDef.getPackageName());
-                model.setName(typeDef.getName());
-                fAdderInterface.addModelToView(model, typeDef, true);
-                fTypeDefView.setVisible(false);
-            }
-        };
-        fTypeDefView.getBeanForm().addSaveActionListener(newComposedComponentListener);
-        KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
-        fTypeDefView.getTypeDefinitionForm().registerKeyboardAction(enter, newComposedComponentListener);
-        fTypeDefView.getTypeDefinitionForm().addKeyListener();
-        fTypeDefView.setVisible(true);
-        ULCComponent nameTextField = fTypeDefView.getTypeDefinitionForm().getComponent("name");
-        if (nameTextField != null)
-            nameTextField.requestFocus();
-
-    }
-
-    private org.pillarone.riskanalytics.graph.core.graph.model.Port getGraphPort(Port ulcPort) {
-        if (ulcPort.getType().equals(PortType.IN) || ulcPort.getType().equals(PortType.OUT)) {
-            Vertex vertex = getParentVertex(ulcPort);
-            ComponentNode node = fNodesMap.get(vertex.getId());
-            if (node == null) {
-                System.out.println("No node to given vertex found: " + vertex.getTitle());
-                return null;
-            }
-            String name = UIUtils.formatTechnicalPortName(ulcPort.getTitle(), ulcPort.getType().equals(PortType.IN));
-            return node.getPort(name);
-        } else {
-            ComposedComponentGraphModel ccModel = (ComposedComponentGraphModel) fGraphModel;
-            if (ulcPort.getType().equals(PortType.REPLICATE_IN)) {
-                String name = UIUtils.formatTechnicalPortName(ulcPort.getTitle(), true);
-                for (InPort graphPort : ccModel.getOuterInPorts()) {
-                    if (graphPort.getName().equalsIgnoreCase(name)) {
-                        return graphPort;
-                    }
-                }
-            } else if (ulcPort.getType().equals(PortType.REPLICATE_OUT)) {
-                String name = UIUtils.formatTechnicalPortName(ulcPort.getTitle(), false);
-                for (OutPort graphPort : ccModel.getOuterOutPorts()) {
-                    if (graphPort.getName().equalsIgnoreCase(name)) {
-                        return graphPort;
-                    }
-                }
-            }
-        }
-        System.out.println("Port could not be identified: " + ulcPort.getTitle());
-        return null;
-    }
-
-    private Vertex getParentVertex(Port p) {
-        for (String vertexId : fNodesMap.keySet()) {
-            Vertex vertex = fULCGraph.getVertex(vertexId);
-            if (vertex != null && vertex.getPorts().contains(p)) {
-                return vertex;
-            }
-        }
-        return null;
-    }
-
-    final protected Port getULCPort(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
-        Vertex v = null;
-        if (!p.isComposedComponentOuterPort()) {
-            ComponentNode node = p.getComponentNode();
-            Iterator<Map.Entry<String, ComponentNode>> it = fNodesMap.entrySet().iterator();
-            while (v == null && it.hasNext()) {
-                Map.Entry<String, ComponentNode> e = it.next();
-                if (e.getValue() == node) {
-                    v = fULCGraph.getVertex(e.getKey());
-                }
-            }
-        } else {
-            v = fRootVertex;
-        }
-        if (v != null) {
-            for (Port port : v.getPorts()) {
-                if (VisualSceneUtilities.isConsistentPort(port, p)) {
-                    return port;
-                }
-            }
-        }
-        return null;
-    }
-
     public void addSelectionListener(ISelectionListener selectionListener) {
         fSelectionListeners.add(selectionListener);
     }
@@ -792,7 +788,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
     // ITreeSelectionListener
     ////////////////////////////////////
 
-
     public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
         Object o = treeSelectionEvent.getPath().getLastPathComponent();
         if (o instanceof ComponentTableTreeNode) {
@@ -807,6 +802,98 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
     }
 
+    public void modelRenamed(AbstractGraphModel modelWithNewName, String oldName, String oldPackageName) {
+        if (modelWithNewName.equals(fGraphModel) && fGraphModel instanceof ComposedComponentGraphModel) {
+            fRootVertex.setTitle(modelWithNewName.getName());
+        }
+    }
+
+
+    ////////////////////////////////////
+    // Convenience methods
+    ////////////////////////////////////
+
+    /**
+     * Helper method that looks up for a given ULC port the associated graph model port.
+     * @param ulcPort
+     * @return
+     */
+    private org.pillarone.riskanalytics.graph.core.graph.model.Port getGraphPort(Port ulcPort) {
+        if (ulcPort.getType().equals(PortType.IN) || ulcPort.getType().equals(PortType.OUT)) {
+            Vertex vertex = getParentVertex(ulcPort);
+            ComponentNode node = fNodesMap.get(vertex.getId());
+            if (node == null) {
+                System.out.println("No node to given vertex found: " + vertex.getTitle());
+                return null;
+            }
+            String name = UIUtils.formatTechnicalPortName(ulcPort.getTitle(), ulcPort.getType().equals(PortType.IN));
+            return node.getPort(name);
+        } else {
+            ComposedComponentGraphModel ccModel = (ComposedComponentGraphModel) fGraphModel;
+            if (ulcPort.getType().equals(PortType.REPLICATE_IN)) {
+                String name = UIUtils.formatTechnicalPortName(ulcPort.getTitle(), true);
+                for (InPort graphPort : ccModel.getOuterInPorts()) {
+                    if (graphPort.getName().equalsIgnoreCase(name)) {
+                        return graphPort;
+                    }
+                }
+            } else if (ulcPort.getType().equals(PortType.REPLICATE_OUT)) {
+                String name = UIUtils.formatTechnicalPortName(ulcPort.getTitle(), false);
+                for (OutPort graphPort : ccModel.getOuterOutPorts()) {
+                    if (graphPort.getName().equalsIgnoreCase(name)) {
+                        return graphPort;
+                    }
+                }
+            }
+        }
+        System.out.println("Port could not be identified: " + ulcPort.getTitle());
+        return null;
+    }
+
+    /**
+     * Returns for a given ulc port its parent, i.e. a ulc vertex.
+     * @param p
+     * @return
+     */
+    private Vertex getParentVertex(Port p) {
+        for (String vertexId : fNodesMap.keySet()) {
+            Vertex vertex = fULCGraph.getVertex(vertexId);
+            if (vertex != null && vertex.getPorts().contains(p)) {
+                return vertex;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns for a given graph model port teh associated ulc port.
+     * @param p
+     * @return
+     */
+    private Port getULCPort(org.pillarone.riskanalytics.graph.core.graph.model.Port p) {
+        Vertex v = null;
+        if (!p.isComposedComponentOuterPort()) {
+            ComponentNode node = p.getComponentNode();
+            Iterator<Map.Entry<String, ComponentNode>> it = fNodesMap.entrySet().iterator();
+            while (v == null && it.hasNext()) {
+                Map.Entry<String, ComponentNode> e = it.next();
+                if (e.getValue() == node) {
+                    v = fULCGraph.getVertex(e.getKey());
+                }
+            }
+        } else {
+            v = fRootVertex;
+        }
+        if (v != null) {
+            for (Port port : v.getPorts()) {
+                if (VisualSceneUtilities.isConsistentPort(port, p)) {
+                    return port;
+                }
+            }
+        }
+        return null;
+    }
+
     private Vertex findVertexByTitle(String name) {
         for (Vertex vertex : fULCGraph.getModel().getAllVertices()) {
             if (vertex.getTitle().equals(name))
@@ -815,9 +902,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         return null;
     }
 
-    ////////////////////////////////////
-    // Convience methods
-    ////////////////////////////////////
     private void clearVertexSelection() {
         List<Vertex> selectedV = new ArrayList<Vertex>();
         selectedV.addAll(fULCGraph.getSelectionModel().getSelectedVertices());
@@ -877,7 +961,6 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         }
         return null;
     }
-
 
     private List<Edge> getEdges(List<Connection> connections) {
         List<Edge> edges = new ArrayList<Edge>();
@@ -960,18 +1043,8 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             if (fNodesMap.containsKey(vertex.getId())) {
                 ComponentNode node = fNodesMap.get(vertex.getId());
 
-                removeWatches(node);
+                removeFromWatches(node);
                 fGraphModel.removeComponentNode(node);
-            }
-        }
-
-        private void removeWatches(ComponentNode node) {
-            if (fWatchList != null) {
-                for (OutPort p : node.getOutPorts()) {
-                    String pathOfWatchToRemove = GraphModelUtilities.getPath(p, fGraphModel);
-                    if (pathOfWatchToRemove != null)
-                        fWatchList.removeWatch(pathOfWatchToRemove);
-                }
             }
         }
 

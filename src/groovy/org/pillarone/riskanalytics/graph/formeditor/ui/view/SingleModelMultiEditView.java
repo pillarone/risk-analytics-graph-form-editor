@@ -15,19 +15,18 @@ import com.ulcjava.base.application.event.*;
 import com.ulcjava.base.application.tabletree.ITableTreeNode;
 import com.ulcjava.base.application.util.Dimension;
 import com.ulcjava.base.application.util.KeyStroke;
-import org.pillarone.riskanalytics.core.model.registry.ModelRegistry;
 import org.pillarone.riskanalytics.core.simulation.engine.SimulationRunner;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.ComponentNodeFilterFactory;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
-import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
-import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
+import org.pillarone.riskanalytics.graph.formeditor.ui.*;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.DataNameFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.DataNameForm;
+import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.ProbeSimulationService;
 import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils;
 
@@ -35,7 +34,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class SingleModelMultiEditView extends AbstractBean implements IWatchList, ISaveListener {
+/**
+ * Provides a multiple view on a single graph model.
+ * It contains
+ * <ul>
+ *     <it>the actual view on the model (card pane with the visual, the form and the textual views)</it>
+ *     <it>help</it>
+ *     <it>comments</it>
+ *     <it>data (with parameters to be viewed or edited)</it>
+ *     <it>results from a probe simulation run either in the default result table or in the watch list.</it>
+ * </ul>
+ */
+public class SingleModelMultiEditView extends AbstractBean implements IWatchList, ISaveListener, IModelRenameListener {
     private ApplicationContext fApplicationContext;
 
     private AbstractGraphModel fGraphModel;
@@ -45,40 +55,34 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
     private SingleModelVisualView fVisualEditorView;
     private SingleModelFormView fFormEditorView;
     private SingleModelTextView fTextEditorView;
+
     private ULCDetachableTabbedPane fLeftTabbedPane;
-    private ULCDetachableTabbedPane fRightTabbedPane;
     private HelpView fHelpView;
-    private CommentView fCommentView;
     private ULCCloseableTabbedPane fDataSetSheets;
+
+    private ULCDetachableTabbedPane fRightTabbedPane;
+    private CommentView fCommentView;
     private ULCCloseableTabbedPane fResultSheets;
     private WatchesTable fWatchesTable;
-    private ITabListener tabListener;
 
     private IActionListener f9_pressed;
     private List<ISaveListener> saveListeners = new ArrayList<ISaveListener>();
     private List<ISelectionListener> selectionListeners = new ArrayList<ISelectionListener>();
     private boolean readOnly = false;
 
-    public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model, IGraphModelAdder adderInterface) {
+    private IGraphModelHandler graphModelHandler;
+
+    public SingleModelMultiEditView(ApplicationContext ctx, AbstractGraphModel model, IGraphModelHandler graphModelHandler) {
         super();
-        if (model instanceof ModelGraphModel) {
-            for (Class c : ModelRegistry.getInstance().getAllModelClasses()) {
-                if (c.getName().equals(model.getPackageName() + "." + model.getName())) {
-                    readOnly = true;
-                }
-            }
-        } else if (model instanceof ComposedComponentGraphModel) {
-            for (ComponentDefinition cd : PaletteService.getInstance().getAllComponentDefinitions()) {
-                if (cd.getTypeClass().getName().equals(model.getPackageName() + "." + model.getName())) {
-                    readOnly = true;
-                }
-            }
-        }
         fApplicationContext = ctx;
         boolean isModel = model instanceof ModelGraphModel;
+        readOnly = GraphModelUtilities.isIncludedInRegistry(model);
+
         createView(isModel);
+        createContextMenu();
         injectGraphModel(model);
-        fVisualEditorView.setAdderInterface(adderInterface);
+
+        fVisualEditorView.setGraphModelHandler(graphModelHandler);
         fVisualEditorView.setWatchList(this);
         fFormEditorView.setWatchList(this);
 
@@ -88,6 +92,18 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             }
         };
         fMainView.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
+    }
+
+    public ULCBoxPane getView() {
+        return fMainView;
+    }
+
+    public HelpView getHelpView() {
+        return fHelpView;
+    }
+
+    public void setHelpView(HelpView fHelpView) {
+        this.fHelpView = fHelpView;
     }
 
     public boolean isReadOnly() {
@@ -100,21 +116,126 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         fVisualEditorView.setReadOnly();
     }
 
-    public void createView(boolean isModel) {
+    public void setGraphModelHandler(IGraphModelHandler graphModelHandler) {
+        this.graphModelHandler = graphModelHandler;
+        fFormEditorView.setGraphModelHandler(graphModelHandler);
+        fVisualEditorView.setGraphModelHandler(graphModelHandler);
+    }
+
+    /**
+     * Create the view.
+     * @param isModel
+     */
+    private void createView(boolean isModel) {
         fMainView = new ULCBoxPane(true, 1);
 
-        ///////////////////
-        // toolbar pane
-        //////////////////
+        // split pane with the model views in the upper part and the "properties" in the lower
+        ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.VERTICAL_SPLIT);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.setDividerLocation(0.65);
+        splitPane.setDividerSize(10);
+        ULCBoxPane modelPane = new ULCBoxPane(true, 2);
 
+        // toolbar pane
         // model filter tool
         ULCBoxPane modelFilterTool = new ULCBoxPane(false);
-        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, new ULCLabel("Filter Type: "));
+        ULCLabel filterTypeLabel = new ULCLabel("Filter Type: ");
         final ULCComboBox filterType = new ULCComboBox(ComponentNodeFilterFactory.getFilterModelNames());
-        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, filterType);
-        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, new ULCLabel("Value: "));
+        ULCLabel filterValueLabel = new ULCLabel("Value: ");
         final ULCTextField filterValue = new ULCTextField(10);
         filterValue.setEditable(false);
+        ULCButton clear = new ULCButton(UIUtils.getIcon("delete-active.png"));
+        clear.setPreferredSize(new Dimension(16, 16));
+        clear.setContentAreaFilled(false);
+        clear.setOpaque(false);
+        final ULCButton refreshLayout = new ULCButton("Layout");
+
+        // view selector
+        ULCBoxPane viewSelector = new ULCBoxPane(false);
+        viewSelector.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
+        ULCButtonGroup buttonGroup = new ULCButtonGroup();
+        ULCRadioButton formSelectButton = new ULCRadioButton("Forms");
+        formSelectButton.setGroup(buttonGroup);
+        formSelectButton.setToolTipText("Edit (model | component) by filling in forms with nodes and connections.");
+        ULCRadioButton textSelectButton = new ULCRadioButton("Code");
+        textSelectButton.setGroup(buttonGroup);
+        textSelectButton.setToolTipText("Inspect (model | component) by looking at its groovy code.");
+        ULCRadioButton visualSelectButton = new ULCRadioButton("Visual", true);
+        visualSelectButton.setGroup(buttonGroup);
+        visualSelectButton.setToolTipText("Edit (model | component) in the graphical editor.");
+        ULCBoxPane toolBarPane = new ULCBoxPane(false);
+        toolBarPane.setBorder(BorderFactory.createEtchedBorder());
+
+        // content pane with teh views on the model - initialize the different views
+        final ULCCardPane cardPane = new ULCCardPane();
+        fFormEditorView = new SingleModelFormView(fApplicationContext, readOnly);
+        final ULCComponent formView = fFormEditorView.getView();
+        fTextEditorView = new SingleModelTextView(fApplicationContext);
+        final ULCComponent textView = fTextEditorView.getView();
+        fVisualEditorView = new SingleModelVisualView(fApplicationContext, isModel, readOnly);
+        final ULCComponent visualView = fVisualEditorView.getView();
+
+        // lower pane - consisting of a property pane and a model filter pane
+        ULCBoxPane lower = new ULCBoxPane(true, 1);
+        ULCBoxPane propertyPane = new ULCBoxPane(1, 1);
+
+        // the property editing area --> comments, help, ...etc.
+        ULCSplitPane propertiesAreaSplitPane = new ULCSplitPane();
+        propertiesAreaSplitPane.setDividerSize(10);
+        propertiesAreaSplitPane.setOneTouchExpandable(true);
+        propertiesAreaSplitPane.setDividerLocation(0.5);
+
+        fLeftTabbedPane = new ULCDetachableTabbedPane();
+        fRightTabbedPane = new ULCDetachableTabbedPane();
+        fHelpView = new HelpView();
+        fCommentView = new CommentView(readOnly);
+        // parameters --> will be added on demand
+        // results --> will be added on demand
+        // watches --> will be added on demand
+
+
+        // layout
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, filterTypeLabel);
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, filterType);
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, filterValueLabel);
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, filterValue);
+        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, clear);
+        viewSelector.add(visualSelectButton);
+        viewSelector.add(formSelectButton);
+        viewSelector.add(textSelectButton);
+
+        toolBarPane.add(ULCBoxPane.BOX_LEFT_CENTER, modelFilterTool);
+        toolBarPane.add(ULCBoxPane.BOX_EXPAND_CENTER, ULCFiller.createHorizontalGlue());
+        toolBarPane.add(ULCBoxPane.BOX_RIGHT_CENTER, refreshLayout);
+        toolBarPane.add(ULCBoxPane.BOX_RIGHT_CENTER, viewSelector);
+
+        cardPane.addCard("Form", formView);
+        cardPane.addCard("Text", textView);
+        cardPane.addCard("Visual", visualView);
+        cardPane.setSelectedComponent(visualView);
+        fVisualEditorView.setVisible(true);
+
+
+        modelPane.add(ULCBoxPane.BOX_EXPAND_TOP, toolBarPane);
+        modelPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, cardPane);
+
+        splitPane.setTopComponent(modelPane);
+
+        fLeftTabbedPane.addTab("Help", new ULCScrollPane(getHelpView().getMainComponent()));
+        fRightTabbedPane.addTab("Comments", new ULCScrollPane(fCommentView.getContent()));
+        fLeftTabbedPane.setSelectedIndex(0);
+        fRightTabbedPane.setSelectedIndex(0);
+
+        propertiesAreaSplitPane.setLeftComponent(fLeftTabbedPane);
+        propertiesAreaSplitPane.setRightComponent(fRightTabbedPane);
+        propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, propertiesAreaSplitPane);
+        lower.add(ULCBoxPane.BOX_EXPAND_EXPAND, propertyPane);
+
+        splitPane.setBottomComponent(lower);
+        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane);
+
+
+        // attach listeners
         // TODO: Validation of what has been entered
         filterType.addActionListener(
                 new IActionListener() {
@@ -128,12 +249,6 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
                     }
                 }
         );
-        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, filterValue);
-
-        ULCButton clear = new ULCButton(UIUtils.getIcon("delete-active.png"));
-        clear.setPreferredSize(new Dimension(16, 16));
-        clear.setContentAreaFilled(false);
-        clear.setOpaque(false);
         clear.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 filterValue.setText("");
@@ -146,8 +261,6 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
                     selectionListener.applyFilter(new NodeNameFilter(null));
             }
         });
-        modelFilterTool.add(ULCBoxPane.BOX_LEFT_CENTER, clear);
-
         IActionListener action = new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 String expr = filterValue.getText();
@@ -165,56 +278,11 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false);
         filterValue.registerKeyboardAction(action, enter, ULCComponent.WHEN_FOCUSED);
 
-        // refresh layout button:
-        final ULCButton refreshLayout = new ULCButton("Layout");
         refreshLayout.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
-                fVisualEditorView.getULCGraphComponent().layout();
+                fVisualEditorView.refreshLayout();
             }
         });
-
-        // button to select the view
-        ULCBoxPane viewSelector = new ULCBoxPane(false);
-        ULCRadioButton formSelectButton = new ULCRadioButton("Forms");
-        formSelectButton.setToolTipText("Edit (model | component) by filling in forms with nodes and connections.");
-        ULCRadioButton textSelectButton = new ULCRadioButton("Code");
-        textSelectButton.setToolTipText("Inspect (model | component) by looking at its groovy code.");
-        ULCRadioButton visualSelectButton = new ULCRadioButton("Visual", true);
-        visualSelectButton.setToolTipText("Edit (model | component) in the graphical editor.");
-        ULCButtonGroup buttonGroup = new ULCButtonGroup();
-        formSelectButton.setGroup(buttonGroup);
-        textSelectButton.setGroup(buttonGroup);
-        visualSelectButton.setGroup(buttonGroup);
-        viewSelector.add(visualSelectButton);
-        viewSelector.add(formSelectButton);
-        viewSelector.add(textSelectButton);
-        viewSelector.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
-
-        // pack it in a toolbar pane:
-        ULCBoxPane toolBarPane = new ULCBoxPane(false);
-        // model filtering
-        toolBarPane.add(ULCBoxPane.BOX_LEFT_CENTER, modelFilterTool);
-
-        // view selector
-        toolBarPane.add(ULCBoxPane.BOX_EXPAND_CENTER, ULCFiller.createHorizontalGlue());
-        toolBarPane.add(ULCBoxPane.BOX_RIGHT_CENTER, refreshLayout);
-        //toolBarPane.add(ULCBoxPane.BOX_EXPAND_CENTER, ULCFiller.createHorizontalGlue());
-        toolBarPane.add(ULCBoxPane.BOX_RIGHT_CENTER, viewSelector);
-        toolBarPane.setBorder(BorderFactory.createEtchedBorder());
-
-        //////////////////////////////////////////////////
-        // content pane - initialize the different views
-        //////////////////////////////////////////////////
-        final ULCCardPane cardPane = new ULCCardPane();
-        fFormEditorView = new SingleModelFormView(fApplicationContext, readOnly);
-        final ULCComponent formView = fFormEditorView.getView();
-        cardPane.addCard("Form", formView);
-        fTextEditorView = new SingleModelTextView(fApplicationContext);
-        final ULCComponent textView = fTextEditorView.getView();
-        cardPane.addCard("Text", textView);
-        fVisualEditorView = new SingleModelVisualView(fApplicationContext, isModel, readOnly);
-        final ULCComponent visualView = fVisualEditorView.getView();
-        cardPane.addCard("Visual", visualView);
 
         formSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
@@ -247,60 +315,91 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
                 fTextEditorView.setVisible(false);
             }
         });
-
-        cardPane.setSelectedComponent(visualView);
-        fVisualEditorView.setVisible(true);
-
-        ULCSplitPane splitPane = new ULCSplitPane(ULCSplitPane.VERTICAL_SPLIT);
-        splitPane.setOneTouchExpandable(true);
-        splitPane.setDividerLocation(0.65);
-        splitPane.setDividerSize(10);
-        // the model editing area
-        ULCBoxPane modelPane = new ULCBoxPane(true, 2);
-        modelPane.add(ULCBoxPane.BOX_EXPAND_TOP, toolBarPane);
-        modelPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, cardPane);
-        splitPane.setTopComponent(modelPane);
-
-        // lower pane - consisting of a property pane and a model filter pane
-        ULCBoxPane lower = new ULCBoxPane(true, 1);
-
-        // the property editing area --> comments, help, ...etc.
-        ULCSplitPane propertiesAreaSplitPane = new ULCSplitPane();
-        propertiesAreaSplitPane.setDividerSize(10);
-        propertiesAreaSplitPane.setOneTouchExpandable(true);
-        propertiesAreaSplitPane.setDividerLocation(0.5);
-
-        fLeftTabbedPane = new ULCDetachableTabbedPane();
-        fRightTabbedPane = new ULCDetachableTabbedPane();
-
-        // help
-        fHelpView = new HelpView();
-
-        // comments
-        fCommentView = new CommentView(readOnly);
-
-        // parameters --> will be added on demand
-
-        // results --> will be added on demand
-
-        // watches --> will be added on demand
-
-        fLeftTabbedPane.addTab("Help", new ULCScrollPane(getHelpView().getMainComponent()));
-        fRightTabbedPane.addTab("Comments", new ULCScrollPane(fCommentView.getContent()));
-        fLeftTabbedPane.setSelectedIndex(0);
-        fRightTabbedPane.setSelectedIndex(0);
-
-        propertiesAreaSplitPane.setLeftComponent(fLeftTabbedPane);
-        propertiesAreaSplitPane.setRightComponent(fRightTabbedPane);
-        ULCBoxPane propertyPane = new ULCBoxPane(1, 1);
-        propertyPane.add(ULCBoxPane.BOX_EXPAND_EXPAND, propertiesAreaSplitPane);
-        lower.add(ULCBoxPane.BOX_EXPAND_EXPAND, propertyPane);
-
-        splitPane.setBottomComponent(lower);
-        fMainView.add(ULCBoxPane.BOX_EXPAND_EXPAND, splitPane);
     }
 
-    public void injectGraphModel(AbstractGraphModel model) {
+    private void createContextMenu() {
+        ULCPopupMenu menu = new ULCPopupMenu();
+        ULCMenuItem renameModelItem = new ULCMenuItem("rename model");
+        menu.add(renameModelItem);
+        renameModelItem.addActionListener(new IActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                graphModelHandler.renameModel(fGraphModel);
+            }
+        });
+        fMainView.setComponentPopupMenu(menu);
+    }
+
+    private void createParametersView() {
+        ULCBoxPane data = new ULCBoxPane();
+        fDataSetSheets = new ULCCloseableTabbedPane();
+        data.add(ULCBoxPane.BOX_EXPAND_EXPAND, fDataSetSheets);
+        fLeftTabbedPane.addTab("Parameters", data);
+
+        fDataSetSheets.addTabListener(new ITabListener() {
+            public void tabClosing(TabEvent event) {
+                int tabClosingIndex = event.getTabClosingIndex();
+                ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
+                if (component instanceof ISelectionListener) {
+                    fFormEditorView.removeSelectionListener((ISelectionListener) component);
+                    fVisualEditorView.removeSelectionListener((ISelectionListener) component);
+                }
+                if (component instanceof ISaveListener)
+                    saveListeners.remove((ISaveListener) component);
+                if (component instanceof SimulationResultTable)
+                    selectionListeners.remove(component);
+
+                event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
+                if (fDataSetSheets.getTabCount() > 0) {
+                    event.getClosableTabbedPane().setSelectedIndex(0);
+                }
+            }
+        });
+    }
+
+    private void createResultsView() {
+        ULCBoxPane results = new ULCBoxPane();
+        fResultSheets = new ULCCloseableTabbedPane();
+        results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
+        fRightTabbedPane.addTab("Results", results);
+
+        fResultSheets.addTabListener(new ITabListener() {
+            public void tabClosing(TabEvent event) {
+                int tabClosingIndex = event.getTabClosingIndex();
+
+                ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
+                if (component instanceof ISelectionListener) {
+                    fFormEditorView.removeSelectionListener((ISelectionListener) component);
+                    fVisualEditorView.removeSelectionListener((ISelectionListener) component);
+                }
+                event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
+                if (fResultSheets.getTabCount() > 0) {
+                    event.getClosableTabbedPane().setSelectedIndex(0);
+                }
+            }
+        });
+        fResultSheets.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
+    }
+
+    /**
+     * Creates a context menu for the parameterizations.
+     */
+    private void addParametersContextMenu() {
+        ULCPopupMenu menu = new ULCPopupMenu();
+        ApplicationActionMap actionMap = fApplicationContext.getActionMap(this);
+
+        ULCMenuItem addItem = new ULCMenuItem("simulate");
+        addItem.addActionListener(actionMap.get("simulateAction"));
+        menu.add(addItem);
+
+        fDataSetSheets.setComponentPopupMenu(menu);
+    }
+
+
+    /**
+     * Activate the multiple view component with the given graph model.
+     * @param model
+     */
+    private void injectGraphModel(AbstractGraphModel model) {
         fGraphModel = model;
         fIsModel = model instanceof ModelGraphModel;
         fVisualEditorView.injectGraphModel(model);
@@ -320,54 +419,36 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         fFormEditorView.addSelectionListener(fCommentView);
         fVisualEditorView.addSelectionListener(fCommentView);
 
+        fVisualEditorView.refreshLayout();
     }
 
-    public ULCBoxPane getView() {
-        return fMainView;
-    }
-
+    /**
+     * Provide the graph model for the given multi-edit view.
+     * @return
+     */
     public AbstractGraphModel getGraphModel() {
         return fGraphModel;
     }
 
-    public DataTable getSelectedDataTable() {
-        if (fDataSetSheets != null && fDataSetSheets.getTabCount() > 0) {
-            return (DataTable) fDataSetSheets.getSelectedComponent();
-        }
-        return null;
-    }
-
+    /**
+     * Add a given parameterization to the given view so that it is viewable in DataTable section.
+     * Opens the DatasetNameDialog to ask for a name and then delegates to addParameterSet(Parameterization, String).
+     * @param p
+     */
     public void addParameterSet(Parameterization p) {
-        DataNameDialog dialog = new DataNameDialog(UlcUtilities.getWindowAncestor(fMainView), p);
+        DatasetNameDialog dialog = new DatasetNameDialog(UlcUtilities.getWindowAncestor(fMainView), p, "Dataset Name");
         dialog.setModal(true);
         dialog.setVisible(true);
     }
 
+    /**
+     * Add the given parameterization under the given name in the parameters section of the multi edit view.
+     * @param p
+     * @param name
+     */
     public void addParameterSet(Parameterization p, String name) {
         if (!fLeftTabbedPane.anyTabContains("Parameters")) {
-            ULCBoxPane data = new ULCBoxPane();
-            fDataSetSheets = new ULCCloseableTabbedPane();
-            fDataSetSheets.addTabListener(new ITabListener() {
-                public void tabClosing(TabEvent event) {
-                    int tabClosingIndex = event.getTabClosingIndex();
-                    ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
-                    if (component instanceof ISelectionListener) {
-                        fFormEditorView.removeSelectionListener((ISelectionListener) component);
-                        fVisualEditorView.removeSelectionListener((ISelectionListener) component);
-                    }
-                    if (component instanceof ISaveListener)
-                        saveListeners.remove((ISaveListener) component);
-                    if (component instanceof SimulationResultTable)
-                        selectionListeners.remove(component);
-
-                    event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
-                    if (fDataSetSheets.getTabCount() > 0) {
-                        event.getClosableTabbedPane().setSelectedIndex(0);
-                    }
-                }
-            });
-            data.add(ULCBoxPane.BOX_EXPAND_EXPAND, fDataSetSheets);
-            fLeftTabbedPane.addTab("Parameters", data);
+            createParametersView();
         }
 
         DataTable dataTable;
@@ -387,37 +468,36 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         fLeftTabbedPane.setSelectedIndex(fLeftTabbedPane.indexOfTab("Parameters"));
     }
 
+    /**
+     * Provides the selected parameterization (parameterization contained in the active tab).
+     * @return
+     */
+    public Parameterization getSelectedParametrization() {
+        ULCComponent comp = fDataSetSheets != null ? fDataSetSheets.getSelectedComponent() : null;
+        if (comp != null) {
+            return ((DataTable) fDataSetSheets.getSelectedComponent()).getParameterization();
+        }
+        return null;
+    }
+
+    /**
+     * Adds the given map with the simulation output under the given name to the tabbed pane with the results.
+     * @param output
+     * @param name
+     * @param inNewTab
+     * @param periodLabels
+     */
     public void addSimulationResult(Map output, String name, boolean inNewTab, List<String> periodLabels) {
         if (!fRightTabbedPane.anyTabContains("Results")) {
-            ULCBoxPane results = new ULCBoxPane();
-            fResultSheets = new ULCCloseableTabbedPane();
-            fResultSheets.addTabListener(new ITabListener() {
-                public void tabClosing(TabEvent event) {
-                    int tabClosingIndex = event.getTabClosingIndex();
-
-                    ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
-                    if (component instanceof ISelectionListener) {
-                        fFormEditorView.removeSelectionListener((ISelectionListener) component);
-                        fVisualEditorView.removeSelectionListener((ISelectionListener) component);
-                    }
-                    event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
-                    if (fResultSheets.getTabCount() > 0) {
-                        event.getClosableTabbedPane().setSelectedIndex(0);
-                    }
-                }
-            });
-            results.add(ULCBoxPane.BOX_EXPAND_EXPAND, fResultSheets);
-            fRightTabbedPane.addTab("Results", results);
-            fResultSheets.registerKeyboardAction(f9_pressed, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), ULCComponent.WHEN_IN_FOCUSED_WINDOW);
+            createResultsView();
         }
         SimulationResultTable resultTable = new SimulationResultTable(output, periodLabels);
-        selectionListeners.add(resultTable);
-        fFormEditorView.addSelectionListener(resultTable);
-        fVisualEditorView.addSelectionListener(resultTable);
+
         ULCScrollPane resultScrollPane = new ULCScrollPane(resultTable);
         ULCBoxPane resultTablePane = new ULCBoxPane(true);
-        resultTablePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, resultScrollPane);
         resultTablePane.setBorder(BorderFactory.createEmptyBorder());
+
+        resultTablePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, resultScrollPane);
         int index = fResultSheets.indexOfTab(name);
         if (index < 0 || inNewTab) {
             fResultSheets.addTab(name, resultTablePane);
@@ -425,6 +505,10 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             fResultSheets.setComponentAt(index, resultTablePane);
             fResultSheets.setSelectedIndex(index);
         }
+        selectionListeners.add(resultTable);
+
+        fFormEditorView.addSelectionListener(resultTable);
+        fVisualEditorView.addSelectionListener(resultTable);
 
         boolean hasWatches = fWatchesTable != null && ((ITableTreeNode) fWatchesTable.getModel().getRoot()).getChildCount() > 0;
         if (hasWatches) {
@@ -444,6 +528,14 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         }
     }
 
+    ////////////////////////////////////////////////
+    // Implementation of the IWatchList-interface
+    ////////////////////////////////////////////////
+
+    /**
+     * @see org.pillarone.riskanalytics.graph.formeditor.ui.IWatchList
+     * @param path
+     */
     public void addWatch(String path) {
         if (fWatchesTable == null) {
             fWatchesTable = new WatchesTable();
@@ -456,43 +548,39 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         fRightTabbedPane.setSelectedIndex(fRightTabbedPane.indexOfTab("Watches"));
     }
 
+    /**
+     * @see org.pillarone.riskanalytics.graph.formeditor.ui.IWatchList
+     * @param path
+     */
     public void removeWatch(String path) {
         if (fWatchesTable != null && fWatchesTable.getModel() != null)
             fWatchesTable.getModel().removeWatch(path);
     }
 
+    /**
+     * @see org.pillarone.riskanalytics.graph.formeditor.ui.IWatchList
+     * @param oldPath
+     * @param newPath
+     */
     public void editWatch(String oldPath, String newPath) {
         if (fWatchesTable != null && fWatchesTable.getModel() != null)
             fWatchesTable.getModel().editWatch(oldPath, newPath);
     }
 
+    /**
+     * @see org.pillarone.riskanalytics.graph.formeditor.ui.IWatchList
+     */
     public void removeAllWatches() {
         fWatchesTable.getModel().removeAllWatches();
     }
 
+    /**
+     * @see ISaveListener
+     */
     public void save() {
         for (ISaveListener saveListener : saveListeners) {
             saveListener.save();
         }
-    }
-
-    public Parameterization getSelectedParametrization() {
-        ULCComponent comp = fDataSetSheets != null ? fDataSetSheets.getSelectedComponent() : null;
-        if (comp != null) {
-            return ((DataTable) fDataSetSheets.getSelectedComponent()).getParameterization();
-        }
-        return null;
-    }
-
-    private void addParametersContextMenu() {
-        ULCPopupMenu menu = new ULCPopupMenu();
-        ApplicationActionMap actionMap = fApplicationContext.getActionMap(this);
-
-        ULCMenuItem addItem = new ULCMenuItem("simulate");
-        addItem.addActionListener(actionMap.get("simulateAction"));
-        menu.add(addItem);
-
-        fDataSetSheets.setComponentPopupMenu(menu);
     }
 
     @Action
@@ -525,20 +613,18 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         }
     }
 
-    public HelpView getHelpView() {
-        return fHelpView;
+    public void modelRenamed(AbstractGraphModel modelWithNewName, String oldName, String oldPackageName) {
+        fFormEditorView.modelRenamed(modelWithNewName, oldName, oldPackageName);
+        fVisualEditorView.modelRenamed(modelWithNewName, oldName, oldPackageName);
     }
 
-    public void setHelpView(HelpView fHelpView) {
-        this.fHelpView = fHelpView;
-    }
 
-    private class DataNameDialog extends ULCDialog {
+    private class DatasetNameDialog extends ULCDialog {
         private BeanFormDialog<DataNameFormModel> fBeanForm;
         private ULCButton fCancel;
         private Parameterization fParameterization;
 
-        public DataNameDialog(ULCWindow parent, Parameterization parameterization) {
+        public DatasetNameDialog(ULCWindow parent, Parameterization parameterization, String title) {
             super(parent);
             fParameterization = parameterization;
             boolean metalLookAndFeel = "Metal".equals(ClientContext.getLookAndFeelName());
@@ -548,7 +634,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             }
 
             createBeanView();
-            setTitle("Dataset Name");
+            setTitle(title);
             setLocationRelativeTo(parent);
         }
 
@@ -557,16 +643,17 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             DataNameFormModel formModel = new DataNameFormModel(new NameBean());
             DataNameForm form = new DataNameForm(formModel);
             fBeanForm = new BeanFormDialog<DataNameFormModel>(form);
-            add(fBeanForm.getContentPane());
             fCancel = new ULCButton("Cancel");
+
+            add(fBeanForm.getContentPane());
+            fBeanForm.addToButtons(fCancel);
+
             fCancel.addActionListener(new IActionListener() {
                 public void actionPerformed(ActionEvent event) {
                     fBeanForm.reset();
                     setVisible(false);
                 }
             });
-            fBeanForm.addToButtons(fCancel);
-
             IActionListener saveActionListener = new IActionListener() {
                 public void actionPerformed(ActionEvent event) {
                     NameBean bean = (NameBean) fBeanForm.getModel().getBean();
@@ -591,5 +678,4 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
             pack();
         }
     }
-
 }

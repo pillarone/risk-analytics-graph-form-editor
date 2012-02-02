@@ -2,6 +2,8 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.model.beans;
 
 
 public class TypeDefinitionBean {
+    public static final String MODEL = "Model";
+    public static final String COMPOSED_COMPONENT = "ComposedComponent";
     private String name;
     private String packageName = "models";
     private String baseType;

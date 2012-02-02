@@ -4,25 +4,25 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 import com.canoo.ulc.detachabletabbedpane.server.ITabListener;
 import com.canoo.ulc.detachabletabbedpane.server.TabEvent;
 import com.canoo.ulc.detachabletabbedpane.server.ULCCloseableTabbedPane;
-import com.canoo.ulc.graph.ULCGraphPalette;
-import com.ulcjava.applicationframework.application.*;
+import com.ulcjava.applicationframework.application.AbstractBean;
+import com.ulcjava.applicationframework.application.Action;
 import com.ulcjava.applicationframework.application.ApplicationContext;
+import com.ulcjava.applicationframework.application.ToolBarFactory;
 import com.ulcjava.base.application.*;
 import com.ulcjava.base.application.event.ActionEvent;
 import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.event.KeyEvent;
-import com.ulcjava.base.application.util.*;
+import com.ulcjava.base.application.util.Dimension;
+import com.ulcjava.base.application.util.IFileLoadHandler;
+import com.ulcjava.base.application.util.KeyStroke;
 import com.ulcjava.base.shared.FileChooserConfig;
 import groovy.util.ConfigObject;
-import models.core.CoreModel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.model.Model;
-import org.pillarone.riskanalytics.core.parameterization.ParameterWriter;
 import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
-import org.pillarone.riskanalytics.core.util.IConfigObjectWriter;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
@@ -32,8 +32,15 @@ import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraph
 import org.pillarone.riskanalytics.graph.core.graphimport.GraphImportService;
 import org.pillarone.riskanalytics.graph.core.graphimport.ModelGraphImport;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
+import org.pillarone.riskanalytics.graph.formeditor.ui.IGraphModelHandler;
+import org.pillarone.riskanalytics.graph.formeditor.ui.IHelpViewable;
+import org.pillarone.riskanalytics.graph.formeditor.ui.IModelRenameListener;
+import org.pillarone.riskanalytics.graph.formeditor.ui.ISaveListener;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.TypeDefinitionFormModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.ModelRenameDialog;
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.TypeDefinitionDialog;
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.TypeImportDialog;
 import org.pillarone.riskanalytics.graph.formeditor.util.FileStoreHandler;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities;
@@ -45,11 +52,14 @@ import java.util.*;
  * The main window with the form editor view.
  * It inherits from {@link AbstractBean} to benefit from its property change support.
  * <p/>
- * The window is a tabbed pane which contains for each model or component to be edited a tab.
+ *
+ * The main window is a tabbed pane which contains for each model or component to be edited a tab.
+ * Furthermore, it contains also a palette which contains the components available to DnD to a model under construction.
+ * Finally, a model repository contains the the elements that have been saved, but may be still under construction and not deployed yet.
  *
  * @author martin.melchior
  */
-public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
+public class GraphModelEditor extends AbstractBean implements IGraphModelHandler, IModelRenameListener {
 
     private static Log LOG = LogFactory.getLog(GraphModelEditor.class);
 
@@ -66,6 +76,8 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
     private Map<ULCComponent, SingleModelMultiEditView> fModelTabs;
     /* A dialog for models or composed components to be imported.*/
     private TypeImportDialog fTypeImportView;
+    /* A dialog to rename models */
+    private ModelRenameDialog fRenameModelDialog;
 
     private ModelRepositoryTree fModelRepositoryTree;
 
@@ -80,17 +92,17 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         fContext = context;
         fEditedTypeDefinitions = new HashSet<TypeDefinitionBean>();
         fModelTabs = new HashMap<ULCComponent, SingleModelMultiEditView>();
-        initialize();
+        createView();
 
         TypeDefinitionBean typeDef = new TypeDefinitionBean();
-        typeDef.setBaseType("Model");
+        typeDef.setBaseType(TypeDefinitionBean.MODEL);
         typeDef.setPackageName("models");
         typeDef.setName("untitled");
 
         AbstractGraphModel model = new ModelGraphModel();
         model.setPackageName("models");
         model.setName("untitled");
-        addModelToView(model, typeDef, true);
+        addModel(model, typeDef, true);
     }
 
     /**
@@ -103,45 +115,22 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         return fContentView;
     }
 
-    private void initialize() {
+    private void createView() {
+        // initialize & decorate components
         ULCBoxPane modelEdit = new ULCBoxPane(true);
         modelEdit.setPreferredSize(new Dimension(600, 600));
-        modelEdit.add(ULCBoxPane.BOX_EXPAND_BOTTOM, ULCFiller.createVerticalStrut(3));
         ULCSeparator separator = new ULCSeparator();
         separator.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
-        modelEdit.add(ULCBoxPane.BOX_EXPAND_BOTTOM, separator);
-
         fEditorArea = new ULCCloseableTabbedPane();
-        fEditorArea.addTabListener(new ITabListener() {
-            public void tabClosing(TabEvent event) {
-                int tabClosingIndex = event.getTabClosingIndex();
-                ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
-                Object modelView = fModelTabs.get(component);
-                if (modelView instanceof ISaveListener) {
-                    saveListeners.remove((ISaveListener)modelView);
-                    fModelTabs.remove(component);
-                }
-                event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
-                if (fEditorArea.getTabCount() > 0) {
-                    event.getClosableTabbedPane().setSelectedIndex(0);
-                }
-            }
-        });
-        modelEdit.add(ULCBoxPane.BOX_EXPAND_EXPAND, fEditorArea);
 
         ULCBoxPane palettePane = new ULCBoxPane(1, 2);
         TabularFilterView filterView = new TabularFilterView();
         ULCBoxPane paletteArea = getPalettePane(filterView);
-        palettePane.add(ULCBoxPane.BOX_LEFT_TOP, filterView.getContent());
-        palettePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, new ULCScrollPane(paletteArea));
 
         ULCBoxPane repositoryTreePane = new ULCBoxPane(true);
         repositoryTreePane.setPreferredSize(new Dimension(200, 200));
         fModelRepositoryTree = new ModelRepositoryTree(this);
         ULCTabbedPane tabbedPane = new ULCTabbedPane();
-        tabbedPane.addTab("Models",fModelRepositoryTree);
-//        repositoryTreePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, fModelRepositoryTree);
-        repositoryTreePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, tabbedPane);
 
         ULCSplitPane typeSelectionPane = new ULCSplitPane(ULCSplitPane.VERTICAL_SPLIT);
         typeSelectionPane.setPreferredSize(new Dimension(150, 600));
@@ -158,9 +147,47 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         fContentView.setOneTouchExpandable(true);
         fContentView.setDividerLocation(0.3);
         fContentView.setDividerSize(10);
+
+        // layout
+        modelEdit.add(ULCBoxPane.BOX_EXPAND_BOTTOM, ULCFiller.createVerticalStrut(3));
+        modelEdit.add(ULCBoxPane.BOX_EXPAND_BOTTOM, separator);
+        modelEdit.add(ULCBoxPane.BOX_EXPAND_EXPAND, fEditorArea);
+
+        palettePane.add(ULCBoxPane.BOX_LEFT_TOP, filterView.getContent());
+        palettePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, new ULCScrollPane(paletteArea));
+
+        tabbedPane.addTab("Models",fModelRepositoryTree);
+        repositoryTreePane.add(ULCBoxPane.BOX_EXPAND_EXPAND, tabbedPane);
+
+        // attach listeners
+        fEditorArea.addTabListener(new ITabListener() {
+            public void tabClosing(TabEvent event) {
+                int tabClosingIndex = event.getTabClosingIndex();
+                ULCComponent component = event.getClosableTabbedPane().getComponentAt(tabClosingIndex);
+                SingleModelMultiEditView modelView = fModelTabs.get(component);
+                saveListeners.remove(modelView);
+                fModelTabs.remove(component);
+                event.getClosableTabbedPane().closeCloseableTab(tabClosingIndex);
+                if (fEditorArea.getTabCount() > 0) {
+                    event.getClosableTabbedPane().setSelectedIndex(0);
+                }
+                fRenameModelDialog.removeModelRenameListener(modelView);
+            }
+        });
+
+        // dialog for renaming models
+        fRenameModelDialog = new ModelRenameDialog(fContentView);
+        fRenameModelDialog.addModelRenameListener(fModelRepositoryTree);
+        fRenameModelDialog.addModelRenameListener(this);
     }
 
+    /**
+     * Create the palette pane.
+     * @param filterView
+     * @return
+     */
     private ULCBoxPane getPalettePane(TabularFilterView filterView) {
+        // initialize components
         ULCBoxPane viewSelector = new ULCBoxPane(false);
         ULCRadioButton categoryTreeSelectButton = new ULCRadioButton("Categories", true);
         ULCRadioButton packageSelectButton = new ULCRadioButton("Package");
@@ -169,77 +196,45 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         packageSelectButton.setGroup(buttonGroup);
         categoryTreeSelectButton.setGroup(buttonGroup);
         alphabeticalButton.setGroup(buttonGroup);
+        final ULCCardPane views = new ULCCardPane();
+        final ComponentCategoryTree categoryTree = new ComponentCategoryTree(this);
+        final ComponentTypeTree packagePalette = new ComponentTypeTree(this);
+        final SortedComponentDefinitionsTree alphabeticalPalette = new SortedComponentDefinitionsTree(this);
+        ULCBoxPane paletteArea = new ULCBoxPane(true);
 
+
+        // layout
         viewSelector.add(ULCBoxPane.BOX_LEFT_CENTER, categoryTreeSelectButton);
         viewSelector.add(ULCBoxPane.BOX_LEFT_CENTER, alphabeticalButton);
         viewSelector.add(ULCBoxPane.BOX_LEFT_CENTER, packageSelectButton);
         viewSelector.add(ULCBoxPane.BOX_EXPAND_EXPAND, new ULCFiller());
-
-        final ULCCardPane views = new ULCCardPane();
-
-        final ComponentCategoryTree categoryTree = new ComponentCategoryTree(this);
-        filterView.addSearchListener(categoryTree);
         views.addCard("categoryTree", categoryTree);
-
-        final ComponentTypeTree packagePalette = new ComponentTypeTree(this);
-        filterView.addSearchListener(packagePalette);
         views.addCard("packagePalette", packagePalette);
-
-        final SortedComponentDefinitionsTree alphabeticalPalette = new SortedComponentDefinitionsTree(this);
-        filterView.addSearchListener(alphabeticalPalette);
         views.addCard("alphabeticalPalette", alphabeticalPalette);
+        paletteArea.add(ULCBoxPane.BOX_EXPAND_TOP, viewSelector);
+        paletteArea.add(ULCBoxPane.BOX_EXPAND_EXPAND, views);
 
+        // attach listeners
+        filterView.addSearchListener(categoryTree);
+        filterView.addSearchListener(packagePalette);
+        filterView.addSearchListener(alphabeticalPalette);
         categoryTreeSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 views.setSelectedComponent(categoryTree);
             }
         });
-
         packageSelectButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 views.setSelectedComponent(packagePalette);
             }
         });
-
         alphabeticalButton.addActionListener(new IActionListener() {
             public void actionPerformed(ActionEvent event) {
                 views.setSelectedComponent(alphabeticalPalette);
             }
         });
-        ULCBoxPane paletteArea = new ULCBoxPane(true);
-        paletteArea.add(ULCBoxPane.BOX_EXPAND_TOP, viewSelector);
-        paletteArea.add(ULCBoxPane.BOX_EXPAND_EXPAND, views);
 
         return paletteArea;
-    }
-
-
-    /**
-     * Creates a new tab for a given or a new model with given type definition
-     *
-     * @param model
-     * @param typeDef
-     */
-    public void addModelToView(AbstractGraphModel model, TypeDefinitionBean typeDef, boolean isEditable) {
-        SingleModelMultiEditView modelView = new SingleModelMultiEditView(fContext, model, this);
-        fModelTabs.put(modelView.getView(), modelView);
-        fEditorArea.addTab(typeDef.getName(), modelView.getView());
-        fEditorArea.setSelectedIndex(fEditorArea.getComponentCount() - 1);
-        fEditorArea.setToolTipTextAt(fEditorArea.getComponentCount() - 1, model.getPackageName() + "." + model.getName());
-        fEditedTypeDefinitions.add(typeDef);
-        //fModelRepositoryTree.getTreeModel().addNode(model);
-        saveListeners.add(modelView);
-    }
-
-    private void addParameterSet(Parameterization p, String name) {
-        ULCComponent comp = fEditorArea.getSelectedComponent();
-        if (comp != null && fModelTabs.containsKey(comp)) {
-            SingleModelMultiEditView modelView = fModelTabs.get(comp);
-            modelView.addParameterSet(p, name);
-        } else {
-            ULCAlert alert = new ULCAlert("No model view available", "Create or load the model view before you ingest the parametrization.", "ok");
-            alert.show();
-        }
     }
 
     /**
@@ -248,15 +243,14 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
     private void showTypeDefinitionDialog() {
         final TypeDefinitionDialog fTypeDefView = new TypeDefinitionDialog(UlcUtilities.getWindowAncestor(fEditorArea), fEditedTypeDefinitions);
         IActionListener newModelListener = new IActionListener() {
-
             public void actionPerformed(ActionEvent event) {
                 TypeDefinitionFormModel typeDefinitionFormModel = fTypeDefView.getBeanForm().getModel();
                 if (typeDefinitionFormModel.hasErrors()) return;
                 TypeDefinitionBean typeDef = typeDefinitionFormModel.getBean();
-                AbstractGraphModel model = typeDef.getBaseType().equals("Model") ? new ModelGraphModel() : new ComposedComponentGraphModel();
+                AbstractGraphModel model = typeDef.getBaseType().equals(TypeDefinitionBean.MODEL) ? new ModelGraphModel() : new ComposedComponentGraphModel();
                 model.setPackageName(typeDef.getPackageName());
                 model.setName(typeDef.getName());
-                addModelToView(model, typeDef, true);
+                addModel(model, typeDef, true);
                 fTypeDefView.setVisible(false);
             }
         };
@@ -268,6 +262,124 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         ULCComponent nameTextField = fTypeDefView.getTypeDefinitionForm().getComponent("name");
         if (nameTextField != null)
             nameTextField.requestFocus();
+    }
+
+    /**
+     * Returns the active help view - to show help entries for component definitions selected in the palette
+     * @return
+     */
+    IHelpViewable getHelpView(){
+        ULCComponent comp = fEditorArea.getSelectedComponent();
+        return comp != null ? fModelTabs.get(comp).getHelpView() : null;
+    }
+
+    /**
+     * Create toolbar using the toolbar factory and referring to the actions declared by an '@Action' annotations.
+     * @return
+     */
+    public ULCToolBar getToolBar() {
+        ULCToolBar designerToolBar = new ToolBarFactory(fContext.getActionMap(this)).createToolBar(
+                "newModelAction", "importModelAction", "saveModelAction",
+                "exportModelToGroovyAction", "createParametersAction",
+                "importParametersAction", "exportParametersAction", "simulateAction",
+                "exportModelToApplicationAction");
+
+        // inserting separators shifts later items therefore the numbers look strange
+        designerToolBar.add(new ULCToolBar.ULCSeparator(), 4);
+        designerToolBar.add(new ULCToolBar.ULCSeparator(), 8);
+        designerToolBar.add(new ULCToolBar.ULCSeparator(), 10);
+
+        return designerToolBar;
+    }
+
+    /**
+     * Creates a new tab for a given or a new model with given type definition
+     * @param model
+     * @param typeDef
+     */
+    public void addModel(AbstractGraphModel model, TypeDefinitionBean typeDef, boolean isEditable) {
+        SingleModelMultiEditView modelView = new SingleModelMultiEditView(fContext, model, this);
+        fModelTabs.put(modelView.getView(), modelView);
+        fEditorArea.addTab(typeDef.getName(), modelView.getView());
+        fEditorArea.setSelectedIndex(fEditorArea.getComponentCount() - 1);
+        fEditorArea.setToolTipTextAt(fEditorArea.getComponentCount() - 1, model.getPackageName() + "." + model.getName());
+        fEditedTypeDefinitions.add(typeDef);
+        
+        saveListeners.add(modelView);
+        modelView.setGraphModelHandler(this);
+        fRenameModelDialog.addModelRenameListener(modelView);
+    }
+
+    public void removeModel(AbstractGraphModel graphModel) {
+        // remove it from the editor pane
+        ULCComponent modelTab = null;
+        for (Iterator<ULCComponent> it = fModelTabs.keySet().iterator(); it.hasNext() && modelTab==null;){
+            modelTab = it.next();
+            if (!fModelTabs.get(modelTab).getGraphModel().equals(graphModel)) {
+                modelTab=null;
+            }
+        }
+        fEditorArea.remove(modelTab);
+
+        // remove it from the repository
+        fModelRepositoryTree.removeModel(graphModel);
+
+        // remove it from the repository
+        getPersistenceService().delete(graphModel);
+    }
+
+    public void renameModel(AbstractGraphModel model) {
+        fRenameModelDialog.setGraphModel(model);
+        fRenameModelDialog.setVisible(true);
+    }
+
+    public GraphPersistenceService getPersistenceService() {
+        if (fPersistenceService == null) {
+            org.springframework.context.ApplicationContext ctx = ApplicationHolder.getApplication().getMainContext();
+            fPersistenceService = ctx.getBean(GraphPersistenceService.class);
+        }
+        return fPersistenceService;
+    }
+
+    public void modelRenamed(AbstractGraphModel model, String oldName, String oldPackageName) {
+        ULCComponent modelTab = null;
+        for (Iterator<ULCComponent> it = fModelTabs.keySet().iterator(); it.hasNext() && modelTab==null;){
+            modelTab = it.next();
+            if (!fModelTabs.get(modelTab).getGraphModel().equals(model)) {
+                modelTab=null;
+            }
+        }
+        if (modelTab != null) {
+            int index = fEditorArea.indexOfComponent(modelTab);
+            fEditorArea.setTitleAt(index, model.getName());
+        } 
+    }
+    
+    @Action
+    public void renameModelAction() {
+        ULCComponent comp = fEditorArea.getSelectedComponent();
+        if (comp != null) {
+            renameModel(fModelTabs.get(comp).getGraphModel());
+        }
+    }
+    
+    
+    
+    /**
+     * Adds the given parameterization to the selected model view.
+     * May be used for imports of parameterizations.
+     * @param p
+     * @param name
+     */
+    private void addParameterSet(Parameterization p, String name) {
+        ULCComponent comp = fEditorArea.getSelectedComponent();
+        if (comp != null && fModelTabs.containsKey(comp)) {
+            SingleModelMultiEditView modelView = fModelTabs.get(comp);
+            modelView.addParameterSet(p, name);
+        } else {
+            ULCAlert alert = new ULCAlert("No model view available", "Create or load the model view before you ingest the parametrization.", "ok");
+            alert.show();
+        }
     }
 
     /**
@@ -290,10 +402,10 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         if (importer != null) {
             AbstractGraphModel model = importer.importGraph(clazz, null);
             TypeDefinitionBean typeDef = new TypeDefinitionBean();
-            typeDef.setBaseType(model instanceof ModelGraphModel ? "Model" : "ComposedComponent");
+            typeDef.setBaseType(model instanceof ModelGraphModel ? TypeDefinitionBean.MODEL : TypeDefinitionBean.COMPOSED_COMPONENT);
             typeDef.setName(model.getName());
             typeDef.setPackageName(model.getPackageName());
-            addModelToView(model, typeDef, false);
+            addModel(model, typeDef, false);
             return true;
         }
         return false;
@@ -359,10 +471,10 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
                     GraphImportService importService = new GraphImportService();
                     AbstractGraphModel model = importService.importGraph(content);
                     TypeDefinitionBean typeDef = new TypeDefinitionBean();
-                    typeDef.setBaseType(model instanceof ModelGraphModel ? "Model" : "Composed Component");
+                    typeDef.setBaseType(model instanceof ModelGraphModel ? TypeDefinitionBean.MODEL : TypeDefinitionBean.COMPOSED_COMPONENT);
                     typeDef.setName(model.getName());
                     typeDef.setPackageName(model.getPackageName());
-                    addModelToView(model, typeDef, true);
+                    addModel(model, typeDef, true);
                 } catch (Exception ex) {
                     new ULCAlert(UlcUtilities.getWindowAncestor(fEditorArea), "Import failed", "The specified file could not be imported. Reason: " + ex.getMessage(), "Ok").show();
                 }
@@ -376,15 +488,7 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         ClientContext.loadFile(handler, config, fEditorArea);
     }
 
-    public void loadModel(String name, String packageName) {
-        TypeDefinitionBean typeDefBean = new TypeDefinitionBean();
-        final AbstractGraphModel graphModel = getPersistenceService().load(name, packageName);
-        typeDefBean.setName(graphModel.getName());
-        typeDefBean.setPackageName(graphModel.getPackageName());
-        typeDefBean.setBaseType(graphModel instanceof ModelGraphModel ? "Model" : "ComposedComponent");
-        addModelToView(graphModel, typeDefBean, true);
-    }
-
+    
     @Action
     public void createParametersAction() {
         ULCComponent comp = fEditorArea.getSelectedComponent();
@@ -411,26 +515,18 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
         }
 
         AbstractGraphModel model = view.getGraphModel();
-        if (!fModelRepositoryTree.getTreeModel().containsModel(model)) {
+        if (fModelRepositoryTree.getTreeModel().getModelNode(model) == null) {
             fModelRepositoryTree.getTreeModel().addNode(model);
         }
-        getPersistenceService().save(model);
-        for (ISaveListener saveListener : saveListeners) {
-            saveListener.save();
+        try {
+            getPersistenceService().save(model);
+            for (ISaveListener saveListener : saveListeners) {
+                saveListener.save();
+            }
+        } catch (Exception ex) {
+            ULCAlert alert = new ULCAlert("Model not saved.", "Model could not be saved.", "ok");
+            alert.show();
         }
-    }
-
-    private GraphPersistenceService getPersistenceService() {
-        if (fPersistenceService == null) {
-            org.springframework.context.ApplicationContext ctx = ApplicationHolder.getApplication().getMainContext();
-            fPersistenceService = ctx.getBean(GraphPersistenceService.class);
-        }
-        return fPersistenceService;
-    }
-
-    IHelpViewable getHelpView(){
-        ULCComponent comp = fEditorArea.getSelectedComponent();
-        return comp != null ? fModelTabs.get(comp).getHelpView() : null;
     }
 
     @Action
@@ -450,31 +546,25 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelAdder {
     @Action
     public void exportModelToApplicationAction() {
         SingleModelMultiEditView view = fModelTabs.get(fEditorArea.getSelectedComponent());
-        view.setReadOnly();
-
         AbstractGraphModel model = view.getGraphModel();
+
         try {
+            // include it in the (RA) model registry
             GraphModelUtilities.exportToApplication(model);
+
+            // declare the view as read only
+            view.setReadOnly();
+
+            // remove it from the repository and the repository tree
+            fModelRepositoryTree.removeModel(model);
+
+            //remove it from the (graph) model registry
+            fPersistenceService.delete(model);
         } catch (Exception ex) {
             ULCAlert alert = new ULCAlert("Model not deployed.", "Model could not be deployed. Reason: " + ex.getMessage(), "ok");
             alert.show();
             LOG.error("Model could not be deployed", ex);
         }
-    }
-
-    protected ApplicationActionMap getActionMap() {
-        return fContext.getActionMap(this);
-    }
-
-    public ULCToolBar getToolBar() {
-        ULCToolBar designerToolBar = new ToolBarFactory(getActionMap()).createToolBar("newModelAction", "importModelAction", "saveModelAction",
-                "exportModelToGroovyAction", "createParametersAction",
-                "importParametersAction", "exportParametersAction", "simulateAction", "exportModelToApplicationAction");
-        // inserting separators shifts later items therefore the numbers look strange
-        designerToolBar.add(new ULCToolBar.ULCSeparator(), 4);
-        designerToolBar.add(new ULCToolBar.ULCSeparator(), 8);
-        designerToolBar.add(new ULCToolBar.ULCSeparator(), 10);
-        return designerToolBar;
     }
 
     @Action

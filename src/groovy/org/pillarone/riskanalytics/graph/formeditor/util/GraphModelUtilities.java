@@ -1,7 +1,5 @@
 package org.pillarone.riskanalytics.graph.formeditor.util;
 
-import org.apache.tools.ant.taskdefs.optional.PropertyFile;
-import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.model.registry.ModelRegistry;
 import org.pillarone.riskanalytics.graph.core.graph.model.*;
 import org.pillarone.riskanalytics.graph.core.graphexport.AbstractGraphExport;
@@ -124,6 +122,27 @@ public class GraphModelUtilities {
             }
         }
         return null;
+    }
+
+    public static boolean isIncludedInRegistry(AbstractGraphModel model) {
+        if (model instanceof ModelGraphModel) {
+            for (Class c : ModelRegistry.getInstance().getAllModelClasses()) {
+                if (c.getName().equals(model.getPackageName() + "." + model.getName())) {
+                    return true;
+                }
+            }
+        } else if (model instanceof ComposedComponentGraphModel) {
+            for (ComponentDefinition cd : PaletteService.getInstance().getAllComponentDefinitions()) {
+                if (cd.getTypeClass().getName().equals(model.getPackageName() + "." + model.getName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static String getModelPath(String packageName, String name) {
+        return packageName+ "." + name;
     }
 
     /**

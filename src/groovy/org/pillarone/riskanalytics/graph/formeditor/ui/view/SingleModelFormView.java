@@ -11,22 +11,26 @@ import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+import org.pillarone.riskanalytics.graph.formeditor.ui.*;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
 
 import java.util.List;
 
-public class SingleModelFormView extends AbstractBean implements GraphModelViewable, ISelectionListener {
+public class SingleModelFormView extends AbstractBean implements GraphModelViewable, ISelectionListener, IModelRenameListener {
     private ApplicationContext fApplicationContext;
 
     private AbstractGraphModel fGraphModel;
 
     private ULCBoxPane fMainView;
     private ULCScrollPane fNodesPane;
+
     private ComponentNodesTable fNodesTable;
 
     private ULCScrollPane fConnectionsPane;
     private ConnectionsTable fConnectionsTable;
     private boolean readOnly = false;
+
+    private IGraphModelHandler graphModelHandler;
 
     public SingleModelFormView(ApplicationContext ctx) {
         this(ctx, false);
@@ -43,6 +47,11 @@ public class SingleModelFormView extends AbstractBean implements GraphModelViewa
         fNodesTable.setReadOnly();
         fConnectionsTable.setReadOnly();
 
+    }
+
+    public void setGraphModelHandler(IGraphModelHandler graphModelHandler) {
+        this.graphModelHandler = graphModelHandler;
+        fNodesTable.setGraphModelHandler(graphModelHandler);
     }
 
     public void createView() {
@@ -108,6 +117,10 @@ public class SingleModelFormView extends AbstractBean implements GraphModelViewa
 
     public void newNodeAction(String componentType) {
         fNodesTable.newNodeAction(componentType);
+    }
+
+    public void modelRenamed(AbstractGraphModel modelWithNewName, String oldName, String oldPackageName) {
+        fNodesTable.modelRenamed(modelWithNewName, oldName, oldPackageName);
     }
 
     /////////////////////////////////////////

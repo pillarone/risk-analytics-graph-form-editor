@@ -5,7 +5,7 @@ import com.ulcjava.base.application.tabletree.ITableTreeModel
 import com.ulcjava.base.application.tabletree.ITableTreeNode
 import com.ulcjava.base.application.tree.TreePath
 import java.util.Map.Entry
-import org.pillarone.riskanalytics.graph.formeditor.ui.view.IWatchList
+import org.pillarone.riskanalytics.graph.formeditor.ui.IWatchList
 import org.pillarone.riskanalytics.graph.formeditor.util.UIUtils
 
 /**

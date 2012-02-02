@@ -6,41 +6,70 @@ import com.ulcjava.base.application.event.IActionListener;
 import com.ulcjava.base.application.tree.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.groovy.grails.commons.ApplicationHolder;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.persistence.GraphPersistenceService;
+import org.pillarone.riskanalytics.graph.formeditor.ui.IGraphModelHandler;
+import org.pillarone.riskanalytics.graph.formeditor.ui.IModelRenameListener;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ModelRepositoryTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.ModelRepositoryTreeNode;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitionBean;
 
-public class ModelRepositoryTree extends ULCBoxPane {
+public class ModelRepositoryTree extends ULCBoxPane implements IModelRenameListener {
 
     private static Log LOG = LogFactory.getLog(ModelRepositoryTree.class);
 
-    private ModelRepositoryTreeModel fTreeModel;
-    private ULCTree fTree;
-    private GraphModelEditor fParent; // TODO: this is somewhat ugly
+    private ModelRepositoryTreeModel treeModel;
+    private ULCTree tree;
+    private IGraphModelHandler graphModelHandler;
+    private GraphPersistenceService persistenceService;
 
-    public ModelRepositoryTree(GraphModelEditor parent) {
+    public ModelRepositoryTree(IGraphModelHandler graphModelHandler) {
         super();
-        fParent = parent;
-        fTreeModel = ModelRepositoryTreeModel.getInstance();
+        this.graphModelHandler = graphModelHandler;
+        treeModel = ModelRepositoryTreeModel.getInstance();
         createView();
     }
 
     public ModelRepositoryTreeModel getTreeModel() {
-        return fTreeModel;
+        return treeModel;
+    }
+
+    /**
+     * @see org.pillarone.riskanalytics.graph.formeditor.ui.IModelRenameListener
+     * @param modelWithNewName
+     * @param oldName
+     * @param oldPackageName
+     */
+    public void modelRenamed(AbstractGraphModel modelWithNewName, String oldName, String oldPackageName) {
+        // modify name in the tree view
+        ModelRepositoryTreeNode node = treeModel.getModelNode(modelWithNewName);
+        if (node!=null) {
+            node.setPackageName(modelWithNewName.getPackageName());
+            node.setName(modelWithNewName.getName());
+            treeModel.nodeChanged(new TreePath(DefaultTreeModel.getPathToRoot(node)));
+        }
+    }
+    
+    public void removeModel(AbstractGraphModel model) {
+        ModelRepositoryTreeNode node = treeModel.getModelNode(model);
+        IMutableTreeNode parent = (IMutableTreeNode) node.getParent();
+        final int index = parent.getIndex((ITreeNode) node);
+        parent.remove(index);
+        treeModel.nodesWereRemoved(parent, new int[]{index}, new Object[]{node});
+        treeModel.getLeaves().remove(node);
     }
 
     private void createView() {
         // create tree
-        fTree = new ULCTree();
-        fTree.setDragEnabled(true);
-        fTree.setModel(fTreeModel);
-        fTree.getSelectionModel().setSelectionMode(ULCTreeSelectionModel.SINGLE_TREE_SELECTION);
+        tree = new ULCTree();
+        tree.setDragEnabled(true);
+        tree.setModel(treeModel);
+        tree.getSelectionModel().setSelectionMode(ULCTreeSelectionModel.SINGLE_TREE_SELECTION);
         CellRenderer treeCellRenderer = new CellRenderer();
-        fTree.setCellRenderer(treeCellRenderer);
+        tree.setCellRenderer(treeCellRenderer);
 
-        ULCScrollPane treeScrollPane = new ULCScrollPane(fTree);
+        ULCScrollPane treeScrollPane = new ULCScrollPane(tree);
         // treeScrollPane.setMinimumSize(new Dimension(200, 600));
         this.add(ULCBoxPane.BOX_EXPAND_EXPAND, treeScrollPane);
 
@@ -50,17 +79,16 @@ public class ModelRepositoryTree extends ULCBoxPane {
     private class LoadModelAction implements IActionListener {
 
         public void actionPerformed(ActionEvent actionEvent) {
-            TreePath treePath = fTree.getSelectionModel().getSelectionPath();
+            TreePath treePath = tree.getSelectionModel().getSelectionPath();
             Object selectedNode = treePath.getLastPathComponent();
             if (selectedNode instanceof ModelRepositoryTreeNode) {
-                final String modelName = ((ModelRepositoryTreeNode) selectedNode).getName();
-                final String packageName = ((ModelRepositoryTreeNode) selectedNode).getPackageName();
-                try {
-                    fParent.loadModel(modelName, packageName);
-                } catch (Exception ex) {
-                    ULCAlert alert = new ULCAlert("Model could not be loaded", "Reason: " + ex.getMessage(), "ok");
-                    LOG.error("Model could not be loaded", ex);
-                    alert.show();
+                AbstractGraphModel graphModel = treeModel.getLeaves().get((ModelRepositoryTreeNode) selectedNode);
+                if (graphModel != null) {
+                    TypeDefinitionBean typeDefBean = new TypeDefinitionBean();
+                    typeDefBean.setName(graphModel.getName());
+                    typeDefBean.setPackageName(graphModel.getPackageName());
+                    typeDefBean.setBaseType(graphModel instanceof ModelGraphModel ? TypeDefinitionBean.MODEL : TypeDefinitionBean.COMPOSED_COMPONENT);
+                    graphModelHandler.addModel(graphModel, typeDefBean, true);
                 }
             }
         }
@@ -68,68 +96,29 @@ public class ModelRepositoryTree extends ULCBoxPane {
 
     private class DeleteModelAction implements IActionListener {
 
-        GraphPersistenceService fPersistenceService;
-
         public void actionPerformed(ActionEvent actionEvent) {
-            TreePath treePath = fTree.getSelectionModel().getSelectionPath();
+            TreePath treePath = tree.getSelectionModel().getSelectionPath();
             Object selectedNode = treePath.getLastPathComponent();
             if (selectedNode instanceof ModelRepositoryTreeNode) {
-                final String modelName = ((ModelRepositoryTreeNode) selectedNode).getName();
-                final String packageName = ((ModelRepositoryTreeNode) selectedNode).getPackageName();
-                try {
-                    final AbstractGraphModel graphModel = getPersistenceService().load(modelName, packageName);
-                    getPersistenceService().delete(graphModel);
-                    IMutableTreeNode parent = (IMutableTreeNode) ((ModelRepositoryTreeNode) selectedNode).getParent();
-                    final int index = parent.getIndex((ITreeNode) selectedNode);
-                    parent.remove(index);
-                    fTreeModel.nodesWereRemoved(parent, new int[]{index}, new Object[]{selectedNode});
-
-                } catch (Exception ex) {
-                    ULCAlert alert = new ULCAlert("Model could not be deleted", "Reason: " + ex.getMessage(), "ok");
-                    LOG.error("Model could not be deleted", ex);
-                    alert.show();
+                AbstractGraphModel graphModel = treeModel.getLeaves().get((ModelRepositoryTreeNode)selectedNode);
+                if (graphModel != null) {
+                    graphModelHandler.removeModel(graphModel);
                 }
             }
-        }
-
-        private GraphPersistenceService getPersistenceService() {
-            if (fPersistenceService == null) {
-                org.springframework.context.ApplicationContext ctx = ApplicationHolder.getApplication().getMainContext();
-                fPersistenceService = ctx.getBean(GraphPersistenceService.class);
-            }
-            return fPersistenceService;
         }
     }
 
     private class RenameModelAction implements IActionListener {
 
-        GraphPersistenceService fPersistenceService;
-
         public void actionPerformed(ActionEvent actionEvent) {
-            TreePath treePath = fTree.getSelectionModel().getSelectionPath();
+            TreePath treePath = tree.getSelectionModel().getSelectionPath();
             Object selectedNode = treePath.getLastPathComponent();
             if (selectedNode instanceof ModelRepositoryTreeNode) {
-                final String modelName = ((ModelRepositoryTreeNode) selectedNode).getName();
-                final String packageName = ((ModelRepositoryTreeNode) selectedNode).getPackageName();
-                try {
-                    final AbstractGraphModel graphModel = getPersistenceService().load(modelName, packageName);
-                    new ModelRenameDialog(graphModel, fTree, (ModelRepositoryTreeNode) selectedNode).setVisible(true);
-
-                } catch (Exception ex) {
-                    ULCAlert alert = new ULCAlert("Model could not be deleted", "Reason: " + ex.getMessage(), "ok");
-                    LOG.error("Model could not be deleted", ex);
-                    alert.show();
+                AbstractGraphModel graphModel = treeModel.getLeaves().get((ModelRepositoryTreeNode) selectedNode);
+                if (graphModel != null) {
+                    graphModelHandler.renameModel(graphModel);
                 }
             }
-
-        }
-
-        private GraphPersistenceService getPersistenceService() {
-            if (fPersistenceService == null) {
-                org.springframework.context.ApplicationContext ctx = ApplicationHolder.getApplication().getMainContext();
-                fPersistenceService = ctx.getBean(GraphPersistenceService.class);
-            }
-            return fPersistenceService;
         }
     }
 

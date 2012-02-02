@@ -8,6 +8,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.persistence.GraphPersistenceService;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +17,7 @@ import java.util.Map;
  */
 public class ModelRepositoryTreeModel extends DefaultTreeModel {
 
-    Map<ModelRepositoryTreeNode, AbstractGraphModel> leaves;
+    private Map<ModelRepositoryTreeNode, AbstractGraphModel> leaves;
 
     private ModelRepositoryTreeModel(ITreeNode iTreeNode) {
         super(iTreeNode);
@@ -35,6 +36,10 @@ public class ModelRepositoryTreeModel extends DefaultTreeModel {
         return treeModel;
     }
 
+    public Map<ModelRepositoryTreeNode, AbstractGraphModel> getLeaves() {
+        return leaves;
+    }
+
     public void addNode(AbstractGraphModel model) {
         final ModelRepositoryTreeNode root = (ModelRepositoryTreeNode) getRoot();
         final ModelRepositoryTreeNode newNode = new ModelRepositoryTreeNode(model);
@@ -43,7 +48,23 @@ public class ModelRepositoryTreeModel extends DefaultTreeModel {
         leaves.put(newNode, model);
     }
 
-    public boolean containsModel(AbstractGraphModel model) {
-        return leaves.values().contains(model);
+    public ModelRepositoryTreeNode getModelNode(AbstractGraphModel model) {
+        for (ModelRepositoryTreeNode node : leaves.keySet()) {
+            if (leaves.get(node).equals(model)) {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    public ModelRepositoryTreeNode getModelNode(String modelName, String packageName) {
+        for (Iterator<ModelRepositoryTreeNode> it = leaves.keySet().iterator(); it.hasNext();) {
+            ModelRepositoryTreeNode node = it.next();
+            AbstractGraphModel model = leaves.get(node);
+            if (model.getName().equals(modelName) && model.getPackageName().equals(packageName)) {
+                return node;
+            }
+        }
+        return null;
     }
 }

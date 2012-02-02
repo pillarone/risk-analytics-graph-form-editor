@@ -1,9 +1,9 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view
 
-import com.ulcjava.base.application.ULCBoxPane
-import com.ulcjava.base.application.ULCFiller
-import com.ulcjava.base.application.ULCLabel
-import com.ulcjava.base.application.util.Color
+import com.ulcjava.base.application.event.ActionEvent
+import com.ulcjava.base.application.event.HyperlinkEvent
+import com.ulcjava.base.application.event.IActionListener
+import com.ulcjava.base.application.event.IHyperlinkListener
 import com.ulcjava.base.application.util.Font
 import com.ulcjava.base.application.util.HTMLUtilities
 import org.pillarone.riskanalytics.core.components.ComposedComponent
@@ -11,20 +11,13 @@ import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
+import org.pillarone.riskanalytics.graph.formeditor.ui.IHelpViewable
+import org.pillarone.riskanalytics.graph.formeditor.ui.ISelectionListener
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities
 import org.pillarone.riskanalytics.graph.formeditor.util.ParameterUtilities
+import com.ulcjava.base.application.*
 import org.pillarone.riskanalytics.graph.core.graph.model.*
-import com.ulcjava.base.application.ULCCardPane
-import com.ulcjava.base.application.ULCTextArea
-import com.ulcjava.base.application.ULCButton
-import com.ulcjava.base.application.event.IActionListener
-import com.ulcjava.base.application.event.ActionEvent
-import com.ulcjava.base.application.ULCHtmlPane
-import com.ulcjava.base.application.event.IHyperlinkListener
-import com.ulcjava.base.application.event.HyperlinkEvent
-import com.ulcjava.base.application.ClientContext
-import com.ulcjava.base.application.ULCTextField
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com, martin.melchior@fhnw.ch
@@ -32,7 +25,7 @@ import com.ulcjava.base.application.ULCTextField
 class HelpView implements ISelectionListener, IHelpViewable {
 
     ULCBoxPane mainComponent
-    BreadCrumbsModelSelector modelPathSelector
+    HelpViewBreadCrumbs modelPathSelector
     ULCCardPane contentArea
     HelpHtmlPane htmlTextPane
     ULCTextArea editableTextPane
@@ -40,7 +33,7 @@ class HelpView implements ISelectionListener, IHelpViewable {
     ULCButton editButton
 
     HelpEntry modelHelpEntry
-    Map<String,HelpEntry> cache = new LinkedHashMap<String,HelpEntry>() // TODO could be declared thread local
+    Map<String, HelpEntry> cache = new LinkedHashMap<String, HelpEntry>() // TODO could be declared thread local
     Map<GraphElement, LinkedList<GraphElement>> cachedPaths = [:]
 
     AbstractGraphModel graphModel
@@ -62,7 +55,7 @@ class HelpView implements ISelectionListener, IHelpViewable {
 
     private void initComponents() {
         mainComponent = new ULCBoxPane(true)
-        modelPathSelector = new BreadCrumbsModelSelector()
+        modelPathSelector = new HelpViewBreadCrumbs()
         contentArea = new ULCCardPane()
 
         htmlTextPane = new HelpHtmlPane()
@@ -81,15 +74,15 @@ class HelpView implements ISelectionListener, IHelpViewable {
         cancelButton.setEnabled false
 
         editButton.addActionListener(
-            new IActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    editableTextPane.setText(modelHelpEntry.description)
-                    contentArea.setSelectedComponent(editableTextPane);
-                    editButton.setEnabled false
-                    okButton.setEnabled true
-                    cancelButton.setEnabled true
+                new IActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        editableTextPane.setText(modelHelpEntry.description)
+                        contentArea.setSelectedComponent(editableTextPane);
+                        editButton.setEnabled false
+                        okButton.setEnabled true
+                        cancelButton.setEnabled true
+                    }
                 }
-            }
         )
         IActionListener okAction = new IActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -157,7 +150,7 @@ class HelpView implements ISelectionListener, IHelpViewable {
         if (!cachedPaths.containsKey(node)) {
             modelPath = GraphModelUtilities.getModelTreePath(node, graphModel)
             if (modelPath) {
-                modelPath.add(0,graphModel)
+                modelPath.add(0, graphModel)
                 cachedPaths.put(node, modelPath)
             }
         } else {
@@ -223,13 +216,13 @@ class HelpView implements ISelectionListener, IHelpViewable {
 
         entry.title = model.getName()
 
-        String path = model.getPackageName()+"."+model.getName()
+        String path = model.getPackageName() + "." + model.getName()
         String type = model instanceof ComposedComponentGraphModel ? "ComposedComponent" : "Component"
         List<String> categoriesList = null
         Map<String, Object> parameters = null
         List<Port> ports = null
         if (model instanceof ComposedComponentGraphModel) {
-            ports = ((ComposedComponentGraphModel)model).outerInPorts + ((ComposedComponentGraphModel)model).outerOutPorts
+            ports = ((ComposedComponentGraphModel) model).outerInPorts + ((ComposedComponentGraphModel) model).outerOutPorts
         }
         entry.autoText = createAutoDescription(path, type, categoriesList, ports, parameters)
 
@@ -252,7 +245,7 @@ class HelpView implements ISelectionListener, IHelpViewable {
         String path = componentDefinition.getTypeClass().getName()
         entry.description = UIUtils.getPropertyValue(null, "COMPONENT_DEFINITION_HELP", "['$path']")
 
-        String title = path.substring(path.lastIndexOf('.')+1)
+        String title = path.substring(path.lastIndexOf('.') + 1)
         entry.title = title
 
         ComponentNode node
@@ -275,7 +268,7 @@ class HelpView implements ISelectionListener, IHelpViewable {
     }
 
     private static String createAutoDescription(String fullPath, String type,
-                List<String> categoriesList, List<Port> portList, Map<String, Object> parameters) {
+                                                List<String> categoriesList, List<Port> portList, Map<String, Object> parameters) {
 
         String description = ""
         if (categoriesList) {
@@ -374,9 +367,87 @@ class HelpView implements ISelectionListener, IHelpViewable {
             }
         }
     }
+
+    static Font LABELFONT = new Font("SansSerif", Font.PLAIN, 11);
+    class HelpViewBreadCrumbs extends ULCBoxPane {
+
+        LinkedList<GraphElement> currentPath
+        Map<GraphElement, ULCButton> cachedLabels = [:]
+        ULCToolBar breadcrumbPane
+        HelpView helpView
+
+        public HelpViewBreadCrumbs() {
+            createView()
+        }
+
+        public void setCurrentPath(LinkedList<GraphElement> modelPath) {
+            currentPath = modelPath
+            showCurrentPath()
+        }
+
+        public void setGraphModel(AbstractGraphModel model) {
+            graphModel = model
+            LinkedList<GraphElement> path = new LinkedList<GraphElement>()
+            path << model
+            setCurrentPath(path)
+        }
+
+        void applyFilter(IComponentNodeFilter filter) {
+            // Filter not applicable here
+        }
+
+        void applyFilter(NodeNameFilter filter) {
+            // Filter not applicable here
+        }
+
+        private void createView() {
+            breadcrumbPane = new ULCToolBar();
+            breadcrumbPane.setOrientation(ULCToolBar.HORIZONTAL);
+            breadcrumbPane.setFloatable(false);
+            add breadcrumbPane
+        }
+
+        private void showCurrentPath() {
+            clearBreadCrumbs()
+            boolean isFirst = true
+            for (GraphElement el: currentPath) {
+                ULCButton label = null
+                if (!cachedLabels.containsKey(el)) {
+                    label = new ULCButton()
+                    label.setText(el.displayName)
+                    label.setFont(LABELFONT)
+                    label.setBorderPainted(false)
+                    final GraphElement elm = el
+                    label.addActionListener(new IActionListener() {
+                        void actionPerformed(ActionEvent actionEvent) {
+                            if (elm instanceof ComponentNode) {
+                                helpView.showHelp((ComponentNode) elm)
+                            } else if (elm instanceof AbstractGraphModel) {
+                                helpView.showHelp((AbstractGraphModel) elm)
+                            }
+                        }
+                    })
+                    cachedLabels[el] = label
+                } else {
+                    label = cachedLabels[el]
+                }
+                if (!isFirst) {
+                    ULCLabel sep = new ULCLabel(" > ")
+                    sep.setFont(LABELFONT)
+                    breadcrumbPane.add(sep)
+                } else {
+                    isFirst = false
+                }
+                breadcrumbPane.add label
+            }
+        }
+
+        private void clearBreadCrumbs() {
+            breadcrumbPane.removeAll()
+        }
+    }
 }
 
-interface IHelpViewable {
-    void showHelp(ComponentDefinition cd)
-}
+
+
 

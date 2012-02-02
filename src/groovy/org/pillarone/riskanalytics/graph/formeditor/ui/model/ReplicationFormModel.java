@@ -7,7 +7,7 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.ReplicationBe
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.checkers.PropertySpellChecker;
 
 /**
- * Model underlying the input form ({@link org.pillarone.riskanalytics.graph.formeditor.ui.view.ReplicationForm}) for replicating connections.
+ * Model underlying the input form ({@link org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.ReplicationForm}) for replicating connections.
  * Is based on the generic {@link FormModel} specified for the {@link ReplicationBean}
  * introduced particularly for that purpose.
  *

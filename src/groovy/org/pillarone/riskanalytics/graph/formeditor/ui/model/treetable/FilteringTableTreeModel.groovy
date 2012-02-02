@@ -3,16 +3,10 @@ package org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable
 import com.ulcjava.base.application.event.ITableTreeModelListener
 import com.ulcjava.base.application.event.TableTreeModelEvent
 import com.ulcjava.base.application.tabletree.AbstractTableTreeModel
-import com.ulcjava.base.application.tabletree.ITableTreeModel
 import com.ulcjava.base.application.tabletree.ITableTreeNode
 import com.ulcjava.base.application.tree.TreePath
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
-import org.pillarone.riskanalytics.graph.core.graph.model.GraphElement
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
-import org.pillarone.riskanalytics.graph.core.graph.model.IGraphModelChangeListener
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection
-import org.pillarone.riskanalytics.graph.core.graph.model.Port
-import com.ulcjava.base.application.tabletree.IMutableTableTreeNode
+import org.pillarone.riskanalytics.graph.core.graph.model.*
 
 class FilteringTableTreeModel extends AbstractTableTreeModel implements ITableTreeModelListener {
 
@@ -333,7 +327,8 @@ class FilteringTableTreeModel extends AbstractTableTreeModel implements ITableTr
         public void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
             GraphElementNode treeNode = model.findNode(node);
             treeNode.updateColumnValues();
-            nodeChanged(model.getTreePath(treeNode), model.NAMEID);
+            nodeChanged(model.getTreePath(treeNode));
+            //nodeChanged(model.getTreePath(treeNode), model.NAMEID);
         }
     }
 }

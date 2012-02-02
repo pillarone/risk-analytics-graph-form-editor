@@ -12,6 +12,8 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
+import org.pillarone.riskanalytics.graph.formeditor.ui.GraphModelViewable;
+import org.pillarone.riskanalytics.graph.formeditor.ui.ISelectionListener;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter;
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities;
 

@@ -6,7 +6,7 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.TypeDefinitio
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.checkers.PropertySpellChecker;
 
 /**
- * Model underlying the input form ({@link org.pillarone.riskanalytics.graph.formeditor.ui.view.TypeDefinitionForm}) for type definitions.
+ * Model underlying the input form ({@link org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.TypeDefinitionForm}) for type definitions.
  * Is based on the generic {@link FormModel} specified for the {@link TypeDefinitionBean}
  * introduced particularly for that purpose.
  *

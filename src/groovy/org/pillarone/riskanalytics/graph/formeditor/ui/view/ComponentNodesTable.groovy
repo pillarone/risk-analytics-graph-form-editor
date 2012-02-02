@@ -18,6 +18,10 @@ import com.ulcjava.base.shared.UlcEventConstants
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.NoneComponentNodeFilter
 import org.pillarone.riskanalytics.graph.core.graph.util.UIUtils
+import org.pillarone.riskanalytics.graph.formeditor.ui.IGraphModelHandler
+import org.pillarone.riskanalytics.graph.formeditor.ui.IModelRenameListener
+import org.pillarone.riskanalytics.graph.formeditor.ui.ISelectionListener
+import org.pillarone.riskanalytics.graph.formeditor.ui.IWatchList
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NameBean
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode
@@ -25,6 +29,10 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.Filtering
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.GraphElementNode
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodesTableTreeModel
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.ConnectNodesDialog
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.NodeEditDialog
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.PortNameDialog
+import org.pillarone.riskanalytics.graph.formeditor.ui.view.helpers.InfoTableTreeCellRenderer
 import org.pillarone.riskanalytics.graph.formeditor.util.GraphModelUtilities
 import com.ulcjava.base.application.*
 import com.ulcjava.base.application.event.*
@@ -33,7 +41,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.*
 /**
  *
  */
-public class ComponentNodesTable extends ULCTableTree implements ISelectionListener {
+public class ComponentNodesTable extends ULCTableTree implements ISelectionListener, IModelRenameListener {
 
     AbstractGraphModel fGraphModel;
     FilteringTableTreeModel fTableModel;
@@ -43,6 +51,7 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
     boolean fExternalSelection;
     IWatchList fWatchList;
 
+    private IGraphModelHandler graphModelHandler; // some weak reference to the parent pane so that parts of a graph can be copied to a new tab.
     private boolean readOnly;
 
     public ComponentNodesTable(ApplicationContext ctx, AbstractGraphModel model, boolean readOnly) {
@@ -85,6 +94,10 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         this.setTransferHandler(null);
         this.setComponentPopupMenu(null);
         createContextMenu();
+    }
+
+    void setGraphModelHandler(IGraphModelHandler graphModelHandler) {
+        this.graphModelHandler = graphModelHandler
     }
 
     private void setRenderer() {
@@ -153,61 +166,66 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         ULCPopupMenu nodesMenu = new ULCPopupMenu();
         ApplicationActionMap actionMap = fApplicationContext.getActionMap(this)
 
-        /*ULCMenuItem addItem = new ULCMenuItem("add node")
-        addItem.addActionListener(actionMap.get("newNodeAction"))
-        nodesMenu.add(addItem)*/
-
         if (!readOnly) {
+            ULCMenuItem renameModelItem = new ULCMenuItem(("rename model"))
             ULCMenuItem editItem = new ULCMenuItem("edit node")
-            IAction editNodeAction = actionMap.get("modifyNodeAction")
-            editItem.addActionListener(editNodeAction)
-            this.registerKeyboardAction(editNodeAction, com.ulcjava.base.application.util.KeyStroke.getKeyStroke(com.ulcjava.base.application.event.KeyEvent.VK_ENTER, 0, true), com.ulcjava.base.application.ULCComponent.WHEN_FOCUSED)
-            nodesMenu.add(editItem)
             ULCMenuItem connectItem = new ULCMenuItem("connect")
-            connectItem.addActionListener(actionMap.get("connectSelectedAction"))
+            ULCMenuItem replicateItem = new ULCMenuItem("replicate")
+            ULCMenuItem deleteItem = new ULCMenuItem("remove")
+
+            nodesMenu.add(renameModelItem)
+            nodesMenu.addSeparator()
+            nodesMenu.add(editItem)
             nodesMenu.add(connectItem)
             if (fGraphModel instanceof ComposedComponentGraphModel) {
-                ULCMenuItem replicateItem = new ULCMenuItem("replicate")
-                replicateItem.addActionListener(actionMap.get("replicateSelectedPortAction"))
                 nodesMenu.add(replicateItem)
             }
             nodesMenu.addSeparator()
-            ULCMenuItem deleteItem = new ULCMenuItem("remove")
+            nodesMenu.add(deleteItem)
+            nodesMenu.addSeparator()
+
+            renameModelItem.addActionListener(new IActionListener() {
+                void actionPerformed(ActionEvent actionEvent) {
+                    graphModelHandler.renameModel(fGraphModel)
+                }
+            })
+            IAction editNodeAction = actionMap.get("modifyNodeAction")
+            editItem.addActionListener(editNodeAction)
+            this.registerKeyboardAction(editNodeAction, com.ulcjava.base.application.util.KeyStroke.getKeyStroke(com.ulcjava.base.application.event.KeyEvent.VK_ENTER, 0, true), com.ulcjava.base.application.ULCComponent.WHEN_FOCUSED)
+            connectItem.addActionListener(actionMap.get("connectSelectedAction"))
+            if (fGraphModel instanceof ComposedComponentGraphModel) {
+                replicateItem.addActionListener(actionMap.get("replicateSelectedPortAction"))
+            }
             IAction removeNodeAction = actionMap.get("removeAction")
             deleteItem.addActionListener(removeNodeAction)
             this.registerKeyboardAction(removeNodeAction, com.ulcjava.base.application.util.KeyStroke.getKeyStroke(com.ulcjava.base.application.event.KeyEvent.VK_DELETE, 0, true), com.ulcjava.base.application.ULCComponent.WHEN_FOCUSED)
-            nodesMenu.add(deleteItem)
-            nodesMenu.addSeparator()
         }
 
         ULCMenuItem addToWatchesItem = new ULCMenuItem("add to watches");
-        addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));
-        nodesMenu.add(addToWatchesItem);
-
-        nodesMenu.addSeparator()
-
         ULCMenuItem expandItem = new ULCMenuItem("expand")
-        expandItem.addActionListener(actionMap.get("expandAction"))
-        nodesMenu.add(expandItem)
         ULCMenuItem expandAllItem = new ULCMenuItem("expand all")
-        expandAllItem.addActionListener(actionMap.get("expandAllAction"))
-        nodesMenu.add(expandAllItem)
         ULCMenuItem collapseItem = new ULCMenuItem("collapse")
-        collapseItem.addActionListener(actionMap.get("collapseAction"))
-        nodesMenu.add(collapseItem)
         ULCMenuItem collapseAllItem = new ULCMenuItem("collapse all")
-        collapseAllItem.addActionListener(actionMap.get("collapseAllAction"));
-        nodesMenu.add(collapseAllItem)
-
-        nodesMenu.addSeparator()
-
         ULCMenuItem showConnectedItem = new ULCMenuItem("show connected")
-        showConnectedItem.addActionListener(actionMap.get("showConnectedAction"))
-        nodesMenu.add(showConnectedItem)
-
         ULCMenuItem clearSelectionsItem = new ULCMenuItem("clear all selections")
-        clearSelectionsItem.addActionListener(actionMap.get("clearSelectionAction"))
+
+        nodesMenu.add(addToWatchesItem);
+        nodesMenu.addSeparator()
+        nodesMenu.add(expandItem)
+        nodesMenu.add(expandAllItem)
+        nodesMenu.add(collapseItem)
+        nodesMenu.add(collapseAllItem)
+        nodesMenu.addSeparator()
+        nodesMenu.add(showConnectedItem)
         nodesMenu.add(clearSelectionsItem)
+
+        addToWatchesItem.addActionListener(actionMap.get("addSelectedToWatches"));
+        expandItem.addActionListener(actionMap.get("expandAction"))
+        expandAllItem.addActionListener(actionMap.get("expandAllAction"))
+        collapseItem.addActionListener(actionMap.get("collapseAction"))
+        collapseAllItem.addActionListener(actionMap.get("collapseAllAction"));
+        showConnectedItem.addActionListener(actionMap.get("showConnectedAction"))
+        clearSelectionsItem.addActionListener(actionMap.get("clearSelectionAction"))
 
         this.setComponentPopupMenu(nodesMenu)
     }
@@ -253,6 +271,15 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
         bean.setComponentType(componentType);
     }
 
+    /**
+     * Action to create and add a connection between two ports to the graph model.
+     * It is necessary that either
+     * <ul>
+     *     <it>exactly two ports in the tree table are selected, or</it>
+     *     <it>exactly two nodes are selected.</it>
+     * </ul>
+     * In the latter case, a dialog is opened in which the user needs to specify the port.
+     */
     @Action
     public void connectSelectedAction() {
         int[] selectedRows = this.getSelectedRows()
@@ -453,6 +480,17 @@ public class ComponentNodesTable extends ULCTableTree implements ISelectionListe
             fWatchList.addWatch(path);
         }
     }
+
+    /////////////////////////////////////////
+    // Implementation of IModelRenameListener
+    /////////////////////////////////////////
+    void modelRenamed(AbstractGraphModel modelWithNewName, String oldName, String oldPackageName) {
+        if (fGraphModel.equals(modelWithNewName)) {
+            ((GraphElementNode)fTableModel.getRoot()).setName(modelWithNewName.getName())
+            
+        }
+    }
+
 
     /////////////////////////////////////////
     // Implementation of ISelectionListener

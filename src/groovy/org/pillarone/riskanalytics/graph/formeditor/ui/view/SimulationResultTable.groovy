@@ -1,26 +1,27 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
-import com.ulcjava.base.application.ClientContext;
-import com.ulcjava.base.application.ULCMenuItem;
-import com.ulcjava.base.application.ULCPopupMenu;
-import com.ulcjava.base.application.ULCTableTree;
-import com.ulcjava.base.application.datatype.IDataType;
-import com.ulcjava.base.application.datatype.ULCNumberDataType;
-import com.ulcjava.base.application.event.ActionEvent;
-import com.ulcjava.base.application.event.IActionListener;
-import com.ulcjava.base.application.tabletree.DefaultTableTreeCellRenderer;
-import com.ulcjava.base.application.tabletree.DefaultTableTreeModel;
-import com.ulcjava.base.application.tabletree.ULCTableTreeColumn;
-import com.ulcjava.base.application.tree.TreePath;
-import com.ulcjava.base.application.util.Dimension;
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
-import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.SimulationResultDataTreeModel;
-import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.FilteringTableTreeModel;
 
+import com.ulcjava.base.application.ClientContext
+import com.ulcjava.base.application.ULCMenuItem
+import com.ulcjava.base.application.ULCPopupMenu
+import com.ulcjava.base.application.ULCTableTree
+import com.ulcjava.base.application.datatype.IDataType
+import com.ulcjava.base.application.datatype.ULCNumberDataType
+import com.ulcjava.base.application.event.ActionEvent
+import com.ulcjava.base.application.event.IActionListener
+import com.ulcjava.base.application.tabletree.DefaultTableTreeCellRenderer
+import com.ulcjava.base.application.tabletree.DefaultTableTreeModel
+import com.ulcjava.base.application.tabletree.ULCTableTreeColumn
+import com.ulcjava.base.application.tree.TreePath
+import com.ulcjava.base.application.util.Dimension
+import org.pillarone.riskanalytics.application.ui.parameterization.view.BasicCellRenderer
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
+import org.pillarone.riskanalytics.graph.formeditor.ui.ISelectionListener
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.SimulationResultDataTreeModel
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.FilteringTableTreeModel
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.treetable.NodeNameFilter
-import org.pillarone.riskanalytics.application.ui.parameterization.view.BasicCellRenderer;
 
 /**
  *

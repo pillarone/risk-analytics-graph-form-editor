@@ -10,8 +10,11 @@ import com.ulcjava.base.application.util.Dimension;
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition;
 import org.pillarone.riskanalytics.graph.core.palette.service.IPaletteServiceListener;
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService;
+import org.pillarone.riskanalytics.graph.formeditor.ui.IHelpViewable;
+import org.pillarone.riskanalytics.graph.formeditor.ui.ISearchListener;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.FilteringTreeModel;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.ITreeFilter;
+import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.NameFilter;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.palette.TypeTreeNode;
 
 public abstract class AbstractComponentDefinitionTree extends ULCBoxPane implements ISearchListener {

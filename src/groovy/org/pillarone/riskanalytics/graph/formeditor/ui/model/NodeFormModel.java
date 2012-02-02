@@ -11,7 +11,7 @@ import org.pillarone.riskanalytics.graph.formeditor.ui.model.beans.NodeBean;
 import org.pillarone.riskanalytics.graph.formeditor.ui.model.checkers.PropertySpellChecker;
 
 /**
- * Model underlying the input form ({@link org.pillarone.riskanalytics.graph.formeditor.ui.view.NodeForm}) for nodes.
+ * Model underlying the input form ({@link org.pillarone.riskanalytics.graph.formeditor.ui.view.dialogs.NodeForm}) for nodes.
  * Is based on the generic {@link FormModel} specified for the {@link NodeBean}
  * introduced particularly for that purpose.
  *
