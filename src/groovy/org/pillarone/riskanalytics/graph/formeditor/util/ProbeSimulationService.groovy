@@ -233,6 +233,10 @@ class ProbeSimulationService extends SimulationRunner {
         void setPacketCollector(PacketCollector packetCollector) {
             collector = packetCollector
         }
+
+        boolean isCompatibleWith(Class packetClass) {
+            return Packet.class.isAssignableFrom(packetClass);
+        }
     }
 
 
