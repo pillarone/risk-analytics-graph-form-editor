@@ -31,8 +31,10 @@ class ParameterizationTableTreeGraphModelListener implements IGraphModelChangeLi
         Component component = node.type.typeClass.newInstance()
         SimpleTableTreeNode root = getRoot()
         component.name = node.name
-        final ComponentTableTreeNode newNode = treeModel.builder.createNewComponentNode(root, component)
-        treeModel.nodesWereInserted(new TreePath(DefaultTableTreeModel.getPathToRoot(root) as Object[]), [root.getIndex(newNode)] as int[])
+        if (component.hasParameters()) {
+            final ComponentTableTreeNode newNode = treeModel.builder.createNewComponentNode(root, component)
+            treeModel.nodesWereInserted(new TreePath(DefaultTableTreeModel.getPathToRoot(root) as Object[]), [root.getIndex(newNode)] as int[])
+        }
     }
 
     private SimpleTableTreeNode getRoot() {
