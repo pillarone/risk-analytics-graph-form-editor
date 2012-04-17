@@ -12,7 +12,7 @@ import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 /**
  *
  */
-@ComponentCategory(categories={"Claims","Generators","Risk"})
+@ComponentCategory(categories={"Claim","Generators","Risk"})
 public class SingleLogNormalClaimsGenerator extends Component {
 
     private double parmMu = 1.0;

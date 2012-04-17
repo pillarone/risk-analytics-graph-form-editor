@@ -8,7 +8,7 @@ import org.pillarone.riskanalytics.core.wiring.WiringValidation;
 /**
  * 
  */
-@ComponentCategory(categories={"Claims","Reinsurance","Risk"})
+@ComponentCategory(categories={"Claim","R/I","Risk"})
 public class QuotaShare extends Component {
 
     private double parmQuota = 0.0;

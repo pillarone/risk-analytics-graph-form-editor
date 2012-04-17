@@ -39,14 +39,14 @@ grails.project.dependency.resolution = {
         runtime ":spring-security-core:1.1.2"
         runtime ":jetty:1.2-SNAPSHOT"
         compile "com.canoo:ulc:${ulcVersion}"
-        runtime "org.pillarone:pillar-one-ulc-extensions:0.1"
+        runtime "org.pillarone:pillar-one-ulc-extensions:0.2"
 
         test ":code-coverage:1.2.4"
 
         if (appName == "RiskAnalyticsGraphFormEditor") {
-            runtime "org.pillarone:risk-analytics-core:1.5-ALPHA-2.1-kti"
-            runtime "org.pillarone:risk-analytics-application:1.5-ALPHA-2.1-kti"
-            runtime("org.pillarone:risk-analytics-graph-core:0.7.8") { transitive = false }
+            runtime "org.pillarone:risk-analytics-core:1.5-kti"
+            runtime "org.pillarone:risk-analytics-application:1.5-kti"
+            runtime("org.pillarone:risk-analytics-graph-core:0.8") { transitive = false }
         }
 
     }

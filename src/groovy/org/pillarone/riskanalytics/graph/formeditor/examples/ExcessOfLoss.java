@@ -8,7 +8,7 @@ import org.pillarone.riskanalytics.core.wiring.WiringValidation;
 /**
  * 
  */
-@ComponentCategory(categories={"Claims","Reinsurance","Risk"})
+@ComponentCategory(categories={"Claim","R/I","Risk"})
 public class ExcessOfLoss extends Component {
 
     private double parmRetention = 0.0;

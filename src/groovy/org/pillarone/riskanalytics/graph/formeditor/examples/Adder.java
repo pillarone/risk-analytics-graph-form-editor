@@ -8,7 +8,7 @@ import org.pillarone.riskanalytics.core.wiring.WiringValidation;
 /**
  * 
  */
-@ComponentCategory(categories={"Claims","Utilities","Arithmetics"})
+@ComponentCategory(categories={"Claim","Utilities","Arithmetics"})
 public class Adder extends Component {
     @WiringValidation(connections={1,1},packets={1,1})
     private PacketList<ClaimPacket> inClaims1 = new PacketList<ClaimPacket>(ClaimPacket.class);

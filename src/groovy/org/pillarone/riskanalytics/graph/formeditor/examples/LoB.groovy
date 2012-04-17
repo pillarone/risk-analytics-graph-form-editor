@@ -11,7 +11,7 @@ import org.pillarone.riskanalytics.core.wiring.WiringUtils
 /**
  * 
  */
-@ComponentCategory(categories=["Claims","Risk"])
+@ComponentCategory(categories=["Claim","Risk"])
 public class LoB extends ComposedComponent {
     PacketList<ClaimPacket> outSingleGrossClaims = new PacketList<ClaimPacket>(ClaimPacket.class);
     PacketList<ClaimPacket> outSingleRetainedClaims = new PacketList<ClaimPacket>(ClaimPacket.class);

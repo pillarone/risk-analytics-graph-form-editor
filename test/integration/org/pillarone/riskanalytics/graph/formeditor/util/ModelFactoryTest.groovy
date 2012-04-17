@@ -20,6 +20,7 @@ import org.pillarone.riskanalytics.graph.formeditor.examples.SingleLogNormalClai
 import org.pillarone.riskanalytics.core.wiring.PortReplicatorCategory
 import org.pillarone.riskanalytics.core.wiring.WiringUtils
 import org.pillarone.riskanalytics.core.wiring.WireCategory
+import org.pillarone.riskanalytics.core.simulation.item.VersionNumber
 
 /**
  *
@@ -55,6 +56,7 @@ class ModelFactoryTest extends GroovyTestCase {
         p.addParameter(new DoubleParameterHolder("claims:parmStdev", 0, 20.0))
         p.addParameter(new DoubleParameterHolder("xl:parmRetention", 0, 100.0))
         p.addParameter(new DoubleParameterHolder("xl:parmLimit", 0, 40.0))
+        p.modelVersionNumber = new VersionNumber("1")
         return p
     }
 
