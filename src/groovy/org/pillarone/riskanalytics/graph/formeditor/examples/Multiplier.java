@@ -8,7 +8,7 @@ import org.pillarone.riskanalytics.core.wiring.WiringValidation;
 /**
  * 
  */
-@ComponentCategory(categories={"Claims","Utilities","Arithmetics"})
+@ComponentCategory(categories={"Utilities","Arithmetics"})
 public class Multiplier extends Component {
 
     private double parmValue = 1.0;
