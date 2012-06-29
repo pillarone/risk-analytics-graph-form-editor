@@ -53,11 +53,13 @@ public class ModelRepositoryTree extends ULCBoxPane implements IModelRenameListe
     
     public void removeModel(AbstractGraphModel model) {
         ModelRepositoryTreeNode node = treeModel.getModelNode(model);
-        IMutableTreeNode parent = (IMutableTreeNode) node.getParent();
-        final int index = parent.getIndex((ITreeNode) node);
-        parent.remove(index);
-        treeModel.nodesWereRemoved(parent, new int[]{index}, new Object[]{node});
-        treeModel.getLeaves().remove(node);
+        if (node != null) {
+            IMutableTreeNode parent = (IMutableTreeNode) node.getParent();
+            final int index = parent.getIndex((ITreeNode) node);
+            parent.remove(index);
+            treeModel.nodesWereRemoved(parent, new int[]{index}, new Object[]{node});
+            treeModel.getLeaves().remove(node);
+        }
     }
 
     private void createView() {

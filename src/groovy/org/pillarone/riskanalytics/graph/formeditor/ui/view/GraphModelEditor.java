@@ -26,6 +26,7 @@ import org.pillarone.riskanalytics.core.simulation.item.Parameterization;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel;
+import org.pillarone.riskanalytics.graph.core.graph.persistence.GraphPersistenceException;
 import org.pillarone.riskanalytics.graph.core.graph.persistence.GraphPersistenceService;
 import org.pillarone.riskanalytics.graph.core.graphimport.AbstractGraphImport;
 import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraphImport;
@@ -559,7 +560,11 @@ public class GraphModelEditor extends AbstractBean implements IGraphModelHandler
             fModelRepositoryTree.removeModel(model);
 
             //remove it from the (graph) model registry
-            fPersistenceService.delete(model);
+            try {
+                getPersistenceService().delete(model);
+            } catch (GraphPersistenceException e) {
+                //ignore, happens when model to be deployed was not persisted, so can't be deleted
+            }
         } catch (Exception ex) {
             ULCAlert alert = new ULCAlert("Model not deployed.", "Model could not be deployed. Reason: " + ex.getMessage(), "ok");
             alert.show();
