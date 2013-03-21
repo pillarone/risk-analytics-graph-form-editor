@@ -198,7 +198,7 @@ class ProbeSimulationService extends SimulationRunner {
     private class SingleValueCollectMode implements ICollectingModeStrategy {
         PacketCollector collector
 
-        public List<SingleValueResultPOJO> collect(PacketList results) throws IllegalAccessException {
+        public List<SingleValueResultPOJO> collect(PacketList results,boolean crashSimulationOnError) throws Exception  {
             List<SingleValueResultPOJO> pojoResults = new ArrayList<SingleValueResultPOJO>(results.size());
             int valueIndex = 0;
             for (Packet packet : results) {
@@ -236,6 +236,16 @@ class ProbeSimulationService extends SimulationRunner {
 
         boolean isCompatibleWith(Class packetClass) {
             return Packet.class.isAssignableFrom(packetClass);
+        }
+
+        @Override
+        List<DrillDownMode> getDrillDownModes() {
+            []
+        }
+
+        @Override
+        Object[] getArguments() {
+            return new Object[0]
         }
     }
 

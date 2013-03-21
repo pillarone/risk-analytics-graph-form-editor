@@ -34,7 +34,7 @@ class SortedComponentDefinitionsTreeTests extends AbstractSimpleStandaloneTestCa
         final TreeModel model = tree.getUITree().getBasicTree().getModel()
         final Object root = tree.getRoot()
 
-        assertEquals Adder.simpleName, model.getChild(root, 0).getValueAt(0)
+        assertEquals "{0=${Adder.simpleName}}", model.getChild(root, 0).toString()
 
         runVoidCommand(new ServerSideCommand() {
 
@@ -45,7 +45,7 @@ class SortedComponentDefinitionsTreeTests extends AbstractSimpleStandaloneTestCa
 
         })
 
-        assertEquals ATestComponent.simpleName, model.getChild(root, 0).getValueAt(0)
+        assertEquals "{0=${ATestComponent.simpleName}}", model.getChild(root, 0).toString()
 
         runVoidCommand(new ServerSideCommand() {
 
@@ -55,8 +55,8 @@ class SortedComponentDefinitionsTreeTests extends AbstractSimpleStandaloneTestCa
             }
 
         })
-        assertEquals ATestComponent.simpleName, model.getChild(root, 0).getValueAt(0)
-        assertEquals BTestComponent.simpleName, model.getChild(root, 4).getValueAt(0)
+        assertEquals "{0=${ATestComponent.simpleName}}", model.getChild(root, 0).toString()
+        assertEquals "{0=${BTestComponent.simpleName}}", model.getChild(root, 4).toString()
     }
 
 

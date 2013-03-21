@@ -42,7 +42,7 @@ class ComponentTypeTreeTests extends AbstractSimpleStandaloneTestCase {
 
 
         final Object org = model.getChild(root, 0)
-        assertEquals "org", org.getValueAt(0)
+        assertEquals "{0=org}", org.toString()
         assertEquals(1, model.getChildCount(root))
 
         runVoidCommand(new ServerSideCommand() {
@@ -55,12 +55,12 @@ class ComponentTypeTreeTests extends AbstractSimpleStandaloneTestCase {
         })
         assertEquals(2, model.getChildCount(root))
         final Object aTest = model.getChild(root, 0)
-        assertEquals "aTest", aTest.getValueAt(0)
+        assertEquals "{0=aTest}", aTest.toString()
 
         tree.doExpandRow(1)
 
         assertEquals(1, model.getChildCount(aTest))
-        assertEquals(ATestComponent.simpleName, model.getChild(aTest, 0).getValueAt(0))
+        assertEquals("{0=${ATestComponent.simpleName}}", model.getChild(aTest, 0).toString())
 
         runVoidCommand(new ServerSideCommand() {
 
@@ -72,7 +72,7 @@ class ComponentTypeTreeTests extends AbstractSimpleStandaloneTestCase {
         })
         assertEquals(2, model.getChildCount(aTest))
 
-        assertEquals(ATestComponent.simpleName, model.getChild(aTest, 0).getValueAt(0))
-        assertEquals(BTestComponent.simpleName, model.getChild(aTest, 1).getValueAt(0))
+        assertEquals("{0=${ATestComponent.simpleName}}", model.getChild(aTest, 0).toString())
+        assertEquals("{0=${BTestComponent.simpleName}}", model.getChild(aTest, 1).toString())
     }
 }

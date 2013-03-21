@@ -37,7 +37,7 @@ class ComponentCategoryTreeTests extends AbstractSimpleStandaloneTestCase {
         tree.doExpandRow(4)
 
         final Object others = model.getChild(root, 3)
-        assertEquals ExampleComposedComponent.simpleName, model.getChild(others, 0).getValueAt(0)
+        assertEquals "{0=${ExampleComposedComponent.simpleName}}", model.getChild(others, 0).toString()
 
         runVoidCommand(new ServerSideCommand() {
 
@@ -47,7 +47,7 @@ class ComponentCategoryTreeTests extends AbstractSimpleStandaloneTestCase {
             }
 
         })
-        assertEquals ATestComponent.simpleName, model.getChild(others, 0).getValueAt(0)
+        assertEquals "{0=${ATestComponent.simpleName}}", model.getChild(others, 0).toString()
 
         runVoidCommand(new ServerSideCommand() {
 
@@ -60,7 +60,7 @@ class ComponentCategoryTreeTests extends AbstractSimpleStandaloneTestCase {
         tree.doExpandRow(4)
         final Object myCategory = model.getChild(root, 3)
 
-        assertEquals ATestComponent.simpleName, model.getChild(others, 0).getValueAt(0)
-        assertEquals BTestComponent.simpleName, model.getChild(myCategory, 0).getValueAt(0)
+        assertEquals "{0=${ATestComponent.simpleName}}", model.getChild(others, 0).toString()
+        assertEquals "{0=${BTestComponent.simpleName}}", model.getChild(myCategory, 0).toString()
     }
 }
