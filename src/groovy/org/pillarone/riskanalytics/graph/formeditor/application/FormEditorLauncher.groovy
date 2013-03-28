@@ -1,9 +1,9 @@
 package org.pillarone.riskanalytics.graph.formeditor.application
 
+import com.canoo.common.logging.LogManager
+import com.canoo.common.logging.SimpleLogManager
 import com.ulcjava.base.client.ISessionStateListener
 import com.ulcjava.base.client.UISession
-import com.ulcjava.base.shared.logging.LogManager
-import com.ulcjava.base.shared.logging.SimpleLogManager
 import com.ulcjava.container.local.server.LocalContainerAdapter
 import org.pillarone.riskanalytics.graph.formeditor.environment.shared.UIManagerHelper
 

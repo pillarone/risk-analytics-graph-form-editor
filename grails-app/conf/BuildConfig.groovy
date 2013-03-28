@@ -8,9 +8,6 @@ grails.project.dependency.resolution = {
         grailsHome()
         grailsCentral()
         def ulcClientJarResolver = new FileSystemResolver()
-        String absolutePluginDir = grailsSettings.projectPluginsDir.absolutePath
-
-        ulcClientJarResolver.addArtifactPattern "${absolutePluginDir}/ulc-[revision]/web-app/lib/[artifact].[ext]"
         ulcClientJarResolver.addArtifactPattern "${basedir}/web-app/lib/[artifact]-[revision].[ext]"
         ulcClientJarResolver.name = "ulc"
 
@@ -20,39 +17,34 @@ grails.project.dependency.resolution = {
         mavenRepo "https://ci.canoo.com/nexus/content/groups/public"
     }
 
-    String ulcVersion = "ria-suite-u5"
+    String ulcVersion = "ria-suite-2012-u1"
 
     plugins {
         runtime ":background-thread:1.3"
         runtime ":hibernate:2.2.1"
         runtime ":joda-time:0.5"
-        runtime ":maven-publisher:0.7.5"
+        runtime ":maven-publisher:0.7.5", {
+            excludes "groovy"
+        }
         runtime ":quartz:0.4.2"
         runtime ":spring-security-core:1.2.7.3"
         compile "com.canoo:ulc:${ulcVersion}"
-        runtime "org.pillarone:pillar-one-ulc-extensions:0.4"
+        runtime "org.pillarone:pillar-one-ulc-extensions:0.6"
 
         test ":code-coverage:1.2.4"
 
         if (appName == "RiskAnalyticsGraphFormEditor") {
             runtime "org.pillarone:risk-analytics-core:1.7-a5"
-            runtime "org.pillarone:risk-analytics-application:1.7-a3"
+            runtime "org.pillarone:risk-analytics-application:1.7-a7"
             runtime("org.pillarone:risk-analytics-graph-core:0.9") { transitive = false }
         }
 
     }
 
     dependencies {
-        compile group: 'canoo', name: 'ulc-applet-client', version: ulcVersion
-        compile group: 'canoo', name: 'ulc-base-client', version: ulcVersion
-        compile group: 'canoo', name: 'ulc-base-trusted', version: ulcVersion
-        compile group: 'canoo', name: 'ulc-jnlp-client', version: ulcVersion
-        compile group: 'canoo', name: 'ulc-servlet-client', version: ulcVersion
-        compile group: 'canoo', name: 'ulc-standalone-client', version: ulcVersion
-
-        compile group: 'canoo', name: 'ULCGraph-client', version: "0.7.1"
+        compile group: 'canoo', name: 'ULCGraph-client', version: "1.0"
         compile group: 'canoo', name: 'SlideInPanel-client', version: "0.1-SNAPSHOT"
-        compile group: 'jgraphx', name: 'jgraphx', version: "1.7.1.0"
+        compile group: 'jgraphx', name: 'jgraphx', version: "1.10.0.3"
         //required for ulc tests
         test 'org.mortbay.jetty:jetty:6.1.21', 'org.mortbay.jetty:jetty-plus:6.1.21'
         test 'org.mortbay.jetty:jetty-util:6.1.21', 'org.mortbay.jetty:jetty-naming:6.1.21'

@@ -1,23 +1,24 @@
 package org.pillarone.riskanalytics.graph.formeditor.ui.view;
 
 
-import com.canoo.ulc.graph.IGraphSelectionListener;
-import com.canoo.ulc.graph.ULCGraph;
-import com.canoo.ulc.graph.ULCGraphComponent;
-import com.canoo.ulc.graph.ULCGraphOutline;
-import com.canoo.ulc.graph.dnd.GraphTransferData;
-import com.canoo.ulc.graph.dnd.GraphTransferHandler;
-import com.canoo.ulc.graph.event.DuplicateIdException;
-import com.canoo.ulc.graph.event.IGraphComponentListener;
-import com.canoo.ulc.graph.event.IGraphElementListener;
-import com.canoo.ulc.graph.event.IGraphListener;
-import com.canoo.ulc.graph.model.Edge;
-import com.canoo.ulc.graph.model.GraphElement;
-import com.canoo.ulc.graph.model.Port;
-import com.canoo.ulc.graph.model.Vertex;
-import com.canoo.ulc.graph.shared.PortConstraint;
-import com.canoo.ulc.graph.shared.PortType;
-import com.canoo.ulc.graph.shared.StyleType;
+import com.ulcjava.ext.graph.IGraphSelectionListener;
+import com.ulcjava.ext.graph.ULCGraph;
+import com.ulcjava.ext.graph.ULCGraphComponent;
+import com.ulcjava.ext.graph.ULCGraphOutline;
+import com.ulcjava.ext.graph.dnd.GraphTransferData;
+import com.ulcjava.ext.graph.dnd.GraphTransferHandler;
+import com.ulcjava.ext.graph.event.DuplicateIdException;
+import com.ulcjava.ext.graph.event.IGraphComponentListener;
+import com.ulcjava.ext.graph.event.IGraphElementListener;
+import com.ulcjava.ext.graph.event.IGraphListener;
+import com.ulcjava.ext.graph.model.Edge;
+import com.ulcjava.ext.graph.model.GraphElement;
+import com.ulcjava.ext.graph.model.Port;
+import com.ulcjava.ext.graph.model.Vertex;
+import com.ulcjava.ext.graph.shared.PortAlignment;
+import com.ulcjava.ext.graph.shared.PortConstraint;
+import com.ulcjava.ext.graph.shared.PortType;
+import com.ulcjava.ext.graph.shared.StyleType;
 import com.canoo.ulc.slideinpanel.application.view.ULCSlideInPanel;
 import com.ulcjava.applicationframework.application.AbstractBean;
 import com.ulcjava.applicationframework.application.Action;
@@ -168,7 +169,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             public void edgeGeometryChanged(Edge edge) {
                 Connection c = fConnectionsMap.get(edge.getId());
                 List<java.awt.Point> points = new ArrayList<java.awt.Point>();
-                for (com.canoo.ulc.graph.model.Point point : edge.getControlPoints()) {
+                for (com.ulcjava.ext.graph.model.Point point : edge.getControlPoints()) {
                     points.add(new java.awt.Point((int) point.getX(), (int) point.getY()));
                 }
                 c.setControlPoints(points);
@@ -338,9 +339,9 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             Edge e = new Edge(id, outPort, inPort);
             final List<java.awt.Point> controlPoints = c.getControlPoints();
             if (controlPoints != null && !controlPoints.isEmpty()) {
-                List<com.canoo.ulc.graph.model.Point> points = new ArrayList<com.canoo.ulc.graph.model.Point>(controlPoints.size());
+                List<com.ulcjava.ext.graph.model.Point> points = new ArrayList<com.ulcjava.ext.graph.model.Point>(controlPoints.size());
                 for (java.awt.Point point : controlPoints) {
-                    points.add(new com.canoo.ulc.graph.model.Point(point.getX(), point.getY()));
+                    points.add(new com.ulcjava.ext.graph.model.Point(point.getX(), point.getY()));
                 }
                 e.setControlPoints(points);
             }
@@ -639,7 +640,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
      */
     protected IGraphComponentListener getGraphComponentListener(final boolean readOnly) {
         return new IGraphComponentListener() {
-            public void doubleClickOnElement(com.canoo.ulc.graph.model.GraphElement inElement) {
+            public void doubleClickOnElement(com.ulcjava.ext.graph.model.GraphElement inElement) {
                 if (!readOnly && inElement instanceof Vertex && fNodesMap.containsKey(inElement.getId())) {
                     ComponentNode node = fNodesMap.get(inElement.getId());
                     modifyNodeAction(node);
@@ -979,13 +980,13 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         String id = "port_" + new Date().getTime() + "_" + Math.random();
         Port port;
         if (p instanceof org.pillarone.riskanalytics.graph.core.graph.model.InPort) {
-            port = new Port(id, PortType.REPLICATE_IN, p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
+            port = new Port(id, PortType.REPLICATE_IN, PortAlignment.TOP,p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
             IntegerRange range = p.getConnectionCardinality();
             int rangeLower = range != null ? range.getFrom() : 0;
             int rangeUpper = range != null ? range.getTo() : Integer.MAX_VALUE;
             port.addConstraint(new PortConstraint(p.getPacketType().getName(), rangeLower, rangeUpper));
         } else {
-            port = new Port(id, PortType.REPLICATE_OUT, p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
+            port = new Port(id, PortType.REPLICATE_OUT, PortAlignment.TOP, p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
             port.addConstraint(new PortConstraint(p.getPacketType().getName(), 0, Integer.MAX_VALUE));
         }
         fRootVertex.addPort(port);
@@ -1057,7 +1058,7 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
             if (outPort != null && inPort != null) {
                 Connection c = fGraphModel.createConnection(outPort, inPort);
                 List<java.awt.Point> points = new ArrayList<java.awt.Point>();
-                for (com.canoo.ulc.graph.model.Point point : edge.getControlPoints()) {
+                for (com.ulcjava.ext.graph.model.Point point : edge.getControlPoints()) {
                     points.add(new java.awt.Point((int) point.getX(), (int) point.getY()));
                 }
                 c.setControlPoints(points);
@@ -1090,6 +1091,10 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
                     }
                 }
             }
+        }
+
+        @Override
+        public void cellConnected(Edge edge, Port port, Port port2, boolean b) {
         }
     }
 
