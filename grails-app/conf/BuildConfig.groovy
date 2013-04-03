@@ -42,7 +42,7 @@ grails.project.dependency.resolution = {
     }
 
     dependencies {
-        compile group: 'canoo', name: 'ULCGraph-client', version: "1.0"
+        compile group: 'canoo', name: 'ULCGraph-client', version: "1.0.1.1"
         compile group: 'canoo', name: 'SlideInPanel-client', version: "0.1-SNAPSHOT"
         compile group: 'jgraphx', name: 'jgraphx', version: "1.10.0.3"
         //required for ulc tests
