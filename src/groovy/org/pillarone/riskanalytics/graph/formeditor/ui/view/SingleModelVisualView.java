@@ -980,13 +980,13 @@ public class SingleModelVisualView extends AbstractBean implements GraphModelVie
         String id = "port_" + new Date().getTime() + "_" + Math.random();
         Port port;
         if (p instanceof org.pillarone.riskanalytics.graph.core.graph.model.InPort) {
-            port = new Port(id, PortType.REPLICATE_IN, PortAlignment.TOP,p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
+            port = new Port(id, PortType.REPLICATE_IN, PortAlignment.LEFT,p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
             IntegerRange range = p.getConnectionCardinality();
             int rangeLower = range != null ? range.getFrom() : 0;
             int rangeUpper = range != null ? range.getTo() : Integer.MAX_VALUE;
             port.addConstraint(new PortConstraint(p.getPacketType().getName(), rangeLower, rangeUpper));
         } else {
-            port = new Port(id, PortType.REPLICATE_OUT, PortAlignment.TOP, p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
+            port = new Port(id, PortType.REPLICATE_OUT, PortAlignment.RIGHT, p.getPacketType().getName(), UIUtils.formatDisplayName(p.getName()));
             port.addConstraint(new PortConstraint(p.getPacketType().getName(), 0, Integer.MAX_VALUE));
         }
         fRootVertex.addPort(port);
