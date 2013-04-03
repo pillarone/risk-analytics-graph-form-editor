@@ -34,7 +34,7 @@ grails.project.dependency.resolution = {
         test ":code-coverage:1.2.4"
 
         if (appName == "RiskAnalyticsGraphFormEditor") {
-            runtime "org.pillarone:risk-analytics-core:1.7-a5"
+            runtime "org.pillarone:risk-analytics-core:1.7-a6"
             runtime "org.pillarone:risk-analytics-application:1.7-a7"
             runtime("org.pillarone:risk-analytics-graph-core:0.9") { transitive = false }
         }
