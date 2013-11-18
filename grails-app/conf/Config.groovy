@@ -1,8 +1,7 @@
 import org.pillarone.riskanalytics.core.output.batch.results.MysqlBulkInsert
-import org.pillarone.riskanalytics.core.output.batch.results.SQLServerBulkInsert
 import org.pillarone.riskanalytics.core.output.batch.calculations.MysqlCalculationsBulkInsert
 import org.pillarone.riskanalytics.core.output.batch.calculations.GenericBulkInsert
-import grails.plugins.springsecurity.SecurityConfigType
+import grails.plugin.springsecurity.SecurityConfigType
 
 // locations to search for config files that get merged into the main config
 // config files can either be Java properties files or ConfigSlurper scripts
@@ -204,7 +203,7 @@ log4j = {
 }
 
 grails {
-    plugins {
+    plugin {
         springsecurity {
             userLookup {
                 userDomainClassName = 'org.pillarone.riskanalytics.core.user.Person'

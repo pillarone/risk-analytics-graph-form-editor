@@ -95,19 +95,19 @@ class ModelFactoryTest extends GroovyTestCase {
         assertNotNull(output)
         assertTrue(output.size()>0)
     }
+}
 
-    class TestComposedComponent extends ComposedComponent {
-        PacketList<ClaimPacket> outClaims = new PacketList<ClaimPacket>(ClaimPacket.class)
-        PoissonFrequencyGenerator subFrequencyGen = new PoissonFrequencyGenerator()
-        SingleLogNormalClaimsGenerator subClaimsGen = new SingleLogNormalClaimsGenerator()
-        public void wire() {
-            WiringUtils.use(PortReplicatorCategory) {
-                this.outClaims = subClaimsGen.outClaims
-            }
-            WiringUtils.use(WireCategory) {
-                subClaimsGen.inFrequency = subFrequencyGen.outFrequency
-            }
+class TestComposedComponent extends ComposedComponent {
+    PacketList<ClaimPacket> outClaims = new PacketList<ClaimPacket>(ClaimPacket.class)
+    PoissonFrequencyGenerator subFrequencyGen = new PoissonFrequencyGenerator()
+    SingleLogNormalClaimsGenerator subClaimsGen = new SingleLogNormalClaimsGenerator()
+    public void wire() {
+        WiringUtils.use(PortReplicatorCategory) {
+            this.outClaims = subClaimsGen.outClaims
+        }
+        WiringUtils.use(WireCategory) {
+            subClaimsGen.inFrequency = subFrequencyGen.outFrequency
         }
     }
-
 }
+

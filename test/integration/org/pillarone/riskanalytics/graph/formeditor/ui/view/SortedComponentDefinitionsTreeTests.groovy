@@ -36,25 +36,11 @@ class SortedComponentDefinitionsTreeTests extends AbstractSimpleStandaloneTestCa
 
         assertEquals "{0=${Adder.simpleName}}", model.getChild(root, 0).toString()
 
-        runVoidCommand(new ServerSideCommand() {
-
-            @Override
-            protected void proceedOnServer() {
-                PaletteService.instance.addComponentDefinition(new ComponentDefinition(typeClass: ATestComponent))
-            }
-
-        })
+        runVoidCommand(new AddComponentDefinition(ATestComponent))
 
         assertEquals "{0=${ATestComponent.simpleName}}", model.getChild(root, 0).toString()
 
-        runVoidCommand(new ServerSideCommand() {
-
-            @Override
-            protected void proceedOnServer() {
-                PaletteService.instance.addComponentDefinition(new ComponentDefinition(typeClass: BTestComponent))
-            }
-
-        })
+        runVoidCommand(new AddComponentDefinition(BTestComponent))
         assertEquals "{0=${ATestComponent.simpleName}}", model.getChild(root, 0).toString()
         assertEquals "{0=${BTestComponent.simpleName}}", model.getChild(root, 4).toString()
     }

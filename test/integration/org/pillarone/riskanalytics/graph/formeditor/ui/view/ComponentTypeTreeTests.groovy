@@ -14,12 +14,6 @@ import aTest.BTestComponent
 
 
 class ComponentTypeTreeTests extends AbstractSimpleStandaloneTestCase {
-    @Override
-    protected void setUp() {
-        super.setUp()    //To change body of overridden methods use File | Settings | File Templates.
-    }
-
-
 
     void start() {
 
@@ -45,14 +39,7 @@ class ComponentTypeTreeTests extends AbstractSimpleStandaloneTestCase {
         assertEquals "{0=org}", org.toString()
         assertEquals(1, model.getChildCount(root))
 
-        runVoidCommand(new ServerSideCommand() {
-
-            @Override
-            protected void proceedOnServer() {
-                PaletteService.instance.addComponentDefinition(new ComponentDefinition(typeClass: ATestComponent))
-            }
-
-        })
+        runVoidCommand(new AddComponentDefinition(ATestComponent))
         assertEquals(2, model.getChildCount(root))
         final Object aTest = model.getChild(root, 0)
         assertEquals "{0=aTest}", aTest.toString()
@@ -62,14 +49,7 @@ class ComponentTypeTreeTests extends AbstractSimpleStandaloneTestCase {
         assertEquals(1, model.getChildCount(aTest))
         assertEquals("{0=${ATestComponent.simpleName}}", model.getChild(aTest, 0).toString())
 
-        runVoidCommand(new ServerSideCommand() {
-
-            @Override
-            protected void proceedOnServer() {
-                PaletteService.instance.addComponentDefinition(new ComponentDefinition(typeClass: BTestComponent))
-            }
-
-        })
+        runVoidCommand(new AddComponentDefinition(BTestComponent))
         assertEquals(2, model.getChildCount(aTest))
 
         assertEquals("{0=${ATestComponent.simpleName}}", model.getChild(aTest, 0).toString())

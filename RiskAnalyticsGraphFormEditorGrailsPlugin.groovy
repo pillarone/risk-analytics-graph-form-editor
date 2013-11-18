@@ -1,11 +1,11 @@
-import org.codehaus.groovy.grails.commons.ConfigurationHolder
+import grails.util.Holders
 import org.pillarone.riskanalytics.application.ui.extension.WindowRegistry
 import org.pillarone.riskanalytics.core.util.ResourceBundleRegistry
 import org.pillarone.riskanalytics.graph.formeditor.application.GraphEditorComponentCreator
 
 class RiskAnalyticsGraphFormEditorGrailsPlugin {
     // the plugin version
-    def version = "1.7"
+    def version = "1.9-a1"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.2.1 > *"
     // the other plugins this plugin depends on
@@ -44,8 +44,8 @@ Brief description of the plugin.
         ResourceBundleRegistry.addBundle("COMPONENT_DEFINITION_HELP", "org.pillarone.riskanalytics.graph.formeditor.examples.componentDefinitionHelp")
 
         boolean visualBuilderEnabled = false
-        if (ConfigurationHolder.config.containsKey("visualBuilderEnabled")) {
-            visualBuilderEnabled = ConfigurationHolder.config.visualBuilderEnabled
+        if (Holders.config.containsKey("visualBuilderEnabled")) {
+            visualBuilderEnabled = Holders.config.visualBuilderEnabled
         }
 
         if (visualBuilderEnabled) {

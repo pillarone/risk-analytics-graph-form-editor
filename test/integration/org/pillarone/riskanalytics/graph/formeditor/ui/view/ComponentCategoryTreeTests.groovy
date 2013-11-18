@@ -39,24 +39,10 @@ class ComponentCategoryTreeTests extends AbstractSimpleStandaloneTestCase {
         final Object others = model.getChild(root, 3)
         assertEquals "{0=${ExampleComposedComponent.simpleName}}", model.getChild(others, 0).toString()
 
-        runVoidCommand(new ServerSideCommand() {
-
-            @Override
-            protected void proceedOnServer() {
-                PaletteService.instance.addComponentDefinition(new ComponentDefinition(typeClass: ATestComponent))
-            }
-
-        })
+        runVoidCommand(new AddComponentDefinition(ATestComponent))
         assertEquals "{0=${ATestComponent.simpleName}}", model.getChild(others, 0).toString()
 
-        runVoidCommand(new ServerSideCommand() {
-
-            @Override
-            protected void proceedOnServer() {
-                PaletteService.instance.addComponentDefinition(new ComponentDefinition(typeClass: BTestComponent))
-            }
-
-        })
+        runVoidCommand(new AddComponentDefinition(BTestComponent))
         tree.doExpandRow(4)
         final Object myCategory = model.getChild(root, 3)
 
