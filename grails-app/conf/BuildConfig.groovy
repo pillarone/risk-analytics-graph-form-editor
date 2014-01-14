@@ -1,7 +1,7 @@
 grails.project.dependency.resolver = "maven"
 
 grails.project.dependency.resolution = {
-    inherits ("global") { // inherit Grails' default dependencies
+    inherits("global") { // inherit Grails' default dependencies
         excludes "grails-plugin-testing"
     }
     log "warn"
@@ -12,7 +12,9 @@ grails.project.dependency.resolution = {
         mavenCentral()
 
         mavenRepo "https://repository.intuitive-collaboration.com/nexus/content/repositories/pillarone-public/"
-        mavenRepo "https://repository.intuitive-collaboration.com/nexus/content/repositories/pillarone-public-snapshot/"
+        mavenRepo("https://repository.intuitive-collaboration.com/nexus/content/repositories/pillarone-public-snapshot/") {
+            updatePolicy System.getProperty('snapshotUpdatePolicy') ?: 'daily'
+        }
         mavenRepo "http://repo.spring.io/milestone/" //needed for spring-security-core 2.0-rc2 plugin
         mavenRepo "https://ci.canoo.com/nexus/content/repositories/public-releases"
 
@@ -68,15 +70,15 @@ grails.project.dependency.distribution = {
         user = properties.get("user")
         password = properties.get("password")
 
-        if (version?.endsWith('-SNAPSHOT')){
+        if (version?.endsWith('-SNAPSHOT')) {
             scpUrl = properties.get("urlSnapshot")
-        }else {
+        } else {
             scpUrl = properties.get("url")
         }
+        remoteRepository(id: "pillarone", url: scpUrl) {
+            authentication username: user, password: password
+        }
     } catch (Throwable t) {
-    }
-    remoteRepository(id: "pillarone", url: scpUrl) {
-        authentication username: user, password: password
     }
 }
 
