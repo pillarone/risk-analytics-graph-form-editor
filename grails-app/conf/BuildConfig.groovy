@@ -25,7 +25,6 @@ grails.project.dependency.resolution = {
     plugins {
         runtime ":background-thread:1.3"
         runtime ":hibernate:3.6.10.3"
-        runtime ":joda-time:0.5"
         runtime ":release:3.0.1"
         runtime ":quartz:1.0.1"
         runtime ":spring-security-core:2.0-RC2"
@@ -53,7 +52,7 @@ grails.project.dependency.resolution = {
         test 'org.mortbay.jetty:jetty:6.1.21', 'org.mortbay.jetty:jetty-plus:6.1.21'
         test 'org.mortbay.jetty:jetty-util:6.1.21', 'org.mortbay.jetty:jetty-naming:6.1.21'
         test 'hsqldb:hsqldb:1.8.0.10'
-
+        compile 'joda-time:joda-time:2.3'
         test("org.grails:grails-plugin-testing:2.2.3.FIXED")
         test("org.springframework:spring-test:3.2.4.RELEASE")
     }

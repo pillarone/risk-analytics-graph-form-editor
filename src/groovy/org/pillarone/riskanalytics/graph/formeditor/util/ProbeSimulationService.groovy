@@ -3,6 +3,7 @@ package org.pillarone.riskanalytics.graph.formeditor.util
 import org.joda.time.DateTime
 import org.pillarone.riskanalytics.core.fileimport.FileImportService
 import org.pillarone.riskanalytics.core.model.Model
+import org.pillarone.riskanalytics.core.output.*
 import org.pillarone.riskanalytics.core.packets.Packet
 import org.pillarone.riskanalytics.core.packets.PacketList
 import org.pillarone.riskanalytics.core.parameterization.StructureInformation
@@ -16,15 +17,10 @@ import org.pillarone.riskanalytics.core.simulation.item.ResultConfiguration
 import org.pillarone.riskanalytics.core.simulation.item.Simulation
 import org.pillarone.riskanalytics.core.wiring.ITransmitter
 import org.pillarone.riskanalytics.core.wiring.Transmitter
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode
-import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
-import org.pillarone.riskanalytics.core.output.*
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
+import org.pillarone.riskanalytics.graph.core.graph.model.*
 
 /**
- * 
+ *
  */
 class ProbeSimulationService extends SimulationRunner {
 
@@ -33,12 +29,12 @@ class ProbeSimulationService extends SimulationRunner {
 
     public SimulationRunner getSimulationRunner(AbstractGraphModel graphModel, Parameterization parametrization) {
         // name
-        String name = graphModel.name+"_temp"
+        String name = graphModel.name + "_temp"
         long time = System.currentTimeMillis()
 
         // model instance
         ModelFactory factory = new ModelFactory()
-        Model model = null
+        Model model
         if (graphModel instanceof ModelGraphModel) {
             model = factory.getModelInstance((ModelGraphModel) graphModel)
         } else {
@@ -46,8 +42,8 @@ class ProbeSimulationService extends SimulationRunner {
         }
 
         // create a simulation object for the probing
-        Simulation simulation = new Simulation(name+"_"+time)
-        simulation.id = "$time"
+        Simulation simulation = new Simulation(name + "_" + time)
+        simulation.id = time
         simulation.numberOfIterations = 1
         simulation.beginOfFirstPeriod = new DateTime(time)
         simulation.randomSeed = Math.abs(new Long(time).intValue())
@@ -58,7 +54,7 @@ class ProbeSimulationService extends SimulationRunner {
         simulation.structure = new ProbeModelStructure(name)
 
         // now create the runner and configure it
-        SimulationRunner runner = SimulationRunner.createRunner()
+        SimulationRunner runner = createRunner()
         runner.currentScope.simulation = simulation
         runner.currentScope.model = model
         runner.currentScope.iterationScope.numberOfPeriods = simulation.periodCount
@@ -77,11 +73,11 @@ class ProbeSimulationService extends SimulationRunner {
     }
 
     void addToCache(SingleValueResultPOJO result) {
-        if (output==null) {
+        if (output == null) {
             output = [:]
         }
         if (!output.containsKey(result.path.pathName)) {
-            output[result.path.pathName]=[:]
+            output[result.path.pathName] = [:]
         }
         Map field = (Map) output[result.path.pathName]
         if (!field.containsKey(result.field.fieldName)) {
@@ -91,7 +87,7 @@ class ProbeSimulationService extends SimulationRunner {
         if (!periods.containsKey(result.period)) {
             periods[result.period] = [:]
         }
-        Map iterations = (Map)periods[result.period]
+        Map iterations = (Map) periods[result.period]
         if (!iterations.containsKey(result.iteration)) {
             iterations[result.iteration] = []
         }
@@ -125,7 +121,7 @@ class ProbeSimulationService extends SimulationRunner {
         SimulationScope fSimulationScope
 
         public ProbeResultConfiguration(AbstractGraphModel graphModel, SimulationScope simulationScope) {
-            super(graphModel.name)
+            super(graphModel.name, simulationScope.model.class)
             fSimulationScope = simulationScope
             collectors = []
             graphModel.allComponentNodes.each { component ->
@@ -143,12 +139,12 @@ class ProbeSimulationService extends SimulationRunner {
             List<PacketCollector> collectors = []
             component.outPorts?.each { outPort ->
                 PacketCollector collector = new ProbePacketCollector(fSimulationScope)
-                collector.path = path+GraphModelUtilities.PATHSEP+outPort.name
+                collector.path = path + GraphModelUtilities.PATHSEP + outPort.name
                 collectors << collector
             }
             if (component instanceof ComposedComponentNode) {
-                ((ComposedComponentNode)component).componentGraph.allComponentNodes.each { subComponent ->
-                    getCollectors(subComponent, path+GraphModelUtilities.PATHSEP+subComponent.name).each { collector ->
+                ((ComposedComponentNode) component).componentGraph.allComponentNodes.each { subComponent ->
+                    getCollectors(subComponent, path + GraphModelUtilities.PATHSEP + subComponent.name).each { collector ->
                         collectors << collector
                     }
                 }
@@ -169,7 +165,7 @@ class ProbeSimulationService extends SimulationRunner {
         public attachToModel(Model model, StructureInformation structureInformation) {
             def pathElements = path.split(GraphModelUtilities.PATHSEP_RESOLVE)
             def sender = model
-            pathElements[0..-2].each {propertyName ->
+            pathElements[0..-2].each { propertyName ->
                 if (sender.properties.containsKey(propertyName)) {
                     sender = sender[propertyName]
                 }
@@ -198,7 +194,7 @@ class ProbeSimulationService extends SimulationRunner {
     private class SingleValueCollectMode implements ICollectingModeStrategy {
         PacketCollector collector
 
-        public List<SingleValueResultPOJO> collect(PacketList results,boolean crashSimulationOnError) throws Exception  {
+        public List<SingleValueResultPOJO> collect(PacketList results, boolean crashSimulationOnError) throws Exception {
             List<SingleValueResultPOJO> pojoResults = new ArrayList<SingleValueResultPOJO>(results.size());
             int valueIndex = 0;
             for (Packet packet : results) {
@@ -206,12 +202,12 @@ class ProbeSimulationService extends SimulationRunner {
                 DateTime date = packet?.date != null ? packet.date : collector.simulationScope.iterationScope.periodScope.currentPeriodStartDate
                 int iteration = collector.simulationScope.iterationScope.currentIteration
                 PathMapping path = new PathMapping(pathName: collector.path)
-                for (Map.Entry<String, Number> entry : packet.getValuesToSave().entrySet()){
+                for (Map.Entry<String, Number> entry : packet.getValuesToSave().entrySet()) {
                     SingleValueResultPOJO singleValue = new SingleValueResultPOJO()
                     singleValue.setIteration(iteration)
                     singleValue.setPeriod(period)
                     singleValue.setPath(path)
-                    singleValue.setField(new FieldMapping(fieldName:entry.key))
+                    singleValue.setField(new FieldMapping(fieldName: entry.key))
                     singleValue.setValueIndex(valueIndex)
                     singleValue.setValue(entry.value.doubleValue())
                     singleValue.setDate(date)
