@@ -31,6 +31,8 @@
         <property name="signjar.keypass" value="nopasswd" />
     </target>
 
+    <target name="_beforeReleasePlugin" depends="jar-client" />
+
     <target name="jar-client" depends="-self-signed-cert" description="--> Create clientside jar files">
         <taskdef resource="net/sf/antcontrib/antcontrib.properties">
             <classpath location="./lib-build/ant-contrib-1.0b3.jar" />
