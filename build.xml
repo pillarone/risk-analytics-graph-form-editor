@@ -1,15 +1,74 @@
 <project name="RiskAnalyticsGraphFormEditor" default="cruise">
 
-    <property file="application.properties"/>
+    <property file="application.properties" />
 
-    <property name="build.prod.dir" value="${user.home}/.grails/${app.grails.version}/projects/${app.name}"/>
-    <property name="plugin.dir" value="${build.prod.dir}/plugins"/>
-    <mkdir dir="${plugin.dir}"/>
+    <property name="build.prod.dir" value="${user.home}/.grails/${app.grails.version}/projects/${app.name}" />
+    <property name="plugin.dir" value="${build.prod.dir}/plugins" />
+    <property name="webapp.lib.dir" value="web-app/lib" />
+    <property name="resources.prod.dir" value="src/java" />
 
-    <get src="https://github.com/pillarone/risk-analytics-core/raw/master/scripts/build.xml" dest="_build.xml" skipexisting="true" />
+    <mkdir dir="${plugin.dir}" />
+
+    <get src="https://raw.githubusercontent.com/pillarone/risk-analytics-core/master/scripts/build.xml"
+        dest="_build.xml" skipexisting="true" ignoreerrors="true" />
 
     <copy tofile="_build.xml" overwrite="true" failonerror="false">
         <fileset dir="${plugin.dir}" includes="risk-analytics-core*/scripts/build.xml" />
     </copy>
-    <import file="_build.xml"/>
+    <import file="_build.xml" />
+
+    <target name="-trusted-cert-available">
+        <!-- try to use a trusted certificate reading cert.properties from the user.home directory -->
+        <available property="file.exists" file="${user.home}/cert.properties" />
+    </target>
+
+    <target name="-self-signed-cert" unless="-trusted-cert-available">
+        <!-- if no trusted certificate has been found use the self signed certificate available in the project root -->
+        <!-- <echo  message="No trusted certificate found. user.home is ${user.home}."/> -->
+        <property name="signjar.alias" value="pillarone" />
+        <property name="signjar.keystore" value="pillarone.keystore" />
+        <property name="signjar.storepass" value="nopasswd" />
+        <property name="signjar.keypass" value="nopasswd" />
+    </target>
+
+    <target name="jar-client" depends="-self-signed-cert" description="--> Create clientside jar files">
+        <taskdef resource="net/sf/antcontrib/antcontrib.properties">
+            <classpath location="./lib-build/ant-contrib-1.0b3.jar" />
+        </taskdef>
+        <echo message="${signjar.keystore}" />
+        <mkdir dir="${webapp.lib.dir}" />
+        <delete dir="${webapp.lib.dir}">
+            <include name="${app.name}*.jar" />
+        </delete>
+
+        <jar jarfile="${webapp.lib.dir}/${app.name}-client.jar">
+            <fileset dir="${classes.prod.dir}" includes="org/pillarone/riskanalytics/graph/formeditor/client/**" />
+            <fileset dir="${classes.prod.dir}"
+                includes="org/pillarone/riskanalytics/application/environment/shared/**" />
+            <fileset dir="${resources.prod.dir}" includes="*.png" />
+        </jar>
+
+        <foreach param="jarFile" target="updateManifestForClientJars">
+            <path>
+                <fileset dir="${webapp.lib.dir}">
+                    <include name="*.jar" />
+                </fileset>
+            </path>
+        </foreach>
+        <!-- has to be replaced with a trusted certificate issued for the builder of the jar files -->
+        <!-- this is a self signed certificate and won't work with a strict security policy -->
+        <signjar alias="${signjar.alias}" storetype="PKCS12" keystore="${signjar.keystore}"
+            storepass="${signjar.storepass}" keypass="${signjar.keypass}" lazy="false">
+            <fileset dir="${webapp.lib.dir}" includes="*.jar" />
+        </signjar>
+    </target>
+
+    <target name="updateManifestForClientJars">
+        <jar update="true" file="${jarFile}">
+            <manifest>
+                <attribute name="Codebase" value="*" />
+                <attribute name="Permissions" value="all-permissions" />
+            </manifest>
+        </jar>
+    </target>
 </project>
