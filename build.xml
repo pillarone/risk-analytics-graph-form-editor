@@ -6,6 +6,7 @@
     <property name="plugin.dir" value="${build.prod.dir}/plugins" />
     <property name="webapp.lib.dir" value="web-app/lib" />
     <property name="resources.prod.dir" value="src/java" />
+    <property file="${user.home}/cert.properties" />
 
     <mkdir dir="${plugin.dir}" />
 
