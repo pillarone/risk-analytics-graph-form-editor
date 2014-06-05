@@ -20,7 +20,7 @@ grails.project.dependency.resolution = {
 
     }
 
-    String ulcVersion = "7.2.0.5"
+    String ulcVersion = "7.2.0.7"
 
     plugins {
         runtime ":background-thread:1.3"
