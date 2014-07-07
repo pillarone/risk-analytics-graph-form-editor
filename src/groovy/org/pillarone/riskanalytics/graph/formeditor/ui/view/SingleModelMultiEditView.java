@@ -419,6 +419,7 @@ public class SingleModelMultiEditView extends AbstractBean implements IWatchList
         fFormEditorView.addSelectionListener(fCommentView);
         fVisualEditorView.addSelectionListener(fCommentView);
 
+        fVisualEditorView.refreshLayout();
     }
 
     /**
